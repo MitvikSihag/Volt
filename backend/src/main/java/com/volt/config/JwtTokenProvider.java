@@ -24,6 +24,7 @@ public class JwtTokenProvider {
     public String generateAccessToken(String username) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
+                .issuer("volt")
                 .subject(username)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + accessTokenExpirationMs))

@@ -2,18 +2,18 @@ package com.volt.user;
 
 import com.volt.common.exception.ConflictException;
 import com.volt.common.exception.ResourceNotFoundException;
+import com.volt.common.exception.UnauthorizedException;
 import com.volt.config.JwtProperties;
 import com.volt.config.JwtTokenProvider;
 import com.volt.user.dto.AuthResponse;
 import com.volt.user.dto.LoginRequest;
 import com.volt.user.dto.RegisterRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -44,10 +44,11 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
+        // Exclude soft-deleted users from uniqueness checks so a deleted username can be reused
+        if (userRepository.existsByUsernameAndNotDeleted(request.username())) {
             throw new ConflictException("Username already taken");
         }
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmailAndNotDeleted(request.email())) {
             throw new ConflictException("Email already registered");
         }
 
@@ -62,11 +63,12 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
+        // One query via AuthenticationManager (unavoidable), then one direct index hit by username
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.usernameOrEmail(), request.password())
         );
-
-        User user = userRepository.findByUsernameOrEmail(request.usernameOrEmail())
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return issueTokens(user);
@@ -74,14 +76,19 @@ public class AuthService {
 
     public AuthResponse refresh(String rawRefreshToken) {
         RefreshToken stored = refreshTokenRepository.findByToken(rawRefreshToken)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
         if (!stored.isValid()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired or revoked");
+            // Possible token reuse after rotation — revoke all tokens for this user
+            refreshTokenRepository.revokeAllByUser(stored.getUser());
+            throw new UnauthorizedException("Refresh token expired or revoked");
         }
 
-        String accessToken = tokenProvider.generateAccessToken(stored.getUser().getUsername());
-        return new AuthResponse(accessToken, rawRefreshToken, jwtProperties.getAccessTokenExpirationMs());
+        // Rotate: revoke old token, issue new one
+        stored.setRevoked(true);
+        refreshTokenRepository.save(stored);
+
+        return issueTokens(stored.getUser());
     }
 
     public void logout(String rawRefreshToken) {
