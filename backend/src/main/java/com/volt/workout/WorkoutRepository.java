@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +22,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, UUID> {
     Page<Workout> findByUserAndDeletedAtIsNullOrderByStartedAtDesc(User user, Pageable pageable);
 
     Optional<Workout> findByIdAndDeletedAtIsNull(UUID id);
+
+    List<Workout> findByUserAndStartedAtAfterAndDeletedAtIsNull(User user, Instant after);
 }

@@ -9,6 +9,7 @@ import com.volt.workout.dto.AddSetRequest;
 import com.volt.workout.dto.CreateWorkoutExerciseRequest;
 import com.volt.workout.dto.CreateWorkoutRequest;
 import com.volt.workout.dto.CreateWorkoutSetRequest;
+import com.volt.workout.dto.LastSetResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
 import com.volt.workout.dto.UpdateWorkoutRequest;
 import com.volt.workout.dto.WorkoutResponse;
@@ -19,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -170,6 +173,23 @@ public class WorkoutService {
     }
 
     @Transactional(readOnly = true)
+    public List<LastSetResponse> getLastSets(String username, List<UUID> exerciseIds) {
+        if (exerciseIds == null || exerciseIds.isEmpty()) return List.of();
+        User user = getUser(username);
+        return workoutSetRepository.findLastSetsForExercises(exerciseIds, user)
+                .stream()
+                .collect(Collectors.toMap(
+                        s -> s.getExercise().getId(),
+                        s -> s,
+                        (existing, ignored) -> existing,  // keep first = highest setOrder
+                        LinkedHashMap::new
+                ))
+                .entrySet().stream()
+                .map(e -> LastSetResponse.from(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<PersonalRecordResponse> getPersonalRecords(String username, UUID exerciseId) {
         User user = getUser(username);
         Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
@@ -196,6 +216,11 @@ public class WorkoutService {
                 .sum();
         if (workoutVolume > 0) {
             updatePr(user, exercise, PersonalRecordType.MAX_VOLUME, workoutVolume, set);
+        }
+
+        if (set.getReps() != null && set.getReps() > 0) {
+            updatePr(user, exercise, PersonalRecordType.MAX_REPS_AT_WEIGHT,
+                    set.getReps().doubleValue(), set);
         }
     }
 

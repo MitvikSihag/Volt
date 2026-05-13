@@ -4,6 +4,7 @@ import com.volt.common.dto.PageResponse;
 import com.volt.workout.dto.AddSetRequest;
 import com.volt.workout.dto.CreateWorkoutRequest;
 import com.volt.workout.dto.CreateWorkoutSetRequest;
+import com.volt.workout.dto.LastSetResponse;
 import com.volt.workout.dto.UpdateWorkoutRequest;
 import com.volt.workout.dto.WorkoutResponse;
 import com.volt.workout.dto.WorkoutSetResponse;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -39,6 +41,12 @@ public class WorkoutController {
     public WorkoutResponse create(@AuthenticationPrincipal UserDetails principal,
                                   @Valid @RequestBody CreateWorkoutRequest request) {
         return workoutService.create(principal.getUsername(), request);
+    }
+
+    @GetMapping("/last-sets")
+    public List<LastSetResponse> lastSets(@AuthenticationPrincipal UserDetails principal,
+                                           @RequestParam List<UUID> exerciseIds) {
+        return workoutService.getLastSets(principal.getUsername(), exerciseIds);
     }
 
     @GetMapping
