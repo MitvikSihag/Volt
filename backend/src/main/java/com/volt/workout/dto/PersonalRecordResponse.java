@@ -10,14 +10,18 @@ public record PersonalRecordResponse(
         PersonalRecordType type,
         double value,
         Instant achievedAt,
-        UUID workoutSetId
+        UUID workoutSetId,
+        Double contextWeightKg
 ) {
     public static PersonalRecordResponse from(PersonalRecord pr) {
         return new PersonalRecordResponse(
                 pr.getType(),
                 pr.getValue(),
                 pr.getAchievedAt(),
-                pr.getWorkoutSet() != null ? pr.getWorkoutSet().getId() : null
+                pr.getWorkoutSet() != null ? pr.getWorkoutSet().getId() : null,
+                pr.getType() == PersonalRecordType.MAX_REPS_AT_WEIGHT && pr.getWorkoutSet() != null
+                        ? pr.getWorkoutSet().getWeightKg()
+                        : null
         );
     }
 }

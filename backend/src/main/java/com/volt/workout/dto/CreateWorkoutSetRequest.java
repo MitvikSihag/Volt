@@ -3,6 +3,7 @@ package com.volt.workout.dto;
 import com.volt.workout.SetType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record CreateWorkoutSetRequest(
@@ -12,10 +13,13 @@ public record CreateWorkoutSetRequest(
         @Min(0)
         Integer reps,
 
+        @PositiveOrZero
         Double weightKg,
 
+        @PositiveOrZero
         Integer durationSeconds,
 
+        @PositiveOrZero
         Double distanceMeters,
 
         @Min(1) @Max(10)

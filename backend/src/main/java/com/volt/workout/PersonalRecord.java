@@ -36,7 +36,7 @@ public class PersonalRecord extends BaseEntity {
     @Column(nullable = false, length = 20)
     private PersonalRecordType type;
 
-    @Column(nullable = false)
+    @Column(name = "record_value", nullable = false)
     private double value;
 
     @Column(nullable = false)

@@ -48,4 +48,15 @@ public interface WorkoutSetRepository extends JpaRepository<WorkoutSet, UUID> {
             ORDER BY e.id ASC, s.setOrder DESC
             """)
     List<WorkoutSet> findLastSetsForExercises(List<UUID> exerciseIds, User user);
+
+    @Query("""
+            SELECT s FROM WorkoutSet s
+            JOIN FETCH s.exercise
+            JOIN FETCH s.workout
+            WHERE s.exercise.id = :exerciseId
+              AND s.workout.user = :user
+              AND s.workout.deletedAt IS NULL
+            ORDER BY s.workout.startedAt DESC, s.setOrder ASC
+            """)
+    List<WorkoutSet> findAllByExerciseAndUser(UUID exerciseId, User user);
 }

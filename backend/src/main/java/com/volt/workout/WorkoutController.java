@@ -8,6 +8,7 @@ import com.volt.workout.dto.LastSetResponse;
 import com.volt.workout.dto.UpdateWorkoutRequest;
 import com.volt.workout.dto.WorkoutResponse;
 import com.volt.workout.dto.WorkoutSetResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/workouts")
+@SecurityRequirement(name = "bearerAuth")
 public class WorkoutController {
 
     private final WorkoutService workoutService;

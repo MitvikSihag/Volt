@@ -5,6 +5,8 @@ import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
 import com.volt.user.dto.UserStatsResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,17 +43,20 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public UserSelfResponse getSelf(@AuthenticationPrincipal UserDetails principal) {
         return userService.getSelf(principal.getUsername());
     }
 
     @PatchMapping("/me")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public UserSelfResponse updateProfile(@AuthenticationPrincipal UserDetails principal,
                                           @Valid @RequestBody UpdateProfileRequest request) {
         return userService.updateProfile(principal.getUsername(), request);
     }
 
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public UserSelfResponse uploadAvatar(@AuthenticationPrincipal UserDetails principal,
                                          @RequestPart("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -67,6 +72,7 @@ public class UserController {
     }
 
     @GetMapping("/me/stats")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public UserStatsResponse getStats(@AuthenticationPrincipal UserDetails principal) {
         return userService.getStats(principal.getUsername());
     }

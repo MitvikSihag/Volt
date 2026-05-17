@@ -20,8 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -49,6 +54,7 @@ public class WorkoutService {
 
     public WorkoutResponse create(String username, CreateWorkoutRequest request) {
         User user = getUser(username);
+        validateWorkoutTimes(request.startedAt(), request.completedAt());
 
         Workout workout = new Workout();
         workout.setUser(user);
@@ -73,9 +79,10 @@ public class WorkoutService {
         Workout saved = workoutRepository.save(workout);
 
         if (request.exercises() != null) {
-            for (WorkoutSet s : saved.getSets()) {
-                checkAndUpdatePr(user, s);
-            }
+            saved.getSets().stream()
+                    .map(WorkoutSet::getExercise)
+                    .collect(Collectors.toCollection(HashSet::new))
+                    .forEach(exercise -> recomputePersonalRecords(user, exercise));
         }
 
         return WorkoutResponse.from(saved);
@@ -103,7 +110,10 @@ public class WorkoutService {
 
         if (request.title() != null) workout.setTitle(request.title());
         if (request.notes() != null) workout.setNotes(request.notes());
-        if (request.completedAt() != null) workout.setCompletedAt(request.completedAt());
+        if (request.completedAt() != null) {
+            validateWorkoutTimes(workout.getStartedAt(), request.completedAt());
+            workout.setCompletedAt(request.completedAt());
+        }
 
         return WorkoutResponse.from(workoutRepository.save(workout));
     }
@@ -113,6 +123,11 @@ public class WorkoutService {
         assertOwner(username, workout);
         workout.setDeletedAt(Instant.now());
         workoutRepository.save(workout);
+
+        workout.getSets().stream()
+                .map(WorkoutSet::getExercise)
+                .collect(Collectors.toCollection(HashSet::new))
+                .forEach(exercise -> recomputePersonalRecords(workout.getUser(), exercise));
     }
 
     public WorkoutSetResponse addSet(String username, UUID workoutId, AddSetRequest request) {
@@ -131,7 +146,7 @@ public class WorkoutService {
         workoutRepository.save(workout);
 
         WorkoutSet saved = workout.getSets().get(workout.getSets().size() - 1);
-        checkAndUpdatePr(workout.getUser(), saved);
+        recomputePersonalRecords(workout.getUser(), saved.getExercise());
 
         return WorkoutSetResponse.from(saved);
     }
@@ -146,7 +161,7 @@ public class WorkoutService {
                 request.durationSeconds(), request.distanceMeters(), request.rpe(), request.notes());
 
         workoutRepository.save(workout);
-        checkAndUpdatePr(workout.getUser(), set);
+        recomputePersonalRecords(workout.getUser(), set.getExercise());
 
         return WorkoutSetResponse.from(set);
     }
@@ -156,10 +171,13 @@ public class WorkoutService {
         assertOwner(username, workout);
 
         WorkoutSet set = findSet(workout, setId);
+        clearPrReferences(set);
+        Exercise exercise = set.getExercise();
         workout.getSets().remove(set);
 
         reorderSets(workout.getSets());
         workoutRepository.save(workout);
+        recomputePersonalRecords(workout.getUser(), exercise);
     }
 
     @Transactional(readOnly = true)
@@ -197,57 +215,6 @@ public class WorkoutService {
                 .stream().map(PersonalRecordResponse::from).toList();
     }
 
-    private void checkAndUpdatePr(User user, WorkoutSet set) {
-        Exercise exercise = set.getExercise();
-
-        if (set.getWeightKg() != null && set.getWeightKg() > 0) {
-            updatePr(user, exercise, PersonalRecordType.MAX_WEIGHT, set.getWeightKg(), set);
-        }
-
-        if (set.getReps() != null && set.getReps() > 0 && set.getWeightKg() != null && set.getWeightKg() > 0) {
-            double epley = set.getWeightKg() * (1 + set.getReps() / 30.0);
-            updatePr(user, exercise, PersonalRecordType.ONE_REP_MAX, epley, set);
-        }
-
-        double workoutVolume = set.getWorkout().getSets().stream()
-                .filter(s -> s.getExercise().getId().equals(exercise.getId())
-                        && s.getReps() != null && s.getWeightKg() != null)
-                .mapToDouble(s -> s.getReps() * s.getWeightKg())
-                .sum();
-        if (workoutVolume > 0) {
-            updatePr(user, exercise, PersonalRecordType.MAX_VOLUME, workoutVolume, set);
-        }
-
-        if (set.getReps() != null && set.getReps() > 0) {
-            updatePr(user, exercise, PersonalRecordType.MAX_REPS_AT_WEIGHT,
-                    set.getReps().doubleValue(), set);
-        }
-    }
-
-    private void updatePr(User user, Exercise exercise, PersonalRecordType type,
-                           double newValue, WorkoutSet set) {
-        prRepository.findByUserAndExerciseAndType(user, exercise, type).ifPresentOrElse(
-                pr -> {
-                    if (newValue > pr.getValue()) {
-                        pr.setValue(newValue);
-                        pr.setAchievedAt(set.getWorkout().getStartedAt());
-                        pr.setWorkoutSet(set);
-                        prRepository.save(pr);
-                    }
-                },
-                () -> {
-                    PersonalRecord pr = new PersonalRecord();
-                    pr.setUser(user);
-                    pr.setExercise(exercise);
-                    pr.setType(type);
-                    pr.setValue(newValue);
-                    pr.setAchievedAt(set.getWorkout().getStartedAt());
-                    pr.setWorkoutSet(set);
-                    prRepository.save(pr);
-                }
-        );
-    }
-
     private WorkoutSet buildSet(Workout workout, Exercise exercise, int order,
                                  SetType setType, Integer reps, Double weightKg,
                                  Integer durationSeconds, Double distanceMeters,
@@ -275,6 +242,92 @@ public class WorkoutService {
     private void reorderSets(List<WorkoutSet> sets) {
         for (int i = 0; i < sets.size(); i++) {
             sets.get(i).setSetOrder(i);
+        }
+    }
+
+    private void recomputePersonalRecords(User user, Exercise exercise) {
+        List<WorkoutSet> sets = workoutSetRepository.findAllByExerciseAndUser(exercise.getId(), user);
+        List<PersonalRecord> existing = prRepository.findByUserAndExercise(user, exercise);
+        Map<PersonalRecordType, PersonalRecord> existingByType = existing.stream()
+                .collect(Collectors.toMap(PersonalRecord::getType, pr -> pr, (left, ignored) -> left,
+                        () -> new EnumMap<>(PersonalRecordType.class)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_WEIGHT,
+                sets.stream()
+                        .filter(s -> s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparing(WorkoutSet::getWeightKg))
+                        .map(set -> new PrComputation(set.getWeightKg(), set.getWorkout().getStartedAt(), set)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.ONE_REP_MAX,
+                sets.stream()
+                        .filter(s -> s.getReps() != null && s.getReps() > 0
+                                && s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparingDouble(
+                                s -> s.getWeightKg() * (1 + s.getReps() / 30.0)))
+                        .map(set -> new PrComputation(
+                                set.getWeightKg() * (1 + set.getReps() / 30.0),
+                                set.getWorkout().getStartedAt(),
+                                set)));
+
+        Map<Workout, List<WorkoutSet>> setsByWorkout = sets.stream()
+                .collect(Collectors.groupingBy(WorkoutSet::getWorkout));
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_VOLUME,
+                setsByWorkout.entrySet().stream()
+                        .map(entry -> {
+                            double volume = entry.getValue().stream()
+                                    .filter(s -> s.getReps() != null && s.getWeightKg() != null)
+                                    .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                                    .sum();
+                            WorkoutSet representativeSet = entry.getValue().stream()
+                                    .max(Comparator.comparingInt(WorkoutSet::getSetOrder))
+                                    .orElse(null);
+                            return volume > 0 && representativeSet != null
+                                    ? new PrComputation(volume, entry.getKey().getStartedAt(), representativeSet)
+                                    : null;
+                        })
+                        .filter(computation -> computation != null)
+                        .max(Comparator.comparingDouble(PrComputation::value)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_REPS_AT_WEIGHT,
+                sets.stream()
+                        .filter(s -> s.getReps() != null && s.getReps() > 0
+                                && s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparingInt(WorkoutSet::getReps)
+                                .thenComparingDouble(WorkoutSet::getWeightKg))
+                        .map(set -> new PrComputation(set.getReps(), set.getWorkout().getStartedAt(), set)));
+    }
+
+    private void syncPr(Map<PersonalRecordType, PersonalRecord> existingByType,
+                        User user,
+                        Exercise exercise,
+                        PersonalRecordType type,
+                        Optional<PrComputation> computation) {
+        PersonalRecord current = existingByType.get(type);
+        if (computation.isEmpty()) {
+            if (current != null) {
+                prRepository.delete(current);
+            }
+            return;
+        }
+
+        PrComputation result = computation.get();
+        PersonalRecord pr = current != null ? current : new PersonalRecord();
+        pr.setUser(user);
+        pr.setExercise(exercise);
+        pr.setType(type);
+        pr.setValue(result.value());
+        pr.setAchievedAt(result.achievedAt());
+        pr.setWorkoutSet(result.workoutSet());
+        prRepository.save(pr);
+    }
+
+    private void clearPrReferences(WorkoutSet set) {
+        prRepository.findByWorkoutSet(set).forEach(pr -> pr.setWorkoutSet(null));
+    }
+
+    private void validateWorkoutTimes(Instant startedAt, Instant completedAt) {
+        if (completedAt != null && completedAt.isBefore(startedAt)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Workout completedAt cannot be before startedAt");
         }
     }
 
@@ -314,4 +367,6 @@ public class WorkoutService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
+
+    private record PrComputation(double value, Instant achievedAt, WorkoutSet workoutSet) {}
 }
