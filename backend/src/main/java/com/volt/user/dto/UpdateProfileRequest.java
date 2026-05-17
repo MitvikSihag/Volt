@@ -1,6 +1,7 @@
 package com.volt.user.dto;
 
 import com.volt.user.Gender;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -17,7 +18,9 @@ public record UpdateProfileRequest(
 
         Gender gender,
 
+        @Positive
         Integer heightCm,
 
+        @Positive
         Double weightKg
 ) {}

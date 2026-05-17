@@ -1,0 +1,372 @@
+package com.volt.workout;
+
+import com.volt.common.dto.PageResponse;
+import com.volt.common.exception.ApiException;
+import com.volt.common.exception.ResourceNotFoundException;
+import com.volt.user.User;
+import com.volt.user.UserRepository;
+import com.volt.workout.dto.AddSetRequest;
+import com.volt.workout.dto.CreateWorkoutExerciseRequest;
+import com.volt.workout.dto.CreateWorkoutRequest;
+import com.volt.workout.dto.CreateWorkoutSetRequest;
+import com.volt.workout.dto.LastSetResponse;
+import com.volt.workout.dto.PersonalRecordResponse;
+import com.volt.workout.dto.UpdateWorkoutRequest;
+import com.volt.workout.dto.WorkoutResponse;
+import com.volt.workout.dto.WorkoutSetResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class WorkoutService {
+
+    private final WorkoutRepository workoutRepository;
+    private final WorkoutSetRepository workoutSetRepository;
+    private final ExerciseRepository exerciseRepository;
+    private final PersonalRecordRepository prRepository;
+    private final UserRepository userRepository;
+
+    public WorkoutService(WorkoutRepository workoutRepository,
+                          WorkoutSetRepository workoutSetRepository,
+                          ExerciseRepository exerciseRepository,
+                          PersonalRecordRepository prRepository,
+                          UserRepository userRepository) {
+        this.workoutRepository = workoutRepository;
+        this.workoutSetRepository = workoutSetRepository;
+        this.exerciseRepository = exerciseRepository;
+        this.prRepository = prRepository;
+        this.userRepository = userRepository;
+    }
+
+    public WorkoutResponse create(String username, CreateWorkoutRequest request) {
+        User user = getUser(username);
+        validateWorkoutTimes(request.startedAt(), request.completedAt());
+
+        Workout workout = new Workout();
+        workout.setUser(user);
+        workout.setTitle(request.title());
+        workout.setNotes(request.notes());
+        workout.setStartedAt(request.startedAt());
+        workout.setCompletedAt(request.completedAt());
+
+        if (request.exercises() != null) {
+            int order = 0;
+            for (CreateWorkoutExerciseRequest exerciseReq : request.exercises()) {
+                Exercise exercise = findAccessibleExercise(username, exerciseReq.exerciseId());
+                for (CreateWorkoutSetRequest setReq : exerciseReq.sets()) {
+                    WorkoutSet set = buildSet(workout, exercise, order++, setReq.setType(),
+                            setReq.reps(), setReq.weightKg(), setReq.durationSeconds(),
+                            setReq.distanceMeters(), setReq.rpe(), setReq.notes());
+                    workout.getSets().add(set);
+                }
+            }
+        }
+
+        Workout saved = workoutRepository.save(workout);
+
+        if (request.exercises() != null) {
+            saved.getSets().stream()
+                    .map(WorkoutSet::getExercise)
+                    .collect(Collectors.toCollection(HashSet::new))
+                    .forEach(exercise -> recomputePersonalRecords(user, exercise));
+        }
+
+        return WorkoutResponse.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<WorkoutResponse> list(String username, int page, int size) {
+        User user = getUser(username);
+        return PageResponse.from(
+                workoutRepository.findByUserAndDeletedAtIsNullOrderByStartedAtDesc(
+                        user, PageRequest.of(page, size))
+                        .map(WorkoutResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public WorkoutResponse getById(String username, UUID id) {
+        Workout workout = findActive(id);
+        assertOwner(username, workout);
+        return WorkoutResponse.from(workout);
+    }
+
+    public WorkoutResponse update(String username, UUID id, UpdateWorkoutRequest request) {
+        Workout workout = findActive(id);
+        assertOwner(username, workout);
+
+        if (request.title() != null) workout.setTitle(request.title());
+        if (request.notes() != null) workout.setNotes(request.notes());
+        if (request.completedAt() != null) {
+            validateWorkoutTimes(workout.getStartedAt(), request.completedAt());
+            workout.setCompletedAt(request.completedAt());
+        }
+
+        return WorkoutResponse.from(workoutRepository.save(workout));
+    }
+
+    public void delete(String username, UUID id) {
+        Workout workout = findActive(id);
+        assertOwner(username, workout);
+        workout.setDeletedAt(Instant.now());
+        workoutRepository.save(workout);
+
+        workout.getSets().stream()
+                .map(WorkoutSet::getExercise)
+                .collect(Collectors.toCollection(HashSet::new))
+                .forEach(exercise -> recomputePersonalRecords(workout.getUser(), exercise));
+    }
+
+    public WorkoutSetResponse addSet(String username, UUID workoutId, AddSetRequest request) {
+        Workout workout = findActive(workoutId);
+        assertOwner(username, workout);
+
+        Exercise exercise = findAccessibleExercise(username, request.exerciseId());
+        int order = workout.getSets().size();
+
+        WorkoutSet set = buildSet(workout, exercise, order,
+                request.setType(), request.reps(), request.weightKg(),
+                request.durationSeconds(), request.distanceMeters(),
+                request.rpe(), request.notes());
+
+        workout.getSets().add(set);
+        workoutRepository.save(workout);
+
+        WorkoutSet saved = workout.getSets().get(workout.getSets().size() - 1);
+        recomputePersonalRecords(workout.getUser(), saved.getExercise());
+
+        return WorkoutSetResponse.from(saved);
+    }
+
+    public WorkoutSetResponse updateSet(String username, UUID workoutId, UUID setId,
+                                        com.volt.workout.dto.CreateWorkoutSetRequest request) {
+        Workout workout = findActive(workoutId);
+        assertOwner(username, workout);
+
+        WorkoutSet set = findSet(workout, setId);
+        applySetFields(set, request.setType(), request.reps(), request.weightKg(),
+                request.durationSeconds(), request.distanceMeters(), request.rpe(), request.notes());
+
+        workoutRepository.save(workout);
+        recomputePersonalRecords(workout.getUser(), set.getExercise());
+
+        return WorkoutSetResponse.from(set);
+    }
+
+    public void removeSet(String username, UUID workoutId, UUID setId) {
+        Workout workout = findActive(workoutId);
+        assertOwner(username, workout);
+
+        WorkoutSet set = findSet(workout, setId);
+        clearPrReferences(set);
+        Exercise exercise = set.getExercise();
+        workout.getSets().remove(set);
+
+        reorderSets(workout.getSets());
+        workoutRepository.save(workout);
+        recomputePersonalRecords(workout.getUser(), exercise);
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkoutSetResponse> getExerciseHistory(String username, UUID exerciseId,
+                                                        int page, int size) {
+        User user = getUser(username);
+        Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
+        return workoutSetRepository
+                .findHistoryByExerciseAndUser(exercise.getId(), user, PageRequest.of(page, size))
+                .stream().map(WorkoutSetResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LastSetResponse> getLastSets(String username, List<UUID> exerciseIds) {
+        if (exerciseIds == null || exerciseIds.isEmpty()) return List.of();
+        User user = getUser(username);
+        return workoutSetRepository.findLastSetsForExercises(exerciseIds, user)
+                .stream()
+                .collect(Collectors.toMap(
+                        s -> s.getExercise().getId(),
+                        s -> s,
+                        (existing, ignored) -> existing,  // keep first = highest setOrder
+                        LinkedHashMap::new
+                ))
+                .entrySet().stream()
+                .map(e -> LastSetResponse.from(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PersonalRecordResponse> getPersonalRecords(String username, UUID exerciseId) {
+        User user = getUser(username);
+        Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
+        return prRepository.findByUserAndExercise(user, exercise)
+                .stream().map(PersonalRecordResponse::from).toList();
+    }
+
+    private WorkoutSet buildSet(Workout workout, Exercise exercise, int order,
+                                 SetType setType, Integer reps, Double weightKg,
+                                 Integer durationSeconds, Double distanceMeters,
+                                 Integer rpe, String notes) {
+        WorkoutSet set = new WorkoutSet();
+        set.setWorkout(workout);
+        set.setExercise(exercise);
+        set.setSetOrder(order);
+        applySetFields(set, setType, reps, weightKg, durationSeconds, distanceMeters, rpe, notes);
+        return set;
+    }
+
+    private void applySetFields(WorkoutSet set, SetType setType, Integer reps, Double weightKg,
+                                 Integer durationSeconds, Double distanceMeters,
+                                 Integer rpe, String notes) {
+        if (setType != null) set.setSetType(setType);
+        if (reps != null) set.setReps(reps);
+        if (weightKg != null) set.setWeightKg(weightKg);
+        if (durationSeconds != null) set.setDurationSeconds(durationSeconds);
+        if (distanceMeters != null) set.setDistanceMeters(distanceMeters);
+        if (rpe != null) set.setRpe(rpe);
+        if (notes != null) set.setNotes(notes);
+    }
+
+    private void reorderSets(List<WorkoutSet> sets) {
+        for (int i = 0; i < sets.size(); i++) {
+            sets.get(i).setSetOrder(i);
+        }
+    }
+
+    private void recomputePersonalRecords(User user, Exercise exercise) {
+        List<WorkoutSet> sets = workoutSetRepository.findAllByExerciseAndUser(exercise.getId(), user);
+        List<PersonalRecord> existing = prRepository.findByUserAndExercise(user, exercise);
+        Map<PersonalRecordType, PersonalRecord> existingByType = existing.stream()
+                .collect(Collectors.toMap(PersonalRecord::getType, pr -> pr, (left, ignored) -> left,
+                        () -> new EnumMap<>(PersonalRecordType.class)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_WEIGHT,
+                sets.stream()
+                        .filter(s -> s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparing(WorkoutSet::getWeightKg))
+                        .map(set -> new PrComputation(set.getWeightKg(), set.getWorkout().getStartedAt(), set)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.ONE_REP_MAX,
+                sets.stream()
+                        .filter(s -> s.getReps() != null && s.getReps() > 0
+                                && s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparingDouble(
+                                s -> s.getWeightKg() * (1 + s.getReps() / 30.0)))
+                        .map(set -> new PrComputation(
+                                set.getWeightKg() * (1 + set.getReps() / 30.0),
+                                set.getWorkout().getStartedAt(),
+                                set)));
+
+        Map<Workout, List<WorkoutSet>> setsByWorkout = sets.stream()
+                .collect(Collectors.groupingBy(WorkoutSet::getWorkout));
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_VOLUME,
+                setsByWorkout.entrySet().stream()
+                        .map(entry -> {
+                            double volume = entry.getValue().stream()
+                                    .filter(s -> s.getReps() != null && s.getWeightKg() != null)
+                                    .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                                    .sum();
+                            WorkoutSet representativeSet = entry.getValue().stream()
+                                    .max(Comparator.comparingInt(WorkoutSet::getSetOrder))
+                                    .orElse(null);
+                            return volume > 0 && representativeSet != null
+                                    ? new PrComputation(volume, entry.getKey().getStartedAt(), representativeSet)
+                                    : null;
+                        })
+                        .filter(computation -> computation != null)
+                        .max(Comparator.comparingDouble(PrComputation::value)));
+
+        syncPr(existingByType, user, exercise, PersonalRecordType.MAX_REPS_AT_WEIGHT,
+                sets.stream()
+                        .filter(s -> s.getReps() != null && s.getReps() > 0
+                                && s.getWeightKg() != null && s.getWeightKg() > 0)
+                        .max(Comparator.comparingInt(WorkoutSet::getReps)
+                                .thenComparingDouble(WorkoutSet::getWeightKg))
+                        .map(set -> new PrComputation(set.getReps(), set.getWorkout().getStartedAt(), set)));
+    }
+
+    private void syncPr(Map<PersonalRecordType, PersonalRecord> existingByType,
+                        User user,
+                        Exercise exercise,
+                        PersonalRecordType type,
+                        Optional<PrComputation> computation) {
+        PersonalRecord current = existingByType.get(type);
+        if (computation.isEmpty()) {
+            if (current != null) {
+                prRepository.delete(current);
+            }
+            return;
+        }
+
+        PrComputation result = computation.get();
+        PersonalRecord pr = current != null ? current : new PersonalRecord();
+        pr.setUser(user);
+        pr.setExercise(exercise);
+        pr.setType(type);
+        pr.setValue(result.value());
+        pr.setAchievedAt(result.achievedAt());
+        pr.setWorkoutSet(result.workoutSet());
+        prRepository.save(pr);
+    }
+
+    private void clearPrReferences(WorkoutSet set) {
+        prRepository.findByWorkoutSet(set).forEach(pr -> pr.setWorkoutSet(null));
+    }
+
+    private void validateWorkoutTimes(Instant startedAt, Instant completedAt) {
+        if (completedAt != null && completedAt.isBefore(startedAt)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Workout completedAt cannot be before startedAt");
+        }
+    }
+
+    private WorkoutSet findSet(Workout workout, UUID setId) {
+        return workout.getSets().stream()
+                .filter(s -> s.getId().equals(setId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Set not found"));
+    }
+
+    private Workout findActive(UUID id) {
+        return workoutRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Workout not found"));
+    }
+
+    private Exercise findAccessibleExercise(String username, UUID exerciseId) {
+        return findAccessibleExerciseEntity(username, exerciseId);
+    }
+
+    private Exercise findAccessibleExerciseEntity(String username, UUID exerciseId) {
+        Exercise exercise = exerciseRepository.findByIdAndDeletedAtIsNull(exerciseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exercise not found"));
+        if (!exercise.isSystem() && (exercise.getCreatedBy() == null
+                || !exercise.getCreatedBy().getUsername().equals(username))) {
+            throw new ResourceNotFoundException("Exercise not found");
+        }
+        return exercise;
+    }
+
+    private void assertOwner(String username, Workout workout) {
+        if (!workout.getUser().getUsername().equals(username)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+    }
+
+    private User getUser(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private record PrComputation(double value, Instant achievedAt, WorkoutSet workoutSet) {}
+}
