@@ -1,0 +1,1618 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost
+  description: Generated server url
+paths:
+  /api/exercises/{id}:
+    get:
+      tags:
+      - exercise-controller
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ExerciseResponse"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - exercise-controller
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateExerciseRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ExerciseResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - exercise-controller
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+  /api/workouts:
+    get:
+      tags:
+      - workout-controller
+      operationId: list
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseWorkoutResponse"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - workout-controller
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkoutRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutResponse"
+      security:
+      - bearerAuth: []
+  /api/workouts/{id}/sets:
+    post:
+      tags:
+      - workout-controller
+      operationId: addSet
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddSetRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutSetResponse"
+      security:
+      - bearerAuth: []
+  /api/users/me/avatar:
+    post:
+      tags:
+      - user-controller
+      operationId: uploadAvatar
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserSelfResponse"
+      security:
+      - bearerAuth: []
+  /api/exercises:
+    get:
+      tags:
+      - exercise-controller
+      operationId: list_1
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: muscle
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - CHEST
+          - BACK
+          - SHOULDERS
+          - BICEPS
+          - TRICEPS
+          - QUADRICEPS
+          - HAMSTRINGS
+          - GLUTES
+          - CALVES
+          - CORE
+          - FOREARMS
+          - FULL_BODY
+      - name: equipment
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - BARBELL
+          - DUMBBELL
+          - MACHINE
+          - CABLE
+          - BODYWEIGHT
+          - KETTLEBELL
+          - RESISTANCE_BAND
+          - OTHER
+      - name: movement
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - COMPOUND
+          - ISOLATION
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExerciseResponse"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - exercise-controller
+      operationId: create_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExerciseRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ExerciseResponse"
+      security:
+      - bearerAuth: []
+  /api/auth/register:
+    post:
+      tags:
+      - auth-controller
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/refresh:
+    post:
+      tags:
+      - auth-controller
+      operationId: refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/logout:
+    post:
+      tags:
+      - auth-controller
+      operationId: logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/auth/login:
+    post:
+      tags:
+      - auth-controller
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/activities:
+    get:
+      tags:
+      - activity-controller
+      operationId: list_2
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseActivityListItemResponse"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - activity-controller
+      operationId: create_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActivityRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ActivityDetailResponse"
+      security:
+      - bearerAuth: []
+  /api/workouts/{id}:
+    get:
+      tags:
+      - workout-controller
+      operationId: getById_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - workout-controller
+      operationId: delete_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - workout-controller
+      operationId: update_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkoutRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutResponse"
+      security:
+      - bearerAuth: []
+  /api/workouts/{id}/sets/{setId}:
+    delete:
+      tags:
+      - workout-controller
+      operationId: removeSet
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: setId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - workout-controller
+      operationId: updateSet
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: setId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkoutSetRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutSetResponse"
+      security:
+      - bearerAuth: []
+  /api/users/me:
+    get:
+      tags:
+      - user-controller
+      operationId: getSelf
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserSelfResponse"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - user-controller
+      operationId: updateProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserSelfResponse"
+      security:
+      - bearerAuth: []
+  /api/activities/{id}:
+    get:
+      tags:
+      - activity-controller
+      operationId: getById_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ActivityDetailResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - activity-controller
+      operationId: delete_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - activity-controller
+      operationId: update_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActivityRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ActivityDetailResponse"
+      security:
+      - bearerAuth: []
+  /api/workouts/last-sets:
+    get:
+      tags:
+      - workout-controller
+      operationId: lastSets
+      parameters:
+      - name: exerciseIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LastSetResponse"
+      security:
+      - bearerAuth: []
+  /api/users/{username}:
+    get:
+      tags:
+      - user-controller
+      operationId: getProfile
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserProfileResponse"
+  /api/users/me/stats:
+    get:
+      tags:
+      - user-controller
+      operationId: getStats
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserStatsResponse"
+      security:
+      - bearerAuth: []
+  /api/exercises/{id}/records:
+    get:
+      tags:
+      - exercise-controller
+      operationId: records
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PersonalRecordResponse"
+      security:
+      - bearerAuth: []
+  /api/exercises/{id}/history:
+    get:
+      tags:
+      - exercise-controller
+      operationId: history
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkoutSetResponse"
+      security:
+      - bearerAuth: []
+  /api/dashboard:
+    get:
+      tags:
+      - dashboard-controller
+      operationId: get
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    UpdateExerciseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 0
+        description:
+          type: string
+          maxLength: 500
+          minLength: 0
+        primaryMuscleGroup:
+          type: string
+          enum:
+          - CHEST
+          - BACK
+          - SHOULDERS
+          - BICEPS
+          - TRICEPS
+          - QUADRICEPS
+          - HAMSTRINGS
+          - GLUTES
+          - CALVES
+          - CORE
+          - FOREARMS
+          - FULL_BODY
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum:
+            - CHEST
+            - BACK
+            - SHOULDERS
+            - BICEPS
+            - TRICEPS
+            - QUADRICEPS
+            - HAMSTRINGS
+            - GLUTES
+            - CALVES
+            - CORE
+            - FOREARMS
+            - FULL_BODY
+          uniqueItems: true
+        equipment:
+          type: string
+          enum:
+          - BARBELL
+          - DUMBBELL
+          - MACHINE
+          - CABLE
+          - BODYWEIGHT
+          - KETTLEBELL
+          - RESISTANCE_BAND
+          - OTHER
+        movementType:
+          type: string
+          enum:
+          - COMPOUND
+          - ISOLATION
+    ExerciseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        primaryMuscleGroup:
+          type: string
+          enum:
+          - CHEST
+          - BACK
+          - SHOULDERS
+          - BICEPS
+          - TRICEPS
+          - QUADRICEPS
+          - HAMSTRINGS
+          - GLUTES
+          - CALVES
+          - CORE
+          - FOREARMS
+          - FULL_BODY
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum:
+            - CHEST
+            - BACK
+            - SHOULDERS
+            - BICEPS
+            - TRICEPS
+            - QUADRICEPS
+            - HAMSTRINGS
+            - GLUTES
+            - CALVES
+            - CORE
+            - FOREARMS
+            - FULL_BODY
+          uniqueItems: true
+        equipment:
+          type: string
+          enum:
+          - BARBELL
+          - DUMBBELL
+          - MACHINE
+          - CABLE
+          - BODYWEIGHT
+          - KETTLEBELL
+          - RESISTANCE_BAND
+          - OTHER
+        movementType:
+          type: string
+          enum:
+          - COMPOUND
+          - ISOLATION
+        system:
+          type: boolean
+    CreateWorkoutExerciseRequest:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateWorkoutSetRequest"
+          minItems: 1
+      required:
+      - exerciseId
+      - sets
+    CreateWorkoutRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateWorkoutExerciseRequest"
+      required:
+      - startedAt
+    CreateWorkoutSetRequest:
+      type: object
+      properties:
+        setType:
+          type: string
+          enum:
+          - NORMAL
+          - WARMUP
+          - DROP_SET
+          - FAILURE
+        reps:
+          type: integer
+          format: int32
+          minimum: 0
+        weightKg:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        rpe:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
+        notes:
+          type: string
+          maxLength: 300
+          minLength: 0
+    WorkoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        notes:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        inProgress:
+          type: boolean
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutSetResponse"
+        createdAt:
+          type: string
+          format: date-time
+    WorkoutSetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type: string
+        setOrder:
+          type: integer
+          format: int32
+        setType:
+          type: string
+          enum:
+          - NORMAL
+          - WARMUP
+          - DROP_SET
+          - FAILURE
+        reps:
+          type: integer
+          format: int32
+        weightKg:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        rpe:
+          type: integer
+          format: int32
+        notes:
+          type: string
+    AddSetRequest:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        setType:
+          type: string
+          enum:
+          - NORMAL
+          - WARMUP
+          - DROP_SET
+          - FAILURE
+        reps:
+          type: integer
+          format: int32
+          minimum: 0
+        weightKg:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        rpe:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
+        notes:
+          type: string
+          maxLength: 300
+          minLength: 0
+      required:
+      - exerciseId
+    UserSelfResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: string
+        profilePictureUrl:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+          - OTHER
+          - PREFER_NOT_TO_SAY
+        heightCm:
+          type: integer
+          format: int32
+        weightKg:
+          type: number
+          format: double
+        joinedAt:
+          type: string
+          format: date-time
+    CreateExerciseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 0
+        description:
+          type: string
+          maxLength: 500
+          minLength: 0
+        primaryMuscleGroup:
+          type: string
+          enum:
+          - CHEST
+          - BACK
+          - SHOULDERS
+          - BICEPS
+          - TRICEPS
+          - QUADRICEPS
+          - HAMSTRINGS
+          - GLUTES
+          - CALVES
+          - CORE
+          - FOREARMS
+          - FULL_BODY
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum:
+            - CHEST
+            - BACK
+            - SHOULDERS
+            - BICEPS
+            - TRICEPS
+            - QUADRICEPS
+            - HAMSTRINGS
+            - GLUTES
+            - CALVES
+            - CORE
+            - FOREARMS
+            - FULL_BODY
+          uniqueItems: true
+        equipment:
+          type: string
+          enum:
+          - BARBELL
+          - DUMBBELL
+          - MACHINE
+          - CABLE
+          - BODYWEIGHT
+          - KETTLEBELL
+          - RESISTANCE_BAND
+          - OTHER
+        movementType:
+          type: string
+          enum:
+          - COMPOUND
+          - ISOLATION
+      required:
+      - equipment
+      - movementType
+      - name
+      - primaryMuscleGroup
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          maxLength: 72
+          minLength: 8
+      required:
+      - email
+      - password
+      - username
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+        expiresIn:
+          type: integer
+          format: int64
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
+      required:
+      - refreshToken
+    LoginRequest:
+      type: object
+      properties:
+        usernameOrEmail:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - password
+      - usernameOrEmail
+    ActivityLapRequest:
+      type: object
+      properties:
+        distanceMeters:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        averagePaceMinPerKm:
+          type: number
+          format: double
+        averageHeartRate:
+          type: integer
+          format: int32
+    ActivityRouteRequest:
+      type: object
+      properties:
+        encodedPolyline:
+          type: string
+          maxLength: 20000
+          minLength: 0
+        elevationData:
+          type: string
+          maxLength: 20000
+          minLength: 0
+    CreateActivityRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 0
+        type:
+          type: string
+          enum:
+          - RUN
+          - RIDE
+          - HIKE
+          - WALK
+          - SWIM
+          - ROW
+          - OTHER
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        elevationGainMeters:
+          type: number
+          format: double
+        averageHeartRate:
+          type: integer
+          format: int32
+        maxHeartRate:
+          type: integer
+          format: int32
+        calories:
+          type: integer
+          format: int32
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        route:
+          $ref: "#/components/schemas/ActivityRouteRequest"
+        laps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLapRequest"
+      required:
+      - startedAt
+      - type
+    ActivityDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum:
+          - RUN
+          - RIDE
+          - HIKE
+          - WALK
+          - SWIM
+          - ROW
+          - OTHER
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        elevationGainMeters:
+          type: number
+          format: double
+        averageHeartRate:
+          type: integer
+          format: int32
+        maxHeartRate:
+          type: integer
+          format: int32
+        calories:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        route:
+          $ref: "#/components/schemas/ActivityRouteResponse"
+        laps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLapResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ActivityLapResponse:
+      type: object
+      properties:
+        lapNumber:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        averagePaceMinPerKm:
+          type: number
+          format: double
+        averageHeartRate:
+          type: integer
+          format: int32
+    ActivityRouteResponse:
+      type: object
+      properties:
+        encodedPolyline:
+          type: string
+        elevationData:
+          type: string
+    UpdateWorkoutRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        completedAt:
+          type: string
+          format: date-time
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 50
+          minLength: 0
+        bio:
+          type: string
+          maxLength: 300
+          minLength: 0
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+          - OTHER
+          - PREFER_NOT_TO_SAY
+        heightCm:
+          type: integer
+          format: int32
+        weightKg:
+          type: number
+          format: double
+    UpdateActivityRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 0
+        type:
+          type: string
+          enum:
+          - RUN
+          - RIDE
+          - HIKE
+          - WALK
+          - SWIM
+          - ROW
+          - OTHER
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        elevationGainMeters:
+          type: number
+          format: double
+        averageHeartRate:
+          type: integer
+          format: int32
+        maxHeartRate:
+          type: integer
+          format: int32
+        calories:
+          type: integer
+          format: int32
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        route:
+          $ref: "#/components/schemas/ActivityRouteRequest"
+        laps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLapRequest"
+    PageResponseWorkoutResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    LastSetResponse:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        reps:
+          type: integer
+          format: int32
+        weightKg:
+          type: number
+          format: double
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: string
+        profilePictureUrl:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+    UserStatsResponse:
+      type: object
+      properties:
+        totalWorkouts:
+          type: integer
+          format: int64
+        totalActivities:
+          type: integer
+          format: int64
+        totalDistanceMeters:
+          type: number
+          format: double
+        totalVolumeKg:
+          type: number
+          format: double
+    PersonalRecordResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ONE_REP_MAX
+          - MAX_WEIGHT
+          - MAX_VOLUME
+          - MAX_REPS_AT_WEIGHT
+        value:
+          type: number
+          format: double
+        achievedAt:
+          type: string
+          format: date-time
+        workoutSetId:
+          type: string
+          format: uuid
+        contextWeightKg:
+          type: number
+          format: double
+    ChartPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        volumeKg:
+          type: number
+          format: double
+        distanceKm:
+          type: number
+          format: double
+    DashboardResponse:
+      type: object
+      properties:
+        week:
+          $ref: "#/components/schemas/WeekSummary"
+        trainingCalendar:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayActivity"
+        chartData:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartPoint"
+        recentPrs:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonalRecordResponse"
+    DayActivity:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        hasWorkout:
+          type: boolean
+        hasActivity:
+          type: boolean
+    WeekSummary:
+      type: object
+      properties:
+        volumeKg:
+          type: number
+          format: double
+        workouts:
+          type: integer
+          format: int32
+        distanceKm:
+          type: number
+          format: double
+        activeDays:
+          type: integer
+          format: int32
+    ActivityListItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum:
+          - RUN
+          - RIDE
+          - HIKE
+          - WALK
+          - SWIM
+          - ROW
+          - OTHER
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        durationSeconds:
+          type: integer
+          format: int32
+        distanceMeters:
+          type: number
+          format: double
+        calories:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+    PageResponseActivityListItemResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityListItemResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      in: header
+      scheme: bearer
+      bearerFormat: JWT
