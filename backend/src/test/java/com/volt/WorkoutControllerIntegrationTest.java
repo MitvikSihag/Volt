@@ -44,13 +44,16 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
                                 ))
                         ))))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.sets", hasSize(2)))
+                .andExpect(jsonPath("$.exercises", hasSize(1)))
+                .andExpect(jsonPath("$.exercises[0].sets", hasSize(2)))
+                .andExpect(jsonPath("$.exercises[0].exerciseId").value(systemExercise.getId().toString()))
+                .andExpect(jsonPath("$.exercises[0].position").value(0))
                 .andExpect(jsonPath("$.inProgress").value(false))
                 .andReturn();
 
         JsonNode createdWorkout = readBody(createResult);
         String workoutId = createdWorkout.get("id").asText();
-        String firstSetId = createdWorkout.get("sets").get(0).get("id").asText();
+        String firstSetId = createdWorkout.get("exercises").get(0).get("sets").get(0).get("id").asText();
 
         mockMvc.perform(get("/api/workouts")
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))
@@ -81,7 +84,7 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
                                 "rpe", 9
                         ))))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.setOrder").value(2));
+                .andExpect(jsonPath("$.setNumber").value(3));
 
         mockMvc.perform(patch("/api/workouts/{id}/sets/{setId}", workoutId, firstSetId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken()))
@@ -110,7 +113,7 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
         JsonNode workoutAfterAdd = readBody(mockMvc.perform(get("/api/workouts/{id}", workoutId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))
                 .andReturn());
-        String lastSetId = workoutAfterAdd.get("sets").get(2).get("id").asText();
+        String lastSetId = workoutAfterAdd.get("exercises").get(0).get("sets").get(2).get("id").asText();
 
         mockMvc.perform(delete("/api/workouts/{id}/sets/{setId}", workoutId, lastSetId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))
@@ -119,8 +122,8 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/workouts/{id}", workoutId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sets", hasSize(2)))
-                .andExpect(jsonPath("$.sets[1].setOrder").value(1));
+                .andExpect(jsonPath("$.exercises[0].sets", hasSize(2)))
+                .andExpect(jsonPath("$.exercises[0].sets[1].setNumber").value(2));
 
         mockMvc.perform(get("/api/exercises/{id}/records", systemExercise.getId())
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))

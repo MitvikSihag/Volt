@@ -14,25 +14,21 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "workout_sets", indexes = {
-        @Index(name = "idx_workout_sets_workout_id", columnList = "workout_id"),
-        @Index(name = "idx_workout_sets_exercise_id", columnList = "exercise_id")
+        @Index(name = "idx_workout_sets_workout_exercise_id", columnList = "workout_exercise_id")
 })
 public class WorkoutSet extends BaseEntity {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "workout_id", nullable = false)
-    private Workout workout;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "exercise_id", nullable = false)
-    private Exercise exercise;
+    @JoinColumn(name = "workout_exercise_id", nullable = false)
+    private WorkoutExercise workoutExercise;
 
     @Column(nullable = false)
-    private int setOrder;
+    private int setNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -58,14 +54,20 @@ public class WorkoutSet extends BaseEntity {
     @Column(length = 300)
     private String notes;
 
-    public Workout getWorkout() { return workout; }
-    public void setWorkout(Workout workout) { this.workout = workout; }
+    @Column
+    private Instant completedAt;
 
-    public Exercise getExercise() { return exercise; }
-    public void setExercise(Exercise exercise) { this.exercise = exercise; }
+    @Column(nullable = false)
+    private boolean isPr = false;
 
-    public int getSetOrder() { return setOrder; }
-    public void setSetOrder(int setOrder) { this.setOrder = setOrder; }
+    public WorkoutExercise getWorkoutExercise() { return workoutExercise; }
+    public void setWorkoutExercise(WorkoutExercise workoutExercise) { this.workoutExercise = workoutExercise; }
+
+    public Exercise getExercise() { return workoutExercise.getExercise(); }
+    public Workout getWorkout() { return workoutExercise.getWorkout(); }
+
+    public int getSetNumber() { return setNumber; }
+    public void setSetNumber(int setNumber) { this.setNumber = setNumber; }
 
     public SetType getSetType() { return setType; }
     public void setSetType(SetType setType) { this.setType = setType; }
@@ -87,4 +89,10 @@ public class WorkoutSet extends BaseEntity {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public Instant getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+
+    public boolean isPr() { return isPr; }
+    public void setPr(boolean isPr) { this.isPr = isPr; }
 }

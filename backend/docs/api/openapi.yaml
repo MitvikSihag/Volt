@@ -840,6 +840,13 @@ components:
         exerciseId:
           type: string
           format: uuid
+        notes:
+          type: string
+          maxLength: 300
+          minLength: 0
+        restSeconds:
+          type: integer
+          format: int32
         sets:
           type: array
           items:
@@ -903,6 +910,32 @@ components:
           type: string
           maxLength: 300
           minLength: 0
+        completedAt:
+          type: string
+          format: date-time
+    WorkoutExerciseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type: string
+        position:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        restSeconds:
+          type: integer
+          format: int32
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutSetResponse"
     WorkoutResponse:
       type: object
       properties:
@@ -921,10 +954,13 @@ components:
           format: date-time
         inProgress:
           type: boolean
-        sets:
+        totalVolumeKg:
+          type: number
+          format: double
+        exercises:
           type: array
           items:
-            $ref: "#/components/schemas/WorkoutSetResponse"
+            $ref: "#/components/schemas/WorkoutExerciseResponse"
         createdAt:
           type: string
           format: date-time
@@ -939,7 +975,7 @@ components:
           format: uuid
         exerciseName:
           type: string
-        setOrder:
+        setNumber:
           type: integer
           format: int32
         setType:
@@ -966,6 +1002,11 @@ components:
           format: int32
         notes:
           type: string
+        completedAt:
+          type: string
+          format: date-time
+        isPr:
+          type: boolean
     AddSetRequest:
       type: object
       properties:

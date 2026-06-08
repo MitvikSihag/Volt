@@ -46,8 +46,8 @@ public class Workout extends BaseEntity {
     private Instant completedAt;
 
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("setOrder ASC")
-    private List<WorkoutSet> sets = new ArrayList<>();
+    @OrderBy("position ASC")
+    private List<WorkoutExercise> exercises = new ArrayList<>();
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
@@ -64,7 +64,13 @@ public class Workout extends BaseEntity {
     public Instant getCompletedAt() { return completedAt; }
     public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
 
-    public List<WorkoutSet> getSets() { return sets; }
+    public List<WorkoutExercise> getExercises() { return exercises; }
+
+    public List<WorkoutSet> getAllSets() {
+        return exercises.stream()
+                .flatMap(e -> e.getSets().stream())
+                .toList();
+    }
 
     public boolean isInProgress() { return completedAt == null; }
 }

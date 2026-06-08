@@ -55,7 +55,7 @@ public class DashboardService {
         List<Workout> weekWorkouts = workoutRepository
                 .findByUserAndStartedAtAfterAndDeletedAtIsNull(user, weekStartInstant);
         double weekVolume = weekWorkouts.stream()
-                .flatMap(w -> w.getSets().stream())
+                .flatMap(w -> w.getAllSets().stream())
                 .filter(s -> s.getReps() != null && s.getWeightKg() != null)
                 .mapToDouble(s -> s.getReps() * s.getWeightKg())
                 .sum();
@@ -70,7 +70,7 @@ public class DashboardService {
         Map<LocalDate, Double> volumeByDay = recentWorkouts.stream()
                 .collect(Collectors.groupingBy(
                         w -> w.getStartedAt().atZone(ZoneOffset.UTC).toLocalDate(),
-                        Collectors.summingDouble(w -> w.getSets().stream()
+                        Collectors.summingDouble(w -> w.getAllSets().stream()
                                 .filter(s -> s.getReps() != null && s.getWeightKg() != null)
                                 .mapToDouble(s -> s.getReps() * s.getWeightKg()).sum())));
 

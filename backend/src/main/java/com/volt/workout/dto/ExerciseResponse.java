@@ -24,7 +24,9 @@ public record ExerciseResponse(
                 e.getName(),
                 e.getDescription(),
                 e.getPrimaryMuscleGroup(),
-                e.getSecondaryMuscleGroups(),
+                e.getSecondaryMuscleGroups() == null
+                        ? Set.of()
+                        : Set.copyOf(e.getSecondaryMuscleGroups()),
                 e.getEquipment(),
                 e.getMovementType(),
                 e.isSystem()

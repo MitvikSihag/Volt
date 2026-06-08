@@ -10,6 +10,7 @@ import com.volt.user.UserRepository;
 import com.volt.workout.Exercise;
 import com.volt.workout.ExerciseRepository;
 import com.volt.workout.Workout;
+import com.volt.workout.WorkoutExercise;
 import com.volt.workout.WorkoutRepository;
 import com.volt.workout.WorkoutSet;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,13 +111,18 @@ abstract class AbstractIntegrationTest {
         workout.setStartedAt(startedAt);
         workout.setCompletedAt(completedAt);
 
+        WorkoutExercise workoutExercise = new WorkoutExercise();
+        workoutExercise.setWorkout(workout);
+        workoutExercise.setExercise(exercise);
+        workoutExercise.setPosition(0);
+
         WorkoutSet set = new WorkoutSet();
-        set.setWorkout(workout);
-        set.setExercise(exercise);
-        set.setSetOrder(0);
+        set.setWorkoutExercise(workoutExercise);
+        set.setSetNumber(1);
         set.setReps(reps);
         set.setWeightKg(weightKg);
-        workout.getSets().add(set);
+        workoutExercise.getSets().add(set);
+        workout.getExercises().add(workoutExercise);
 
         return workoutRepository.save(workout);
     }
