@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OpenApiIntegrationTest extends AbstractIntegrationTest {
 
     @Test
-    void openApiAdvertisesBearerAuthAndCurrentWorkoutPatchSchema() throws Exception {
+    void openApiAdvertisesBearerAuthAndActivityEndpoints() throws Exception {
         JsonNode docs = readBody(mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andReturn());
@@ -23,8 +23,17 @@ class OpenApiIntegrationTest extends AbstractIntegrationTest {
         assertThat(docs.path("paths").path("/api/workouts").path("get").path("security").isArray()).isTrue();
         assertThat(docs.path("paths").path("/api/workouts").path("post").path("security").isArray()).isTrue();
         assertThat(docs.path("paths").path("/api/users/me").path("get").path("security").isArray()).isTrue();
+        assertThat(docs.path("paths").path("/api/activities").path("get").path("security").isArray()).isTrue();
+        assertThat(docs.path("paths").path("/api/activities").path("post").path("security").isArray()).isTrue();
+        assertThat(docs.path("paths").path("/api/activities/{id}").path("patch").path("security").isArray()).isTrue();
+        assertThat(docs.path("paths").path("/api/activities/{id}").path("delete").path("security").isArray()).isTrue();
 
         JsonNode updateWorkoutSchema = docs.path("components").path("schemas").path("UpdateWorkoutRequest");
         assertThat(updateWorkoutSchema.path("properties").has("exercises")).isFalse();
+
+        JsonNode updateActivitySchema = docs.path("components").path("schemas").path("UpdateActivityRequest");
+        assertThat(updateActivitySchema.path("properties").has("route")).isTrue();
+        assertThat(updateActivitySchema.path("properties").has("laps")).isTrue();
+        assertThat(updateActivitySchema.path("properties").has("titleSet")).isFalse();
     }
 }

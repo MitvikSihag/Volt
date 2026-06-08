@@ -19,11 +19,10 @@ class UserAndDashboardIntegrationTest extends AbstractIntegrationTest {
         AuthTokens alice = register("dashboarduser");
         User user = findUser("dashboarduser");
 
-        createWorkoutEntity(user, systemExercise,
-                Instant.parse("2026-05-12T06:00:00Z"),
-                Instant.parse("2026-05-12T07:00:00Z"),
-                5, 100.0);
-        createActivityEntity(user, Instant.parse("2026-05-13T06:00:00Z"), 5000.0);
+        // Anchor seed data to "now" so it falls inside the dashboard's current-week window.
+        Instant now = Instant.now();
+        createWorkoutEntity(user, systemExercise, now, now.plusSeconds(3600), 5, 100.0);
+        createActivityEntity(user, now, 5000.0);
 
         mockMvc.perform(patch("/api/users/me")
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken()))

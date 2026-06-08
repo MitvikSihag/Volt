@@ -10,6 +10,7 @@ import com.volt.workout.dto.PersonalRecordResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -28,22 +29,25 @@ public class DashboardService {
     private final WorkoutRepository workoutRepository;
     private final PersonalRecordRepository prRepository;
     private final ActivityRepository activityRepository;
+    private final Clock clock;
 
     public DashboardService(UserRepository userRepository,
                             WorkoutRepository workoutRepository,
                             PersonalRecordRepository prRepository,
-                            ActivityRepository activityRepository) {
+                            ActivityRepository activityRepository,
+                            Clock clock) {
         this.userRepository = userRepository;
         this.workoutRepository = workoutRepository;
         this.prRepository = prRepository;
         this.activityRepository = activityRepository;
+        this.clock = clock;
     }
 
     public DashboardResponse get(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(clock);
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
         Instant weekStartInstant = weekStart.atStartOfDay().toInstant(ZoneOffset.UTC);
         Instant fourteenDaysAgo = today.minusDays(13).atStartOfDay().toInstant(ZoneOffset.UTC);
