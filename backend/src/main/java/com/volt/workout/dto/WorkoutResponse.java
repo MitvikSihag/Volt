@@ -13,10 +13,15 @@ public record WorkoutResponse(
         Instant startedAt,
         Instant completedAt,
         boolean inProgress,
-        List<WorkoutSetResponse> sets,
+        double totalVolumeKg,
+        List<WorkoutExerciseResponse> exercises,
         Instant createdAt
 ) {
     public static WorkoutResponse from(Workout w) {
+        double totalVolumeKg = w.getAllSets().stream()
+                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
+                .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                .sum();
         return new WorkoutResponse(
                 w.getId(),
                 w.getTitle(),
@@ -24,7 +29,8 @@ public record WorkoutResponse(
                 w.getStartedAt(),
                 w.getCompletedAt(),
                 w.isInProgress(),
-                w.getSets().stream().map(WorkoutSetResponse::from).toList(),
+                totalVolumeKg,
+                w.getExercises().stream().map(WorkoutExerciseResponse::from).toList(),
                 w.getCreatedAt()
         );
     }

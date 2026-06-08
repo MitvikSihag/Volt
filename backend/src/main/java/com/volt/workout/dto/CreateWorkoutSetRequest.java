@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
+
 public record CreateWorkoutSetRequest(
 
         SetType setType,
@@ -26,5 +28,7 @@ public record CreateWorkoutSetRequest(
         Integer rpe,
 
         @Size(max = 300)
-        String notes
+        String notes,
+
+        Instant completedAt
 ) {}

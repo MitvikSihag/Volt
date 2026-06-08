@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -64,22 +65,31 @@ public class WorkoutService {
         workout.setCompletedAt(request.completedAt());
 
         if (request.exercises() != null) {
-            int order = 0;
+            int position = 0;
             for (CreateWorkoutExerciseRequest exerciseReq : request.exercises()) {
                 Exercise exercise = findAccessibleExercise(username, exerciseReq.exerciseId());
+                WorkoutExercise workoutExercise = new WorkoutExercise();
+                workoutExercise.setWorkout(workout);
+                workoutExercise.setExercise(exercise);
+                workoutExercise.setPosition(position++);
+                workoutExercise.setNotes(exerciseReq.notes());
+                workoutExercise.setRestSeconds(exerciseReq.restSeconds());
+
+                int setNumber = 1;
                 for (CreateWorkoutSetRequest setReq : exerciseReq.sets()) {
-                    WorkoutSet set = buildSet(workout, exercise, order++, setReq.setType(),
+                    WorkoutSet set = buildSet(workoutExercise, setNumber++, setReq.setType(),
                             setReq.reps(), setReq.weightKg(), setReq.durationSeconds(),
-                            setReq.distanceMeters(), setReq.rpe(), setReq.notes());
-                    workout.getSets().add(set);
+                            setReq.distanceMeters(), setReq.rpe(), setReq.notes(), setReq.completedAt());
+                    workoutExercise.getSets().add(set);
                 }
+                workout.getExercises().add(workoutExercise);
             }
         }
 
         Workout saved = workoutRepository.save(workout);
 
         if (request.exercises() != null) {
-            saved.getSets().stream()
+            saved.getAllSets().stream()
                     .map(WorkoutSet::getExercise)
                     .collect(Collectors.toCollection(HashSet::new))
                     .forEach(exercise -> recomputePersonalRecords(user, exercise));
@@ -124,7 +134,7 @@ public class WorkoutService {
         workout.setDeletedAt(Instant.now());
         workoutRepository.save(workout);
 
-        workout.getSets().stream()
+        workout.getAllSets().stream()
                 .map(WorkoutSet::getExercise)
                 .collect(Collectors.toCollection(HashSet::new))
                 .forEach(exercise -> recomputePersonalRecords(workout.getUser(), exercise));
@@ -135,20 +145,32 @@ public class WorkoutService {
         assertOwner(username, workout);
 
         Exercise exercise = findAccessibleExercise(username, request.exerciseId());
-        int order = workout.getSets().size();
 
-        WorkoutSet set = buildSet(workout, exercise, order,
+        WorkoutExercise workoutExercise = workout.getExercises().stream()
+                .filter(we -> we.getExercise().getId().equals(exercise.getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (workoutExercise == null) {
+            workoutExercise = new WorkoutExercise();
+            workoutExercise.setWorkout(workout);
+            workoutExercise.setExercise(exercise);
+            workoutExercise.setPosition(workout.getExercises().size());
+            workout.getExercises().add(workoutExercise);
+        }
+
+        int setNumber = workoutExercise.getSets().size() + 1;
+        WorkoutSet set = buildSet(workoutExercise, setNumber,
                 request.setType(), request.reps(), request.weightKg(),
                 request.durationSeconds(), request.distanceMeters(),
-                request.rpe(), request.notes());
+                request.rpe(), request.notes(), null);
 
-        workout.getSets().add(set);
+        workoutExercise.getSets().add(set);
         workoutRepository.save(workout);
 
-        WorkoutSet saved = workout.getSets().get(workout.getSets().size() - 1);
-        recomputePersonalRecords(workout.getUser(), saved.getExercise());
+        recomputePersonalRecords(workout.getUser(), exercise);
 
-        return WorkoutSetResponse.from(saved);
+        return WorkoutSetResponse.from(set);
     }
 
     public WorkoutSetResponse updateSet(String username, UUID workoutId, UUID setId,
@@ -172,10 +194,17 @@ public class WorkoutService {
 
         WorkoutSet set = findSet(workout, setId);
         clearPrReferences(set);
-        Exercise exercise = set.getExercise();
-        workout.getSets().remove(set);
+        WorkoutExercise workoutExercise = set.getWorkoutExercise();
+        Exercise exercise = workoutExercise.getExercise();
 
-        reorderSets(workout.getSets());
+        workoutExercise.getSets().remove(set);
+        renumberSets(workoutExercise.getSets());
+
+        if (workoutExercise.getSets().isEmpty()) {
+            workout.getExercises().remove(workoutExercise);
+            reposition(workout.getExercises());
+        }
+
         workoutRepository.save(workout);
         recomputePersonalRecords(workout.getUser(), exercise);
     }
@@ -199,7 +228,7 @@ public class WorkoutService {
                 .collect(Collectors.toMap(
                         s -> s.getExercise().getId(),
                         s -> s,
-                        (existing, ignored) -> existing,  // keep first = highest setOrder
+                        (existing, ignored) -> existing,  // keep first = latest workout, last set
                         LinkedHashMap::new
                 ))
                 .entrySet().stream()
@@ -215,15 +244,15 @@ public class WorkoutService {
                 .stream().map(PersonalRecordResponse::from).toList();
     }
 
-    private WorkoutSet buildSet(Workout workout, Exercise exercise, int order,
+    private WorkoutSet buildSet(WorkoutExercise workoutExercise, int setNumber,
                                  SetType setType, Integer reps, Double weightKg,
                                  Integer durationSeconds, Double distanceMeters,
-                                 Integer rpe, String notes) {
+                                 Integer rpe, String notes, Instant completedAt) {
         WorkoutSet set = new WorkoutSet();
-        set.setWorkout(workout);
-        set.setExercise(exercise);
-        set.setSetOrder(order);
+        set.setWorkoutExercise(workoutExercise);
+        set.setSetNumber(setNumber);
         applySetFields(set, setType, reps, weightKg, durationSeconds, distanceMeters, rpe, notes);
+        if (completedAt != null) set.setCompletedAt(completedAt);
         return set;
     }
 
@@ -239,9 +268,15 @@ public class WorkoutService {
         if (notes != null) set.setNotes(notes);
     }
 
-    private void reorderSets(List<WorkoutSet> sets) {
+    private void renumberSets(List<WorkoutSet> sets) {
         for (int i = 0; i < sets.size(); i++) {
-            sets.get(i).setSetOrder(i);
+            sets.get(i).setSetNumber(i + 1);
+        }
+    }
+
+    private void reposition(List<WorkoutExercise> exercises) {
+        for (int i = 0; i < exercises.size(); i++) {
+            exercises.get(i).setPosition(i);
         }
     }
 
@@ -279,7 +314,7 @@ public class WorkoutService {
                                     .mapToDouble(s -> s.getReps() * s.getWeightKg())
                                     .sum();
                             WorkoutSet representativeSet = entry.getValue().stream()
-                                    .max(Comparator.comparingInt(WorkoutSet::getSetOrder))
+                                    .max(Comparator.comparingInt(WorkoutSet::getSetNumber))
                                     .orElse(null);
                             return volume > 0 && representativeSet != null
                                     ? new PrComputation(volume, entry.getKey().getStartedAt(), representativeSet)
@@ -295,6 +330,13 @@ public class WorkoutService {
                         .max(Comparator.comparingInt(WorkoutSet::getReps)
                                 .thenComparingDouble(WorkoutSet::getWeightKg))
                         .map(set -> new PrComputation(set.getReps(), set.getWorkout().getStartedAt(), set)));
+
+        Set<UUID> prSetIds = prRepository.findByUserAndExercise(user, exercise).stream()
+                .map(PersonalRecord::getWorkoutSet)
+                .filter(ws -> ws != null)
+                .map(WorkoutSet::getId)
+                .collect(Collectors.toSet());
+        sets.forEach(s -> s.setPr(prSetIds.contains(s.getId())));
     }
 
     private void syncPr(Map<PersonalRecordType, PersonalRecord> existingByType,
@@ -332,7 +374,7 @@ public class WorkoutService {
     }
 
     private WorkoutSet findSet(Workout workout, UUID setId) {
-        return workout.getSets().stream()
+        return workout.getAllSets().stream()
                 .filter(s -> s.getId().equals(setId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Set not found"));
