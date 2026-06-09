@@ -9,8 +9,10 @@ import com.volt.workout.dto.AddSetRequest;
 import com.volt.workout.dto.CreateWorkoutExerciseRequest;
 import com.volt.workout.dto.CreateWorkoutRequest;
 import com.volt.workout.dto.CreateWorkoutSetRequest;
+import com.volt.workout.dto.ExerciseRecordsResponse;
 import com.volt.workout.dto.LastSetResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
+import com.volt.workout.dto.ProgressionPointResponse;
 import com.volt.workout.dto.UpdateWorkoutRequest;
 import com.volt.workout.dto.WorkoutResponse;
 import com.volt.workout.dto.WorkoutSetResponse;
@@ -242,6 +244,59 @@ public class WorkoutService {
         Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
         return prRepository.findByUserAndExercise(user, exercise)
                 .stream().map(PersonalRecordResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExerciseRecordsResponse> getRecordsGrid(String username) {
+        User user = getUser(username);
+        Map<Exercise, List<PersonalRecord>> byExercise = prRepository.findByUser(user).stream()
+                .collect(Collectors.groupingBy(PersonalRecord::getExercise,
+                        LinkedHashMap::new, Collectors.toList()));
+        return byExercise.entrySet().stream()
+                .map(entry -> new ExerciseRecordsResponse(
+                        entry.getKey().getId(),
+                        entry.getKey().getName(),
+                        entry.getValue().stream().map(PersonalRecordResponse::from).toList()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProgressionPointResponse> getProgression(String username, UUID exerciseId) {
+        User user = getUser(username);
+        Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
+        List<WorkoutSet> sets = workoutSetRepository.findAllByExerciseAndUser(exercise.getId(), user);
+        if (sets.isEmpty()) return List.of();
+
+        Map<Workout, List<WorkoutSet>> byWorkout = sets.stream()
+                .collect(Collectors.groupingBy(WorkoutSet::getWorkout, LinkedHashMap::new, Collectors.toList()));
+
+        return byWorkout.entrySet().stream()
+                .map(entry -> {
+                    Workout workout = entry.getKey();
+                    List<WorkoutSet> workoutSets = entry.getValue();
+
+                    double estimatedOneRepMax = workoutSets.stream()
+                            .filter(s -> s.getReps() != null && s.getReps() > 0
+                                    && s.getWeightKg() != null && s.getWeightKg() > 0)
+                            .mapToDouble(s -> s.getWeightKg() * (1 + s.getReps() / 30.0))
+                            .max().orElse(0.0);
+
+                    Double bestWeightKg = workoutSets.stream()
+                            .filter(s -> s.getWeightKg() != null)
+                            .map(WorkoutSet::getWeightKg)
+                            .max(Comparator.naturalOrder())
+                            .orElse(null);
+
+                    double volumeKg = workoutSets.stream()
+                            .filter(s -> s.getReps() != null && s.getWeightKg() != null)
+                            .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                            .sum();
+
+                    return new ProgressionPointResponse(
+                            workout.getStartedAt(), estimatedOneRepMax, bestWeightKg, volumeKg);
+                })
+                .sorted(Comparator.comparing(ProgressionPointResponse::date))
+                .toList();
     }
 
     private WorkoutSet buildSet(WorkoutExercise workoutExercise, int setNumber,

@@ -3,6 +3,7 @@ package com.volt.workout;
 import com.volt.workout.dto.CreateExerciseRequest;
 import com.volt.workout.dto.ExerciseResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
+import com.volt.workout.dto.ProgressionPointResponse;
 import com.volt.workout.dto.UpdateExerciseRequest;
 import com.volt.workout.dto.WorkoutSetResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -85,5 +86,11 @@ public class ExerciseController {
     public List<PersonalRecordResponse> records(@AuthenticationPrincipal UserDetails principal,
                                                 @PathVariable UUID id) {
         return workoutService.getPersonalRecords(principal.getUsername(), id);
+    }
+
+    @GetMapping("/{id}/progression")
+    public List<ProgressionPointResponse> progression(@AuthenticationPrincipal UserDetails principal,
+                                                       @PathVariable UUID id) {
+        return workoutService.getProgression(principal.getUsername(), id);
     }
 }
