@@ -16,4 +16,6 @@ public interface PersonalRecordRepository extends JpaRepository<PersonalRecord, 
     List<PersonalRecord> findTop3ByUserOrderByAchievedAtDesc(User user);
 
     List<PersonalRecord> findByWorkoutSet(WorkoutSet workoutSet);
+
+    List<PersonalRecord> findByUser(User user);
 }

@@ -6,11 +6,74 @@ servers:
 - url: http://localhost
   description: Generated server url
 paths:
+  /api/routines/{id}:
+    get:
+      tags:
+      - routine-controller
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RoutineResponse"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - routine-controller
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoutineRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RoutineResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - routine-controller
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
   /api/exercises/{id}:
     get:
       tags:
       - exercise-controller
-      operationId: getById
+      operationId: getById_1
       parameters:
       - name: id
         in: path
@@ -30,7 +93,7 @@ paths:
     put:
       tags:
       - exercise-controller
-      operationId: update
+      operationId: update_1
       parameters:
       - name: id
         in: path
@@ -56,7 +119,7 @@ paths:
     delete:
       tags:
       - exercise-controller
-      operationId: delete
+      operationId: delete_1
       parameters:
       - name: id
         in: path
@@ -169,11 +232,67 @@ paths:
                 $ref: "#/components/schemas/UserSelfResponse"
       security:
       - bearerAuth: []
+  /api/routines:
+    get:
+      tags:
+      - routine-controller
+      operationId: list_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoutineResponse"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - routine-controller
+      operationId: create_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoutineRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RoutineResponse"
+      security:
+      - bearerAuth: []
+  /api/routines/{id}/start:
+    post:
+      tags:
+      - routine-controller
+      operationId: start
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WorkoutResponse"
+      security:
+      - bearerAuth: []
   /api/exercises:
     get:
       tags:
       - exercise-controller
-      operationId: list_1
+      operationId: list_2
       parameters:
       - name: q
         in: query
@@ -234,7 +353,7 @@ paths:
     post:
       tags:
       - exercise-controller
-      operationId: create_1
+      operationId: create_2
       requestBody:
         content:
           application/json:
@@ -322,7 +441,7 @@ paths:
     get:
       tags:
       - activity-controller
-      operationId: list_2
+      operationId: list_3
       parameters:
       - name: page
         in: query
@@ -350,7 +469,7 @@ paths:
     post:
       tags:
       - activity-controller
-      operationId: create_2
+      operationId: create_3
       requestBody:
         content:
           application/json:
@@ -370,7 +489,7 @@ paths:
     get:
       tags:
       - workout-controller
-      operationId: getById_1
+      operationId: getById_2
       parameters:
       - name: id
         in: path
@@ -390,7 +509,7 @@ paths:
     delete:
       tags:
       - workout-controller
-      operationId: delete_1
+      operationId: delete_2
       parameters:
       - name: id
         in: path
@@ -406,7 +525,7 @@ paths:
     patch:
       tags:
       - workout-controller
-      operationId: update_1
+      operationId: update_2
       parameters:
       - name: id
         in: path
@@ -521,7 +640,7 @@ paths:
     get:
       tags:
       - activity-controller
-      operationId: getById_2
+      operationId: getById_3
       parameters:
       - name: id
         in: path
@@ -541,7 +660,7 @@ paths:
     delete:
       tags:
       - activity-controller
-      operationId: delete_2
+      operationId: delete_3
       parameters:
       - name: id
         in: path
@@ -557,7 +676,7 @@ paths:
     patch:
       tags:
       - activity-controller
-      operationId: update_2
+      operationId: update_3
       parameters:
       - name: id
         in: path
@@ -637,6 +756,22 @@ paths:
                 $ref: "#/components/schemas/UserStatsResponse"
       security:
       - bearerAuth: []
+  /api/users/me/records:
+    get:
+      tags:
+      - user-controller
+      operationId: getRecords
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExerciseRecordsResponse"
+      security:
+      - bearerAuth: []
   /api/exercises/{id}/records:
     get:
       tags:
@@ -658,6 +793,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/PersonalRecordResponse"
+      security:
+      - bearerAuth: []
+  /api/exercises/{id}/progression:
+    get:
+      tags:
+      - exercise-controller
+      operationId: progression
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgressionPointResponse"
       security:
       - bearerAuth: []
   /api/exercises/{id}/history:
@@ -713,6 +871,86 @@ paths:
       - bearerAuth: []
 components:
   schemas:
+    CreateRoutineExerciseRequest:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        targetSets:
+          type: integer
+          format: int32
+        targetReps:
+          type: integer
+          format: int32
+        restSeconds:
+          type: integer
+          format: int32
+        notes:
+          type: string
+          maxLength: 300
+          minLength: 0
+      required:
+      - exerciseId
+    CreateRoutineRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateRoutineExerciseRequest"
+      required:
+      - name
+    RoutineExerciseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type: string
+        position:
+          type: integer
+          format: int32
+        targetSets:
+          type: integer
+          format: int32
+        targetReps:
+          type: integer
+          format: int32
+        restSeconds:
+          type: integer
+          format: int32
+        notes:
+          type: string
+    RoutineResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        notes:
+          type: string
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoutineExerciseResponse"
+        createdAt:
+          type: string
+          format: date-time
     UpdateExerciseRequest:
       type: object
       properties:
@@ -1518,6 +1756,18 @@ components:
         totalVolumeKg:
           type: number
           format: double
+    ExerciseRecordsResponse:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type: string
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonalRecordResponse"
     PersonalRecordResponse:
       type: object
       properties:
@@ -1538,6 +1788,21 @@ components:
           type: string
           format: uuid
         contextWeightKg:
+          type: number
+          format: double
+    ProgressionPointResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        estimatedOneRepMax:
+          type: number
+          format: double
+        bestWeightKg:
+          type: number
+          format: double
+        volumeKg:
           type: number
           format: double
     ChartPoint:

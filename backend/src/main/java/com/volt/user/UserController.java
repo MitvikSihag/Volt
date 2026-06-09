@@ -5,6 +5,8 @@ import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
 import com.volt.user.dto.UserStatsResponse;
+import com.volt.workout.WorkoutService;
+import com.volt.workout.dto.ExerciseRecordsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -32,9 +35,11 @@ public class UserController {
     private static final long MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
     private final UserService userService;
+    private final WorkoutService workoutService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, WorkoutService workoutService) {
         this.userService = userService;
+        this.workoutService = workoutService;
     }
 
     @GetMapping("/{username}")
@@ -75,5 +80,11 @@ public class UserController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public UserStatsResponse getStats(@AuthenticationPrincipal UserDetails principal) {
         return userService.getStats(principal.getUsername());
+    }
+
+    @GetMapping("/me/records")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public List<ExerciseRecordsResponse> getRecords(@AuthenticationPrincipal UserDetails principal) {
+        return workoutService.getRecordsGrid(principal.getUsername());
     }
 }
