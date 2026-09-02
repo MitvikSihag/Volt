@@ -1,4 +1,9 @@
-package com.volt.workout;
+package com.volt.analytics;
+
+import com.volt.analytics.dto.DashboardResponse;
+import com.volt.workout.PersonalRecordRepository;
+import com.volt.workout.Workout;
+import com.volt.workout.WorkoutRepository;
 
 import com.volt.activity.Activity;
 import com.volt.activity.ActivityRepository;
@@ -6,7 +11,6 @@ import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.load.TrainingMath;
 import com.volt.user.User;
 import com.volt.user.UserLookup;
-import com.volt.workout.dto.DashboardResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -27,6 +27,16 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
     private final UserLookup userLookup;
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public long countForUser(com.volt.user.User user) {
+        return activityRepository.countByUser(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public double totalDistanceMetersForUser(com.volt.user.User user) {
+        return activityRepository.sumDistanceByUser(user);
+    }
+
     public ActivityService(ActivityRepository activityRepository, UserLookup userLookup) {
         this.activityRepository = activityRepository;
         this.userLookup = userLookup;

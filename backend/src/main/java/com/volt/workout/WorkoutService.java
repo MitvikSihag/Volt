@@ -93,6 +93,16 @@ public class WorkoutService {
     }
 
     @Transactional(readOnly = true)
+    public long countForUser(User user) {
+        return workoutRepository.countByUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public double totalVolumeKgForUser(User user) {
+        return workoutRepository.sumVolumeByUser(user);
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<WorkoutResponse> list(String username, int page, int size) {
         User user = userLookup.require(username);
         return PageResponse.from(

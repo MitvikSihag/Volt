@@ -1,6 +1,6 @@
-package com.volt.workout;
+package com.volt.analytics;
 
-import com.volt.workout.dto.DashboardResponse;
+import com.volt.analytics.dto.DashboardResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
