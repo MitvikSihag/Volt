@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLastSets, useRecords } from '@/api/queries';
@@ -25,7 +25,8 @@ export default function Live() {
     for (const l of lastSets) if (l.exerciseId) dispatch((s) => prefill(s, l.exerciseId!, { weightKg: l.weightKg ?? null, reps: l.reps ?? null }));
   }, [lastSets]);
 
-  useEffect(() => { if (!session || session.status !== 'live') router.back(); }, [session?.status]);
+  const live = session?.status === 'live';
+  useFocusEffect(useCallback(() => { if (!live) router.back(); }, [live]));
   if (!session || session.status !== 'live') return null;
 
   const restLeft = session.restUntil ? Date.parse(session.restUntil) - now : 0;
