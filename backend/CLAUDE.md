@@ -16,9 +16,11 @@ Spring Boot REST API for the Volt fitness platform. See the root `../CLAUDE.md` 
 ```
 src/main/java/com/volt/
 ├── VoltApplication.java
-├── user/           — User entity, profiles, auth (register/login/refresh/JWT)
-├── workout/        — Exercises, workouts, routines, personal records, dashboard
+├── user/           — User entity, profiles, auth (register/login/refresh/JWT), UserLookup
+├── workout/        — Exercises, workouts, routines; PersonalRecordService owns the PR engine
 ├── activity/       — Cardio: Activity, Route, Lap
+├── analytics/      — Cross-domain read models (dashboard today; feed/rivals later)
+├── load/           — TrainingMath: single source of truth for Epley 1RM + set volume
 ├── common/         — Shared DTOs, exceptions, base entities
 └── config/         — Security, OpenAPI, JPA config
 ```
