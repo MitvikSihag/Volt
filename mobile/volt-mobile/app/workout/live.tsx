@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLastSets, useRecords } from '@/api/queries';
 import { formatElapsed } from '@/session/fromRoutine';
@@ -38,7 +39,9 @@ export default function Live() {
   const half = weight != null && String(weight).endsWith('.5');
 
   const onLog = () => dispatch((s) => logSet(s, new Date().toISOString()));
-  const onClose = () => Alert.alert('Leave session?', 'Your sets stay saved on this phone.', [
+  const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) router.back(); });
+  const onClose = () => Alert.alert('Session', 'Your sets stay saved on this phone.', [
+    { text: 'Finish session', onPress: () => router.push('/workout/finish') },
     { text: 'Minimise', onPress: () => router.back() },
     { text: 'Discard session', style: 'destructive', onPress: () => { discard(); router.back(); } },
     { text: 'Cancel', style: 'cancel' },
@@ -46,6 +49,7 @@ export default function Live() {
 
   return (
     <Zone style={{ flex: 1 }}><SafeAreaView style={{ flex: 1 }}>
+      <GestureDetector gesture={swipeDown}><View>
       <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
         <Mono tone="t2" size={13}>● {formatElapsed(now - Date.parse(session.startedAt))}</Mono>
         <Pressable onPress={onClose} hitSlop={12}><Mono tone="t2" size={18}>×</Mono></Pressable>
@@ -54,7 +58,8 @@ export default function Live() {
         <Body tone="t2">{session.title}</Body>
         <Meta>Exercise {session.currentExercise + 1} / {session.exercises.length || 1}</Meta>
       </View>
-      <View style={{ height: 2, backgroundColor: color.ember, marginTop: 16, width: `${(100 * (session.currentExercise + 1)) / Math.max(1, session.exercises.length)}%` }} />
+      <View style={{ height: 2, backgroundColor: color.ember, marginTop: 16 }} />
+      </View></GestureDetector>
 
       {!ex ? (
         <View style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 16 }}>
@@ -119,7 +124,6 @@ export default function Live() {
           <Pressable onPress={() => dispatch(clearRest)} hitSlop={8}><Mono tone={restLeft > 0 ? 't1' : 't3'} size={13}>{restLeft > 0 ? formatElapsed(restLeft) : '—'}</Mono></Pressable>
         </View>
         {ex && <Button label="Log set" onPress={onLog} disabled={!canLog} />}
-        <Pressable onPress={() => router.push('/workout/finish')} style={{ alignSelf: 'center', paddingVertical: 8 }}><Meta tone="t2">Finish session</Meta></Pressable>
         <Meta tone="t3" style={{ textAlign: 'center' }}>Swipe down to minimise</Meta>
       </View>
     </SafeAreaView></Zone>

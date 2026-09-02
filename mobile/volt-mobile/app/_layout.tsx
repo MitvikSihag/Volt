@@ -45,7 +45,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.base }, animation: 'fade', animationDuration: 200 }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="workout/live" options={{ presentation: 'modal', gestureEnabled: true }} />
+          <Stack.Screen name="workout/live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="workout/picker" options={{ presentation: 'modal' }} />
           <Stack.Screen name="workout/finish" options={{ gestureEnabled: false }} />
           <Stack.Screen name="workout/summary" options={{ gestureEnabled: false }} />
