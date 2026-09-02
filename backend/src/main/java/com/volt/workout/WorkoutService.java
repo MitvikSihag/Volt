@@ -4,7 +4,7 @@ import com.volt.common.dto.PageResponse;
 import com.volt.common.exception.ApiException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.AddSetRequest;
 import com.volt.workout.dto.CreateWorkoutExerciseRequest;
 import com.volt.workout.dto.CreateWorkoutRequest;
@@ -33,22 +33,22 @@ public class WorkoutService {
     private final WorkoutSetRepository workoutSetRepository;
     private final ExerciseRepository exerciseRepository;
     private final PersonalRecordService prService;
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
 
     public WorkoutService(WorkoutRepository workoutRepository,
                           WorkoutSetRepository workoutSetRepository,
                           ExerciseRepository exerciseRepository,
                           PersonalRecordService prService,
-                          UserRepository userRepository) {
+                          UserLookup userLookup) {
         this.workoutRepository = workoutRepository;
         this.workoutSetRepository = workoutSetRepository;
         this.exerciseRepository = exerciseRepository;
         this.prService = prService;
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
     }
 
     public WorkoutResponse create(String username, CreateWorkoutRequest request) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         validateWorkoutTimes(request.startedAt(), request.completedAt());
 
         Workout workout = new Workout();
@@ -94,7 +94,7 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public PageResponse<WorkoutResponse> list(String username, int page, int size) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         return PageResponse.from(
                 workoutRepository.findByUserAndDeletedAtIsNullOrderByStartedAtDesc(
                         user, PageRequest.of(page, size))
@@ -206,7 +206,7 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public List<WorkoutSetResponse> getExerciseHistory(String username, UUID exerciseId,
                                                         int page, int size) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
         return workoutSetRepository
                 .findHistoryByExerciseAndUser(exercise.getId(), user, PageRequest.of(page, size))
@@ -216,7 +216,7 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public List<LastSetResponse> getLastSets(String username, List<UUID> exerciseIds) {
         if (exerciseIds == null || exerciseIds.isEmpty()) return List.of();
-        User user = getUser(username);
+        User user = userLookup.require(username);
         return workoutSetRepository.findLastSetsForExercises(exerciseIds, user)
                 .stream()
                 .collect(Collectors.toMap(
@@ -304,9 +304,5 @@ public class WorkoutService {
         }
     }
 
-    private User getUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
+    
 }

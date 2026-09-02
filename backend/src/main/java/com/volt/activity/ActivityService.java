@@ -10,7 +10,7 @@ import com.volt.common.dto.PageResponse;
 import com.volt.common.exception.ApiException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,11 +25,11 @@ import java.util.UUID;
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
 
-    public ActivityService(ActivityRepository activityRepository, UserRepository userRepository) {
+    public ActivityService(ActivityRepository activityRepository, UserLookup userLookup) {
         this.activityRepository = activityRepository;
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
     }
 
     public ActivityDetailResponse create(String username, CreateActivityRequest request) {
@@ -38,7 +38,7 @@ public class ActivityService {
                 request.averageHeartRate(), request.maxHeartRate());
 
         Activity activity = new Activity();
-        activity.setUser(getUser(username));
+        activity.setUser(userLookup.require(username));
         activity.setTitle(request.title());
         activity.setType(request.type());
         activity.setStartedAt(request.startedAt());
@@ -59,7 +59,7 @@ public class ActivityService {
 
     @Transactional(readOnly = true)
     public PageResponse<ActivityListItemResponse> list(String username, int page, int size) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         return PageResponse.from(
                 activityRepository.findByUserAndDeletedAtIsNullOrderByStartedAtDesc(
                                 user, PageRequest.of(page, size))
@@ -183,8 +183,4 @@ public class ActivityService {
         }
     }
 
-    private User getUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
-}

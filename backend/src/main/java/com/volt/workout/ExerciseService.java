@@ -3,7 +3,7 @@ package com.volt.workout;
 import com.volt.common.exception.ApiException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.CreateExerciseRequest;
 import com.volt.workout.dto.ExerciseResponse;
 import com.volt.workout.dto.UpdateExerciseRequest;
@@ -20,17 +20,17 @@ import java.util.UUID;
 public class ExerciseService {
 
     private final ExerciseRepository exerciseRepository;
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
 
-    public ExerciseService(ExerciseRepository exerciseRepository, UserRepository userRepository) {
+    public ExerciseService(ExerciseRepository exerciseRepository, UserLookup userLookup) {
         this.exerciseRepository = exerciseRepository;
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
     }
 
     @Transactional(readOnly = true)
     public List<ExerciseResponse> search(String username, String q, MuscleGroup muscle,
                                          Equipment equipment, MovementType movement) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         return exerciseRepository.search(user, q, muscle, equipment, movement)
                 .stream().map(ExerciseResponse::from).toList();
     }
@@ -46,7 +46,7 @@ public class ExerciseService {
     }
 
     public ExerciseResponse create(String username, CreateExerciseRequest request) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
 
         Exercise exercise = new Exercise();
         exercise.setName(request.name());
@@ -96,8 +96,4 @@ public class ExerciseService {
         }
     }
 
-    private User getUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
-}

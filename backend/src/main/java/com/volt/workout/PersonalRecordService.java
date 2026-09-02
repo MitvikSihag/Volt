@@ -3,7 +3,7 @@ package com.volt.workout;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.load.TrainingMath;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.ExerciseRecordsResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
 import com.volt.workout.dto.ProgressionPointResponse;
@@ -28,21 +28,21 @@ public class PersonalRecordService {
     private final WorkoutSetRepository workoutSetRepository;
     private final PersonalRecordRepository prRepository;
     private final ExerciseRepository exerciseRepository;
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
 
     public PersonalRecordService(WorkoutSetRepository workoutSetRepository,
                                  PersonalRecordRepository prRepository,
                                  ExerciseRepository exerciseRepository,
-                                 UserRepository userRepository) {
+                                 UserLookup userLookup) {
         this.workoutSetRepository = workoutSetRepository;
         this.prRepository = prRepository;
         this.exerciseRepository = exerciseRepository;
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
     }
 
     @Transactional(readOnly = true)
     public List<PersonalRecordResponse> getPersonalRecords(String username, UUID exerciseId) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
         return prRepository.findByUserAndExercise(user, exercise)
                 .stream().map(PersonalRecordResponse::from).toList();
@@ -50,7 +50,7 @@ public class PersonalRecordService {
 
     @Transactional(readOnly = true)
     public List<ExerciseRecordsResponse> getRecordsGrid(String username) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         Map<Exercise, List<PersonalRecord>> byExercise = prRepository.findByUser(user).stream()
                 .collect(Collectors.groupingBy(PersonalRecord::getExercise,
                         LinkedHashMap::new, Collectors.toList()));
@@ -64,7 +64,7 @@ public class PersonalRecordService {
 
     @Transactional(readOnly = true)
     public List<ProgressionPointResponse> getProgression(String username, UUID exerciseId) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         Exercise exercise = findAccessibleExerciseEntity(username, exerciseId);
         List<WorkoutSet> sets = workoutSetRepository.findAllByExerciseAndUser(exercise.getId(), user);
         if (sets.isEmpty()) return List.of();
@@ -196,10 +196,6 @@ public class PersonalRecordService {
         return exercise;
     }
 
-    private User getUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
+    
     private record PrComputation(double value, Instant achievedAt, WorkoutSet workoutSet) {}
 }

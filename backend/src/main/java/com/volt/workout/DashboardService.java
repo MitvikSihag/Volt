@@ -5,7 +5,7 @@ import com.volt.activity.ActivityRepository;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.load.TrainingMath;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.DashboardResponse;
 import com.volt.workout.dto.PersonalRecordResponse;
 import org.springframework.stereotype.Service;
@@ -26,18 +26,18 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
     private final WorkoutRepository workoutRepository;
     private final PersonalRecordRepository prRepository;
     private final ActivityRepository activityRepository;
     private final Clock clock;
 
-    public DashboardService(UserRepository userRepository,
+    public DashboardService(UserLookup userLookup,
                             WorkoutRepository workoutRepository,
                             PersonalRecordRepository prRepository,
                             ActivityRepository activityRepository,
                             Clock clock) {
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
         this.workoutRepository = workoutRepository;
         this.prRepository = prRepository;
         this.activityRepository = activityRepository;
@@ -45,8 +45,7 @@ public class DashboardService {
     }
 
     public DashboardResponse get(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userLookup.require(username);
 
         LocalDate today = LocalDate.now(clock);
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
