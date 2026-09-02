@@ -1,0 +1,14 @@
+# Keep the build context tiny: the runtime image only needs the prebuilt boot jar.
+.git
+.gradle
+.idea
+*.iml
+uploads
+*.log
+docs
+src
+gradle
+gradlew
+gradlew.bat
+build
+!build/libs

@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Volt — Marcus König</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #09090E;
+  --card:          #111118;
+  --elevated:      #1C1C28;
+  --border:        #2A2A3C;
+  --border-strong: #3A3A50;
+  --text:          #F0F0F8;
+  --text-dim:      #A1A1B0;
+  --muted:         #6B7280;
+  --cyan:          #06B6D4;
+  --cyan-dim:      rgba(6,182,212,0.10);
+  --cyan-border:   rgba(6,182,212,0.30);
+  --green:         #22C55E;
+  --green-dim:     rgba(34,197,94,0.12);
+  --green-border:  rgba(34,197,94,0.28);
+  --blue:          #3B82F6;
+  --blue-dim:      rgba(59,130,246,0.12);
+  --blue-border:   rgba(59,130,246,0.30);
+  --yellow:        #EAB308;
+  --yellow-dim:    rgba(234,179,8,0.12);
+  --red:           #EF4444;
+  --purple:        #8B5CF6;
+  --f-display: 'Syne', sans-serif;
+  --f-sans:    'Inter', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+  --sidebar-w: 220px;
+  --tabbar-h:  64px;
+  --header-h:  56px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: var(--f-sans); min-height: 100dvh; overflow-x: hidden; }
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+svg { display: block; flex-shrink: 0; }
+
+/* ─── SHARED ATOMS ────────────────────────────────────────────────────────── */
+.eyebrow { font-family: var(--f-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--elevated); border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-dim); border-radius: 8px; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+.btn-secondary:hover { border-color: var(--border-strong); color: var(--text); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 100px; font-family: var(--f-mono); font-size: 10px; font-weight: 500; white-space: nowrap; }
+.chip.cyan   { background: var(--cyan-dim);   border: 1px solid var(--cyan-border);          color: var(--cyan); }
+.chip.blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);           color: var(--blue); }
+.chip.green  { background: var(--green-dim);  border: 1px solid var(--green-border);          color: var(--green); }
+.chip.yellow { background: var(--yellow-dim); border: 1px solid rgba(234,179,8,0.28);          color: var(--yellow); }
+.chip.purple { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.28);    color: var(--purple); }
+.chip.muted  { background: var(--elevated);   border: 1px solid var(--border);                color: var(--muted); }
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.d-sidebar { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 24px; border-bottom: 1px solid var(--border); }
+.logo-bolt { width: 22px; height: 22px; background: var(--cyan); clip-path: polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%); flex-shrink: 0; }
+.logo-name { font-family: var(--f-display); font-weight: 800; font-size: 17px; color: var(--text); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-dim); transition: background 0.15s, color 0.15s; }
+.nav-item:hover { background: var(--elevated); color: var(--text); }
+.nav-item.active { background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan-border); }
+.nav-item svg { opacity: 0.7; } .nav-item.active svg { opacity: 1; }
+.sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.sidebar-footer-name { font-size: 13px; font-weight: 500; }
+.sidebar-footer-sub  { font-size: 11px; color: var(--muted); }
+
+/* ─── MOBILE SHELL ────────────────────────────────────────────────────────── */
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--tabbar-h); background: var(--card); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; z-index: 50; padding: 0 4px; }
+.tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 12px; color: var(--muted); font-size: 10px; font-weight: 500; border-radius: 8px; transition: color 0.15s; flex: 1; }
+.tab-item.active { color: var(--cyan); }
+.tab-fab { width: 52px; height: 52px; border-radius: 50%; background: var(--cyan); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px var(--bg), 0 4px 16px rgba(6,182,212,0.4); flex-shrink: 0; margin-bottom: 8px; }
+.app-shell { min-height: 100dvh; padding-bottom: var(--tabbar-h); }
+
+/* ─── MOBILE HEADER ───────────────────────────────────────────────────────── */
+.m-header { position: sticky; top: 0; z-index: 40; height: var(--header-h); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.m-header-title { font-family: var(--f-display); font-weight: 700; font-size: 18px; }
+.m-icon-btn { width: 34px; height: 34px; border-radius: 8px; background: var(--elevated); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+.m-icon-btn:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROFILE HERO — avatar, identity, stats
+═══════════════════════════════════════════════════════════════════════════ */
+.profile-hero {
+  padding: 20px 16px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Avatar */
+.avatar-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+.avatar-ring {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 60%, var(--blue) 100%);
+  padding: 2.5px;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar-inner {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: linear-gradient(145deg, #1C1C2E, #0D0D1A);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-display); font-weight: 800; font-size: 26px;
+  color: var(--text); letter-spacing: -0.02em;
+}
+.streak-ring {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--cyan); border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-mono); font-size: 8px; font-weight: 600; color: #08080D;
+}
+
+/* Name + identity row */
+.profile-name { font-family: var(--f-display); font-weight: 800; font-size: 22px; color: var(--text); letter-spacing: -0.01em; margin-bottom: 2px; }
+.profile-handle { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+/* Athlete identity tags */
+.identity-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+
+/* Bio-style descriptor */
+.profile-descriptor {
+  font-size: 13px; color: var(--text-dim); line-height: 1.45;
+  padding: 8px 10px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 12px;
+}
+.profile-descriptor strong { color: var(--text); font-weight: 500; }
+
+/* Follower / following strip */
+.social-strip { display: flex; gap: 20px; align-items: center; margin-bottom: 12px; }
+.social-item { display: flex; flex-direction: column; gap: 2px; }
+.social-val { font-family: var(--f-mono); font-size: 15px; font-weight: 600; color: var(--text); }
+.social-lbl { font-size: 11px; color: var(--muted); }
+
+/* Action buttons */
+.profile-actions { display: flex; gap: 8px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOP STATS GRID
+═══════════════════════════════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+  border-radius: 10px; overflow: hidden;
+  margin: 14px 16px 0;
+}
+.stat-cell { background: var(--card); padding: 11px 12px; }
+.stat-val { font-family: var(--f-mono); font-size: 17px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.stat-val.accent { color: var(--cyan); }
+.stat-val.blue   { color: var(--blue); }
+.stat-val.green  { color: var(--green); }
+.stat-lbl { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID IDENTITY BAR
+═══════════════════════════════════════════════════════════════════════════ */
+.hybrid-bar-section {
+  margin: 14px 16px 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.hybrid-bar-label { font-family: var(--f-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.hybrid-bar-track {
+  height: 8px; border-radius: 100px; overflow: hidden;
+  background: var(--elevated); border: 1px solid var(--border);
+  display: flex; margin-bottom: 8px;
+}
+.hybrid-bar-strength { background: var(--cyan); border-radius: 100px 0 0 100px; }
+.hybrid-bar-cardio   { background: var(--blue); border-radius: 0 100px 100px 0; }
+.hybrid-bar-legend { display: flex; gap: 14px; align-items: center; }
+.hybrid-legend-item { display: flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 10px; color: var(--text-dim); }
+.hybrid-legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* Training frequency mini-calendar */
+.freq-row { display: flex; gap: 3px; margin-top: 10px; padding-top:10px; border-top: 1px solid var(--border); }
+.freq-day { flex: 1; height: 14px; border-radius: 2px; background: var(--elevated); }
+.freq-day.lift  { background: rgba(6,182,212,0.5); }
+.freq-day.run   { background: rgba(59,130,246,0.5); }
+.freq-day.both  { background: linear-gradient(90deg, rgba(6,182,212,0.6) 50%, rgba(59,130,246,0.6) 50%); }
+.freq-day.rest  { background: var(--elevated); }
+.freq-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+.freq-lbl { font-family: var(--f-mono); font-size: 8px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDALS / ACHIEVEMENTS — premium collectibles
+═══════════════════════════════════════════════════════════════════════════ */
+.medals-section { margin: 14px 16px 0; }
+
+.medals-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.medals-scroll::-webkit-scrollbar { display: none; }
+
+.medal-card {
+  flex-shrink: 0; width: 110px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.medal-card:hover { border-color: var(--border-strong); }
+/* Domain-specific medal styles */
+.medal-card.gold   { border-color: rgba(234,179,8,0.35); background: rgba(234,179,8,0.04); }
+.medal-card.cyan-m { border-color: var(--cyan-border);   background: var(--cyan-dim); }
+.medal-card.blue-m { border-color: var(--blue-border);   background: var(--blue-dim); }
+.medal-card.green-m{ border-color: var(--green-border);  background: var(--green-dim); }
+.medal-card.purple-m{ border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.07); }
+
+.medal-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.medal-icon.gold   { background: rgba(234,179,8,0.15); border: 1.5px solid rgba(234,179,8,0.4); color: var(--yellow); }
+.medal-icon.cyan-m { background: var(--cyan-dim);      border: 1.5px solid var(--cyan-border);  color: var(--cyan); }
+.medal-icon.blue-m { background: var(--blue-dim);      border: 1.5px solid var(--blue-border);  color: var(--blue); }
+.medal-icon.green-m{ background: var(--green-dim);     border: 1.5px solid var(--green-border); color: var(--green); }
+.medal-icon.purple-m{ background: rgba(139,92,246,0.12); border: 1.5px solid rgba(139,92,246,0.3); color: var(--purple); }
+
+.medal-name  { font-family: var(--f-mono); font-size: 10px; font-weight: 500; color: var(--text-dim); line-height: 1.3; }
+.medal-val   { font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--text); }
+.medal-date  { font-family: var(--f-mono); font-size: 9px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PR WALL — best lifts
+═══════════════════════════════════════════════════════════════════════════ */
+.pr-section { margin: 14px 16px 0; }
+
+.pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pr-cell {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+}
+.pr-cell.highlight { border-color: var(--cyan-border); background: rgba(6,182,212,0.04); }
+.pr-lift { font-size: 12px; font-weight: 500; color: var(--text-dim); margin-bottom: 4px; }
+.pr-weight { font-family: var(--f-mono); font-size: 18px; font-weight: 600; color: var(--cyan); line-height: 1; }
+.pr-detail { font-family: var(--f-mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
+.pr-delta { font-family: var(--f-mono); font-size: 10px; color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARDIO BESTS
+═══════════════════════════════════════════════════════════════════════════ */
+.cardio-bests { display: flex; flex-direction: column; gap: 6px; margin: 14px 16px 0; }
+.cardio-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.cardio-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cardio-icon.run  { background: var(--blue-dim);  border: 1px solid var(--blue-border);  color: var(--blue); }
+.cardio-icon.ride { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.28); color: var(--purple); }
+.cardio-icon.hike { background: var(--green-dim);  border: 1px solid var(--green-border); color: var(--green); }
+.cardio-label { flex: 1; font-size: 12.5px; color: var(--text-dim); }
+.cardio-best-val { font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--text); }
+.cardio-best-sub { font-family: var(--f-mono); font-size: 10px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECENT FORM — highlights strip
+═══════════════════════════════════════════════════════════════════════════ */
+.form-section { margin: 14px 16px 0; }
+
+.form-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.form-scroll::-webkit-scrollbar { display: none; }
+.form-card {
+  flex-shrink: 0; min-width: 155px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 12px;
+}
+.form-card.pr   { border-color: var(--cyan-border); background: rgba(6,182,212,0.04); }
+.form-card.run  { border-color: var(--blue-border); background: rgba(59,130,246,0.04); }
+.form-eyebrow { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 4px; }
+.form-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.25; }
+.form-val { font-family: var(--f-mono); font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.form-sub { font-family: var(--f-mono); font-size: 10px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STREAK / CONSISTENCY
+═══════════════════════════════════════════════════════════════════════════ */
+.streak-section {
+  margin: 14px 16px 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.streak-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.streak-count { font-family: var(--f-mono); font-size: 28px; font-weight: 600; color: var(--cyan); line-height: 1; }
+.streak-label { font-size: 12px; color: var(--text-dim); }
+/* Month dot grid */
+.month-grid { display: flex; gap: 3px; flex-wrap: wrap; }
+.m-dot { width: 10px; height: 10px; border-radius: 2px; }
+.m-dot.done { background: var(--cyan); opacity: 0.75; }
+.m-dot.active { background: var(--cyan); }
+.m-dot.miss   { background: var(--elevated); }
+.m-dot.rest   { background: rgba(255,255,255,0.04); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION SPACING / SHARED
+═══════════════════════════════════════════════════════════════════════════ */
+.section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.see-all { font-size: 12px; font-weight: 500; color: var(--cyan); }
+.see-all:hover { opacity: 0.8; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP
+═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  .tabbar { display: none; }
+  .app-shell { display: none; }
+
+  .d-root { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100dvh; }
+  .d-main { overflow-y: auto; }
+
+  .d-header { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 56px; }
+  .d-header-title { font-family: var(--f-display); font-weight: 700; font-size: 18px; }
+  .d-header-sub { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .d-header-actions { display: flex; gap: 8px; }
+
+  /* Desktop two-column layout */
+  .d-body { display: grid; grid-template-columns: 300px 1fr; gap: 0; min-height: calc(100vh - 56px); }
+  .d-left { padding: 22px 20px 48px; background: var(--card); border-right: 1px solid var(--border); }
+  .d-right { padding: 22px 24px 48px; overflow-y: auto; }
+
+  /* Desktop left panel: profile hero (no header duplication) */
+  .d-profile-hero { }
+
+  /* Desktop avatar larger */
+  .d-avatar-ring { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--purple), var(--blue)); padding: 3px; }
+  .d-avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(145deg, #1C1C2E, #0D0D1A); display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-weight: 800; font-size: 28px; color: var(--text); }
+
+  /* Right panel sections */
+  .d-section { margin-bottom: 22px; }
+  .d-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .d-three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+}
+@media (max-width: 899px) { .d-root { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE APP SHELL
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+  <header class="m-header">
+    <div class="m-header-title">Profile</div>
+    <div style="display:flex;gap:6px">
+      <button class="m-icon-btn" title="Share profile">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="m-icon-btn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Profile hero ──────────────────────────────────────────────── -->
+  <div class="profile-hero">
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:12px">
+      <div class="avatar-wrap">
+        <div class="avatar-ring">
+          <div class="avatar-inner">MK</div>
+        </div>
+        <div class="streak-ring" title="Active streak">6</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="profile-name">Marcus König</div>
+        <div class="profile-handle">@marcusk · Berlin</div>
+        <div class="identity-tags">
+          <span class="chip cyan">Hybrid athlete</span>
+          <span class="chip blue">Runner</span>
+          <span class="chip purple">Powerlifter</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-descriptor">
+      <strong>Upper/lower 4×/wk · 2 runs · weekend rides.</strong> Strength-first block with aerobic maintenance. Currently peaking SBD — best squat and deadlift on record this month.
+    </div>
+
+    <div class="social-strip">
+      <div class="social-item">
+        <div class="social-val">218</div>
+        <div class="social-lbl">Followers</div>
+      </div>
+      <div class="social-item">
+        <div class="social-val">84</div>
+        <div class="social-lbl">Following</div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="social-item" style="text-align:right">
+        <div class="social-val" style="color:var(--cyan)">9</div>
+        <div class="social-lbl">PRs this block</div>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn-secondary" style="flex:1;justify-content:center">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Edit profile
+      </button>
+      <button class="btn-secondary" style="padding:8px 14px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Top stats ─────────────────────────────────────────────────── -->
+  <div class="stats-grid">
+    <div class="stat-cell">
+      <div class="stat-val accent">312</div>
+      <div class="stat-lbl">Workouts</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val blue">94</div>
+      <div class="stat-lbl">Activities</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val">4.2<span style="font-size:11px;color:var(--muted)">M</span></div>
+      <div class="stat-lbl">kg lifted</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val blue">847<span style="font-size:11px;color:var(--muted)">km</span></div>
+      <div class="stat-lbl">Distance '25</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val accent">38</div>
+      <div class="stat-lbl">PRs total</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val green">88<span style="font-size:11px;color:var(--muted)">%</span></div>
+      <div class="stat-lbl">Consistency</div>
+    </div>
+  </div>
+
+  <!-- ── Hybrid identity bar ───────────────────────────────────────── -->
+  <div class="hybrid-bar-section">
+    <div class="hybrid-bar-label">
+      <span>Training split · last 3 months</span>
+      <span style="color:var(--cyan)">73% lift · 27% cardio</span>
+    </div>
+    <div class="hybrid-bar-track">
+      <div class="hybrid-bar-strength" style="width:73%"></div>
+      <div class="hybrid-bar-cardio"   style="width:27%"></div>
+    </div>
+    <div class="hybrid-bar-legend">
+      <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:var(--cyan)"></div>Strength</div>
+      <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:var(--blue)"></div>Cardio</div>
+      <div style="margin-left:auto"><span class="chip cyan" style="font-size:9.5px">Strength-first block</span></div>
+    </div>
+    <!-- 4-week frequency strip -->
+    <div>
+      <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px;margin-top:10px">Last 4 weeks · daily pattern</div>
+      <div class="freq-row">
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day both"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day ride" style="background:rgba(139,92,246,0.5)"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day rest"></div>
+        <div class="freq-day lift"></div>
+        <div class="freq-day run"></div>
+        <div class="freq-day rest"></div>
+      </div>
+      <div class="freq-labels">
+        <span class="freq-lbl">W1</span>
+        <span class="freq-lbl">W2</span>
+        <span class="freq-lbl">W3</span>
+        <span class="freq-lbl">W4</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(6,182,212,0.6)"></div>Lift</div>
+        <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(59,130,246,0.6)"></div>Run</div>
+        <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(139,92,246,0.6)"></div>Ride</div>
+        <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:var(--elevated);border:1px solid var(--border)"></div>Rest</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Medals / achievements ─────────────────────────────────────── -->
+  <div class="medals-section">
+    <div class="section-hd">
+      <div class="eyebrow">Achievements</div>
+      <button class="see-all">All →</button>
+    </div>
+    <div class="medals-scroll">
+
+      <div class="medal-card gold">
+        <div class="medal-icon gold">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div class="medal-name">Squat Century</div>
+        <div class="medal-val" style="color:var(--yellow)">160kg</div>
+        <div class="medal-date">May '25</div>
+      </div>
+
+      <div class="medal-card cyan-m">
+        <div class="medal-icon cyan-m">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="medal-name">6-week streak</div>
+        <div class="medal-val" style="color:var(--cyan)">42 days</div>
+        <div class="medal-date">Current</div>
+      </div>
+
+      <div class="medal-card blue-m">
+        <div class="medal-icon blue-m">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+        </div>
+        <div class="medal-name">First Half</div>
+        <div class="medal-val" style="color:var(--blue)">21.1km</div>
+        <div class="medal-date">Apr '25</div>
+      </div>
+
+      <div class="medal-card purple-m">
+        <div class="medal-icon purple-m">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="medal-name">Volume peak</div>
+        <div class="medal-val" style="color:var(--purple)">54k<span style="font-size:10px">kg</span></div>
+        <div class="medal-date">May '25</div>
+      </div>
+
+      <div class="medal-card green-m">
+        <div class="medal-icon green-m">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="medal-name">500km run</div>
+        <div class="medal-val" style="color:var(--green)">847km</div>
+        <div class="medal-date">Year '25</div>
+      </div>
+
+      <div class="medal-card gold">
+        <div class="medal-icon gold">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="medal-name">Deadlift 2×BW</div>
+        <div class="medal-val" style="color:var(--yellow)">215kg</div>
+        <div class="medal-date">May '25</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PR wall ────────────────────────────────────────────────────── -->
+  <div class="pr-section">
+    <div class="section-hd">
+      <div class="eyebrow">Best lifts</div>
+      <button class="see-all">All PRs →</button>
+    </div>
+    <div class="pr-grid">
+      <div class="pr-cell highlight">
+        <div class="pr-lift">Back Squat</div>
+        <div class="pr-weight">162<span style="font-size:11px;color:var(--muted)">kg</span></div>
+        <div class="pr-detail">× 5 reps · est. 1RM</div>
+        <div class="pr-delta">↑ +8kg vs 3mo ago</div>
+      </div>
+      <div class="pr-cell highlight">
+        <div class="pr-lift">Deadlift</div>
+        <div class="pr-weight">215<span style="font-size:11px;color:var(--muted)">kg</span></div>
+        <div class="pr-detail">× 3 reps · est. 1RM</div>
+        <div class="pr-delta">↑ +12kg vs 3mo ago</div>
+      </div>
+      <div class="pr-cell">
+        <div class="pr-lift">Bench Press</div>
+        <div class="pr-weight">120<span style="font-size:11px;color:var(--muted)">kg</span></div>
+        <div class="pr-detail">× 5 reps · est. 1RM</div>
+        <div class="pr-delta">↑ +2.5kg this block</div>
+      </div>
+      <div class="pr-cell">
+        <div class="pr-lift">Overhead Press</div>
+        <div class="pr-weight">82<span style="font-size:11px;color:var(--muted)">kg</span></div>
+        <div class="pr-detail">× 5 reps · est. 1RM</div>
+        <div class="pr-delta">↑ +2.5kg this block</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Cardio bests ───────────────────────────────────────────────── -->
+  <div class="cardio-bests" style="margin-top:14px;margin-left:16px;margin-right:16px">
+    <div class="section-hd">
+      <div class="eyebrow">Cardio bests</div>
+    </div>
+    <div class="cardio-row">
+      <div class="cardio-icon run"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+      <div class="cardio-label">Longest run</div>
+      <div>
+        <div class="cardio-best-val">21.1 km</div>
+        <div class="cardio-best-sub">Apr 15 · 2:04:38</div>
+      </div>
+    </div>
+    <div class="cardio-row">
+      <div class="cardio-icon run"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+      <div class="cardio-label">10k fastest</div>
+      <div>
+        <div class="cardio-best-val">52:10</div>
+        <div class="cardio-best-sub">May 10 · 5:13/km avg</div>
+      </div>
+    </div>
+    <div class="cardio-row">
+      <div class="cardio-icon ride"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 12 5.5 14"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg></div>
+      <div class="cardio-label">Longest ride</div>
+      <div>
+        <div class="cardio-best-val">87.4 km</div>
+        <div class="cardio-best-sub">Mar 22 · 26.1 km/h</div>
+      </div>
+    </div>
+    <div class="cardio-row">
+      <div class="cardio-icon hike"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-5 4 3 4-7 4 5"/></svg></div>
+      <div class="cardio-label">Most elevation</div>
+      <div>
+        <div class="cardio-best-val">+1,240 m</div>
+        <div class="cardio-best-sub">Feb 8 · Grunewald</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Streak / consistency ──────────────────────────────────────── -->
+  <div class="streak-section" style="margin-left:16px;margin-right:16px;margin-top:14px">
+    <div class="streak-top">
+      <div>
+        <div class="streak-count">42</div>
+        <div class="streak-label">day streak · active</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--text)">88%</div>
+        <div style="font-size:11px;color:var(--muted)">completion this block</div>
+      </div>
+    </div>
+    <!-- May activity dots -->
+    <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:6px">May · 19 days</div>
+    <div class="month-grid">
+      <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+      <div class="m-dot rest"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+      <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot rest"></div>
+      <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+      <div class="m-dot done"></div><div class="m-dot rest"></div><div class="m-dot done"></div>
+      <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+      <div class="m-dot active"></div>
+    </div>
+  </div>
+
+  <!-- ── Recent form ────────────────────────────────────────────────── -->
+  <div class="form-section" style="margin-bottom:20px">
+    <div class="section-hd">
+      <div class="eyebrow">Recent form</div>
+      <button class="see-all">See all →</button>
+    </div>
+    <div class="form-scroll">
+
+      <div class="form-card pr">
+        <div class="form-eyebrow" style="color:var(--cyan)">Strength PR</div>
+        <div class="form-title">Back Squat</div>
+        <div class="form-val" style="color:var(--cyan)">162kg × 5</div>
+        <div class="form-sub">May 12 · est. 1RM up +8kg</div>
+      </div>
+
+      <div class="form-card run">
+        <div class="form-eyebrow" style="color:var(--blue)">Cardio PR</div>
+        <div class="form-title">10k run</div>
+        <div class="form-val" style="color:var(--blue)">52:10</div>
+        <div class="form-sub">May 10 · fastest ever</div>
+      </div>
+
+      <div class="form-card pr">
+        <div class="form-eyebrow" style="color:var(--cyan)">Strength PR</div>
+        <div class="form-title">Deadlift</div>
+        <div class="form-val" style="color:var(--cyan)">215kg × 3</div>
+        <div class="form-sub">May 8 · season best</div>
+      </div>
+
+      <div class="form-card" style="border-color:var(--green-border);background:var(--green-dim)">
+        <div class="form-eyebrow" style="color:var(--green)">Volume</div>
+        <div class="form-title">Best week</div>
+        <div class="form-val" style="color:var(--green)">54,200kg</div>
+        <div class="form-sub">W11 · all-time high</div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-eyebrow" style="color:var(--purple)">Distance</div>
+        <div class="form-title">Longest ride</div>
+        <div class="form-val" style="color:var(--purple)">87.4km</div>
+        <div class="form-sub">Mar 22 · century prep</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE TAB BAR
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="tabbar">
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Home</button>
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+  <button class="tab-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+  <button class="tab-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DESKTOP LAYOUT
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="d-root">
+  <!-- Sidebar -->
+  <nav class="d-sidebar">
+    <div class="sidebar-logo"><div class="logo-bolt"></div><span class="logo-name">Volt</span></div>
+    <div class="sidebar-nav">
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Progress</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Exercises</button>
+      <button class="nav-item active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar-ring" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));padding:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="width:100%;height:100%;border-radius:50%;background:#0D0D1A;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:11px;color:var(--text)">MK</div>
+      </div>
+      <div><div class="sidebar-footer-name">Marcus K.</div><div class="sidebar-footer-sub">@marcusk</div></div>
+    </div>
+  </nav>
+
+  <div class="d-main">
+    <!-- Desktop header -->
+    <div class="d-header">
+      <div>
+        <div class="d-header-title">Marcus König</div>
+        <div class="d-header-sub">@marcusk · Hybrid athlete · Berlin</div>
+      </div>
+      <div class="d-header-actions">
+        <button class="btn-secondary" style="font-size:12px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share profile
+        </button>
+        <button class="btn-secondary" style="font-size:12px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Edit profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="d-body">
+
+      <!-- LEFT: identity panel -->
+      <div class="d-left">
+
+        <!-- Avatar + name -->
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px">
+          <div style="position:relative;margin-bottom:12px">
+            <div class="d-avatar-ring">
+              <div class="d-avatar-inner">MK</div>
+            </div>
+            <div style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:var(--cyan);border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:9px;font-weight:600;color:#08080D">6</div>
+          </div>
+          <div style="font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--text);margin-bottom:3px">Marcus König</div>
+          <div style="font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-bottom:10px">@marcusk · Berlin</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:12px">
+            <span class="chip cyan">Hybrid athlete</span>
+            <span class="chip blue">Runner</span>
+            <span class="chip purple">Powerlifter</span>
+          </div>
+          <div class="profile-descriptor" style="text-align:left;font-size:12.5px">
+            <strong>Upper/lower 4×/wk · 2 runs · weekend rides.</strong> Strength-first block. Peaking SBD — best squat and deadlift on record this month.
+          </div>
+        </div>
+
+        <!-- Social + stats -->
+        <div style="display:flex;justify-content:space-around;text-align:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+          <div><div class="social-val">218</div><div class="social-lbl">Followers</div></div>
+          <div style="width:1px;background:var(--border)"></div>
+          <div><div class="social-val">84</div><div class="social-lbl">Following</div></div>
+          <div style="width:1px;background:var(--border)"></div>
+          <div><div class="social-val" style="color:var(--cyan)">9</div><div class="social-lbl">PRs this block</div></div>
+        </div>
+
+        <!-- Left panel stat list -->
+        <div style="display:flex;flex-direction:column;gap:0;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">Total workouts</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--cyan)">312</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">Total activities</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--blue)">94</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">Total volume lifted</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">4.2M kg</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">Distance 2025</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--blue)">847 km</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">PRs all-time</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--cyan)">38</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:12.5px;color:var(--text-dim)">Current streak</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--cyan)">42 days</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">
+            <span style="font-size:12.5px;color:var(--text-dim)">Block completion</span>
+            <span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--green)">88%</span>
+          </div>
+        </div>
+
+        <!-- Hybrid bar -->
+        <div style="margin-bottom:16px">
+          <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between"><span>Training split · 3mo</span><span style="color:var(--cyan)">73/27</span></div>
+          <div class="hybrid-bar-track"><div class="hybrid-bar-strength" style="width:73%"></div><div class="hybrid-bar-cardio" style="width:27%"></div></div>
+          <div class="hybrid-bar-legend">
+            <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:var(--cyan)"></div>Strength</div>
+            <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:var(--blue)"></div>Cardio</div>
+            <div style="margin-left:auto"><span class="chip cyan" style="font-size:9px">Strength-first</span></div>
+          </div>
+        </div>
+
+        <!-- 4-week pattern -->
+        <div>
+          <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">4-week daily pattern</div>
+          <div class="freq-row">
+            <div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day lift"></div><div class="freq-day rest"></div><div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day rest"></div>
+            <div class="freq-day lift"></div><div class="freq-day both"></div><div class="freq-day lift"></div><div class="freq-day rest"></div><div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day rest"></div>
+            <div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day lift"></div><div class="freq-day rest"></div><div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day ride" style="background:rgba(139,92,246,0.5)"></div>
+            <div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day lift"></div><div class="freq-day rest"></div><div class="freq-day lift"></div><div class="freq-day run"></div><div class="freq-day rest"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:5px">
+            <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(6,182,212,0.6)"></div>Lift</div>
+            <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(59,130,246,0.6)"></div>Run</div>
+            <div class="hybrid-legend-item"><div class="hybrid-legend-dot" style="background:rgba(139,92,246,0.6)"></div>Ride</div>
+          </div>
+        </div>
+
+      </div><!-- /d-left -->
+
+      <!-- RIGHT: achievements, PRs, bests, recent form -->
+      <div class="d-right">
+
+        <!-- Medals -->
+        <div class="d-section">
+          <div class="section-hd" style="margin-bottom:12px">
+            <div class="eyebrow">Achievements</div>
+            <button class="see-all">All →</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+
+            <div class="medal-card gold" style="width:auto">
+              <div class="medal-icon gold"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+              <div class="medal-name">Squat Century</div>
+              <div class="medal-val" style="color:var(--yellow)">160kg</div>
+              <div class="medal-date">May '25</div>
+            </div>
+
+            <div class="medal-card cyan-m" style="width:auto">
+              <div class="medal-icon cyan-m"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+              <div class="medal-name">6-week streak</div>
+              <div class="medal-val" style="color:var(--cyan)">42 days</div>
+              <div class="medal-date">Current</div>
+            </div>
+
+            <div class="medal-card blue-m" style="width:auto">
+              <div class="medal-icon blue-m"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+              <div class="medal-name">First Half</div>
+              <div class="medal-val" style="color:var(--blue)">21.1km</div>
+              <div class="medal-date">Apr '25</div>
+            </div>
+
+            <div class="medal-card purple-m" style="width:auto">
+              <div class="medal-icon purple-m"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <div class="medal-name">Volume peak</div>
+              <div class="medal-val" style="color:var(--purple)">54k<span style="font-size:10px">kg</span></div>
+              <div class="medal-date">May '25</div>
+            </div>
+
+            <div class="medal-card green-m" style="width:auto">
+              <div class="medal-icon green-m"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="medal-name">500km run</div>
+              <div class="medal-val" style="color:var(--green)">847km</div>
+              <div class="medal-date">Year '25</div>
+            </div>
+
+            <div class="medal-card gold" style="width:auto">
+              <div class="medal-icon gold"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+              <div class="medal-name">Deadlift 2×BW</div>
+              <div class="medal-val" style="color:var(--yellow)">215kg</div>
+              <div class="medal-date">May '25</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PR wall -->
+        <div class="d-section">
+          <div class="section-hd" style="margin-bottom:12px">
+            <div class="eyebrow">Best lifts</div>
+            <button class="see-all">All PRs →</button>
+          </div>
+          <div class="d-two-col">
+            <div class="pr-cell highlight">
+              <div class="pr-lift">Back Squat</div>
+              <div class="pr-weight" style="font-size:22px">162<span style="font-size:12px;color:var(--muted)">kg</span></div>
+              <div class="pr-detail">× 5 reps · est. 1RM</div>
+              <div class="pr-delta">↑ +8kg vs 3mo ago</div>
+            </div>
+            <div class="pr-cell highlight">
+              <div class="pr-lift">Deadlift</div>
+              <div class="pr-weight" style="font-size:22px">215<span style="font-size:12px;color:var(--muted)">kg</span></div>
+              <div class="pr-detail">× 3 reps · est. 1RM</div>
+              <div class="pr-delta">↑ +12kg vs 3mo ago</div>
+            </div>
+            <div class="pr-cell">
+              <div class="pr-lift">Bench Press</div>
+              <div class="pr-weight" style="font-size:22px">120<span style="font-size:12px;color:var(--muted)">kg</span></div>
+              <div class="pr-detail">× 5 reps · est. 1RM</div>
+              <div class="pr-delta">↑ +2.5kg this block</div>
+            </div>
+            <div class="pr-cell">
+              <div class="pr-lift">Overhead Press</div>
+              <div class="pr-weight" style="font-size:22px">82<span style="font-size:12px;color:var(--muted)">kg</span></div>
+              <div class="pr-detail">× 5 reps · est. 1RM</div>
+              <div class="pr-delta">↑ +2.5kg this block</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cardio bests -->
+        <div class="d-section">
+          <div class="section-hd" style="margin-bottom:12px">
+            <div class="eyebrow">Cardio bests</div>
+          </div>
+          <div class="d-two-col">
+            <div class="cardio-row" style="border:1px solid var(--border);border-radius:8px">
+              <div class="cardio-icon run"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+              <div class="cardio-label">Longest run</div>
+              <div><div class="cardio-best-val">21.1 km</div><div class="cardio-best-sub">2:04:38 · Apr 15</div></div>
+            </div>
+            <div class="cardio-row" style="border:1px solid var(--border);border-radius:8px">
+              <div class="cardio-icon run"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+              <div class="cardio-label">10k fastest</div>
+              <div><div class="cardio-best-val">52:10</div><div class="cardio-best-sub">5:13/km · May 10</div></div>
+            </div>
+            <div class="cardio-row" style="border:1px solid var(--border);border-radius:8px">
+              <div class="cardio-icon ride"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 12"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg></div>
+              <div class="cardio-label">Longest ride</div>
+              <div><div class="cardio-best-val">87.4 km</div><div class="cardio-best-sub">26.1 km/h · Mar 22</div></div>
+            </div>
+            <div class="cardio-row" style="border:1px solid var(--border);border-radius:8px">
+              <div class="cardio-icon hike"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-5 4 3 4-7 4 5"/></svg></div>
+              <div class="cardio-label">Most elevation</div>
+              <div><div class="cardio-best-val">+1,240 m</div><div class="cardio-best-sub">Grunewald · Feb 8</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent form (desktop — wider cards, more per row) -->
+        <div class="d-section">
+          <div class="section-hd" style="margin-bottom:12px">
+            <div class="eyebrow">Recent form</div>
+          </div>
+          <div class="d-three-col">
+            <div class="form-card pr" style="min-width:0">
+              <div class="form-eyebrow" style="color:var(--cyan)">Strength PR</div>
+              <div class="form-title">Back Squat</div>
+              <div class="form-val" style="color:var(--cyan)">162kg × 5</div>
+              <div class="form-sub">May 12 · est. 1RM up +8kg</div>
+            </div>
+            <div class="form-card run" style="min-width:0">
+              <div class="form-eyebrow" style="color:var(--blue)">Cardio PR</div>
+              <div class="form-title">10k run</div>
+              <div class="form-val" style="color:var(--blue)">52:10</div>
+              <div class="form-sub">May 10 · fastest ever</div>
+            </div>
+            <div class="form-card pr" style="min-width:0">
+              <div class="form-eyebrow" style="color:var(--cyan)">Strength PR</div>
+              <div class="form-title">Deadlift</div>
+              <div class="form-val" style="color:var(--cyan)">215kg × 3</div>
+              <div class="form-sub">May 8 · season best</div>
+            </div>
+            <div class="form-card" style="min-width:0;border-color:var(--green-border);background:var(--green-dim)">
+              <div class="form-eyebrow" style="color:var(--green)">Volume</div>
+              <div class="form-title">Best week</div>
+              <div class="form-val" style="color:var(--green)">54,200kg</div>
+              <div class="form-sub">W11 · all-time high</div>
+            </div>
+            <div class="form-card" style="min-width:0">
+              <div class="form-eyebrow" style="color:var(--purple)">Distance</div>
+              <div class="form-title">Longest ride</div>
+              <div class="form-val" style="color:var(--purple)">87.4km</div>
+              <div class="form-sub">Mar 22 · century prep</div>
+            </div>
+            <div class="form-card" style="min-width:0;border-color:var(--cyan-border);background:rgba(6,182,212,0.04)">
+              <div class="form-eyebrow" style="color:var(--cyan)">Streak</div>
+              <div class="form-title">Current run</div>
+              <div class="form-val" style="color:var(--cyan)">42 days</div>
+              <div class="form-sub">Active · best 48 days</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak / consistency month grid -->
+        <div class="d-section">
+          <div class="streak-section" style="margin:0">
+            <div class="streak-top">
+              <div>
+                <div class="streak-count">42</div>
+                <div class="streak-label">day streak · active</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:var(--f-mono);font-size:14px;font-weight:600;color:var(--text)">88%</div>
+                <div style="font-size:11px;color:var(--muted)">completion this block</div>
+              </div>
+            </div>
+            <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:6px">May</div>
+            <div class="month-grid">
+              <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+              <div class="m-dot rest"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+              <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot rest"></div>
+              <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+              <div class="m-dot done"></div><div class="m-dot rest"></div><div class="m-dot done"></div>
+              <div class="m-dot done"></div><div class="m-dot done"></div><div class="m-dot done"></div>
+              <div class="m-dot active"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /d-right -->
+    </div><!-- /d-body -->
+  </div><!-- /d-main -->
+</div><!-- /d-root -->
+
+</body>
+</html>

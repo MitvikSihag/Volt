@@ -74,6 +74,7 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse refresh(String rawRefreshToken) {
         RefreshToken stored = refreshTokenRepository.findByToken(rawRefreshToken)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));

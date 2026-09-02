@@ -2,6 +2,10 @@
 
 # Volt — Web Frontend
 
+> **PAUSED (Sep 2026).** Per [PRODUCT.md](../PRODUCT.md) the product is mobile-first; web shrinks
+> to landing page + read-only analytics companion, resumed post-launch. Don't build app features
+> here — new product work goes to `mobile/`.
+
 Web frontend for the Volt fitness platform. See the root `../CLAUDE.md` for the full product overview.
 
 ## Stack
@@ -52,11 +56,12 @@ lib/
 ## Design System
 All tokens are CSS variables defined in `app/globals.css` under `@theme`:
 - `--color-bg` / `--color-surface` / `--color-surface-2` — backgrounds
-- `--color-border` / `--color-border-subtle` — borders
-- `--color-accent` / `--color-accent-hover` / `--color-accent-muted` — orange accent (#F97316)
-- `--color-text` / `--color-text-muted` / `--color-text-subtle` — text
-- `--color-green` / `--color-blue` / `--color-red` — semantic colors
-- `--radius-sm/md/lg/xl` — border radii
+- `--color-border` / `--color-border-subtle` / `--color-border-strong` — borders
+- `--color-accent` (#06B6D4 cyan) / `--color-accent-hover` / `--color-accent-muted` — brand accent
+- `--color-text` / `--color-text-dim` (#A1A1B0) / `--color-text-muted` (#6B7280) / `--color-text-subtle` — text
+- `--color-green` / `--color-blue` / `--color-red` / `--color-yellow` / `--color-purple` — semantic colors
+- `--radius-sm` (6px) / `--radius-md` (8px) / `--radius-lg` (12px) / `--radius-xl` (14px) — border radii
+- `--font-sans` (Inter) / `--font-display` (Syne) / `--font-mono` (JetBrains Mono) — type families
 
 ## API Contract
 - Spec: `../backend/docs/api/openapi.yaml`
