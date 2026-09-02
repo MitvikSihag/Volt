@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Volt — Activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #09090E;
+  --card:          #111118;
+  --elevated:      #1C1C28;
+  --border:        #2A2A3C;
+  --border-strong: #3A3A50;
+  --text:          #F0F0F8;
+  --text-dim:      #A1A1B0;
+  --muted:         #6B7280;
+  --cyan:          #06B6D4;
+  --cyan-dim:      rgba(6,182,212,0.10);
+  --cyan-border:   rgba(6,182,212,0.30);
+  --green:         #22C55E;
+  --green-dim:     rgba(34,197,94,0.12);
+  --green-border:  rgba(34,197,94,0.28);
+  --blue:          #3B82F6;
+  --blue-dim:      rgba(59,130,246,0.12);
+  --blue-border:   rgba(59,130,246,0.30);
+  --yellow:        #EAB308;
+  --yellow-dim:    rgba(234,179,8,0.12);
+  --red:           #EF4444;
+  --purple:        #8B5CF6;
+  --f-display: 'Syne', sans-serif;
+  --f-sans:    'Inter', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+  --sidebar-w: 220px;
+  --tabbar-h:  64px;
+  --header-h:  56px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: var(--f-sans); min-height: 100dvh; overflow-x: hidden; }
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+input { font: inherit; color: inherit; outline: none; border: none; background: none; }
+svg { display: block; flex-shrink: 0; }
+
+/* ─── SHARED ATOMS ────────────────────────────────────────────────────────── */
+.btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: var(--blue); color: #fff; font-size: 13px; font-weight: 600; border-radius: 8px; transition: opacity 0.15s; white-space: nowrap; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; background: var(--elevated); border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-dim); border-radius: 8px; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+.btn-secondary:hover { border-color: var(--border-strong); color: var(--text); }
+
+.eyebrow { font-family: var(--f-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); }
+
+.intel-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 100px; font-family: var(--f-mono); font-size: 10px; font-weight: 500; white-space: nowrap; }
+.intel-badge.blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+.intel-badge.green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+.intel-badge.cyan   { background: var(--cyan-dim);   border: 1px solid var(--cyan-border);   color: var(--cyan); }
+.intel-badge.yellow { background: var(--yellow-dim); border: 1px solid rgba(234,179,8,0.28); color: var(--yellow); }
+.intel-badge.purple { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.28); color: var(--purple); }
+.intel-badge.muted  { background: var(--elevated);   border: 1px solid var(--border);        color: var(--muted); }
+
+/* activity-type icon box — blue for cardio, per design system */
+.act-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--blue-dim); border: 1px solid var(--blue-border); display: flex; align-items: center; justify-content: center; color: var(--blue); flex-shrink: 0; }
+.act-icon.ride  { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.28); color: var(--purple); }
+.act-icon.hike  { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+
+.sdiv { height: 1px; background: var(--border); margin: 18px 0; }
+.section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.see-all { font-size: 12px; font-weight: 500; color: var(--blue); }
+.see-all:hover { opacity: 0.8; }
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar { display: none; position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--card); border-right: 1px solid var(--border); flex-direction: column; z-index: 50; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 24px; border-bottom: 1px solid var(--border); }
+.logo-bolt { width: 22px; height: 22px; background: var(--cyan); clip-path: polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%); flex-shrink: 0; }
+.logo-name { font-family: var(--f-display); font-weight: 800; font-size: 17px; color: var(--text); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-dim); transition: background 0.15s, color 0.15s; }
+.nav-item:hover { background: var(--elevated); color: var(--text); }
+.nav-item.active { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue-border); }
+.nav-item svg { opacity: 0.7; } .nav-item.active svg { opacity: 1; }
+.sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.sidebar-footer-name { font-size: 13px; font-weight: 500; }
+.sidebar-footer-sub  { font-size: 11px; color: var(--muted); }
+
+/* ─── MOBILE SHELL ────────────────────────────────────────────────────────── */
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--tabbar-h); background: var(--card); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; z-index: 50; padding: 0 4px; }
+.tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 12px; color: var(--muted); font-size: 10px; font-weight: 500; border-radius: 8px; transition: color 0.15s; flex: 1; }
+.tab-item.active { color: var(--blue); }
+.tab-fab { width: 52px; height: 52px; border-radius: 50%; background: var(--cyan); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px var(--bg), 0 4px 16px rgba(6,182,212,0.4); flex-shrink: 0; margin-bottom: 8px; transition: transform 0.15s; }
+.tab-fab:hover { transform: scale(1.05); }
+
+.app-shell { min-height: 100dvh; padding-bottom: var(--tabbar-h); }
+.m-header { position: sticky; top: 0; z-index: 40; height: var(--header-h); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.m-header h1 { font-family: var(--f-display); font-weight: 700; font-size: 20px; }
+.main { padding: 14px 16px 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WEEKLY SUMMARY STRIP
+═══════════════════════════════════════════════════════════════════════════ */
+.week-strip {
+  display: flex; gap: 1px;
+  background: var(--border); border-radius: 10px; overflow: hidden;
+  margin-bottom: 14px;
+}
+.week-cell { flex: 1; background: var(--elevated); padding: 10px 8px; text-align: center; }
+.week-val { font-family: var(--f-mono); font-size: 14px; font-weight: 600; color: var(--text); line-height: 1; }
+.week-val.accent { color: var(--blue); }
+.week-lbl { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-top: 3px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOP ACTION AREA — record, import, sync
+═══════════════════════════════════════════════════════════════════════════ */
+.start-card {
+  background: var(--card);
+  border: 1px solid var(--blue-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.start-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 90px; height: 90px;
+  background: radial-gradient(circle at top right, rgba(59,130,246,0.10), transparent 70%);
+  pointer-events: none;
+}
+.start-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.start-label { font-family: var(--f-mono); font-size: 9.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.15em; color: var(--blue); margin-bottom: 3px; }
+.start-name { font-family: var(--f-display); font-weight: 700; font-size: 17px; color: var(--text); line-height: 1.15; }
+.start-meta { font-family: var(--f-mono); font-size: 11px; color: var(--text-dim); margin-top: 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.start-meta .dot { color: var(--border-strong); }
+.start-actions { display: flex; gap: 8px; }
+.start-btn { flex: 1; padding: 11px 16px; background: var(--blue); color: #fff; font-size: 13.5px; font-weight: 700; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 7px; transition: opacity 0.15s; }
+.start-btn:hover { opacity: 0.88; }
+.start-secondary { padding: 11px 14px; background: var(--elevated); border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; font-weight: 500; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: border-color 0.15s, color 0.15s; }
+.start-secondary:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* Alternative action cards — scrollable row */
+.action-alts { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 18px; }
+.action-alts::-webkit-scrollbar { display: none; }
+.alt-card { flex-shrink: 0; min-width: 148px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; cursor: pointer; transition: border-color 0.15s; }
+.alt-card:hover { border-color: var(--border-strong); }
+.alt-label { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 4px; }
+.alt-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.25; }
+.alt-meta { font-family: var(--f-mono); font-size: 10.5px; color: var(--text-dim); margin-bottom: 7px; }
+.alt-btn { display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; padding: 7px 10px; background: var(--elevated); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--text-dim); transition: border-color 0.15s, color 0.15s; }
+.alt-card:hover .alt-btn { border-color: var(--blue-border); color: var(--blue); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPE FILTER TABS
+═══════════════════════════════════════════════════════════════════════════ */
+.type-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.type-tab { padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+.type-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.type-tab-count { display: inline-flex; align-items: center; justify-content: center; padding: 1px 6px; border-radius: 100px; background: var(--elevated); font-family: var(--f-mono); font-size: 10px; font-weight: 600; color: var(--text-dim); margin-left: 5px; }
+.type-tab.active .type-tab-count { background: var(--blue-dim); color: var(--blue); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTIVITY CARDS
+═══════════════════════════════════════════════════════════════════════════ */
+.act-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.act-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.act-card:hover { border-color: var(--border-strong); }
+
+.act-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.act-info { flex: 1; min-width: 0; }
+.act-date { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); margin-bottom: 3px; }
+.act-title { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; margin-bottom: 4px; }
+.act-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.act-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.act-chevron { color: var(--border-strong); }
+
+/* Stat row */
+.act-stats { display: flex; gap: 0; background: var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.act-stat { flex: 1; background: var(--elevated); padding: 7px 10px; }
+.act-stat-val { font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 3px; }
+.act-stat-val.blue { color: var(--blue); }
+.act-stat-lbl { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+
+/* Mini route SVG */
+.act-route { height: 44px; background: var(--elevated); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+.act-route svg { width: 100%; height: 100%; }
+
+/* Volt intelligence note */
+.act-intel {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 10px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 7px; margin-top: 8px;
+  font-size: 12px; color: var(--text-dim);
+}
+.act-intel svg { flex-shrink: 0; color: var(--blue); opacity: 0.7; }
+.act-intel.positive svg { color: var(--green); }
+.act-intel.warning svg  { color: var(--yellow); }
+
+/* effort band */
+.effort-band { display: flex; gap: 2px; align-items: center; }
+.effort-pip { width: 6px; height: 6px; border-radius: 1px; background: var(--border); }
+.effort-pip.filled { background: var(--blue); }
+.effort-pip.peak   { background: var(--purple); }
+
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP LAYOUT
+═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  .sidebar { display: flex; }
+  .tabbar  { display: none; }
+  .app-shell { display: none; }
+
+  .d-root { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100dvh; }
+  .d-sidebar { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+
+  .d-main { overflow-y: auto; }
+  .d-header { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 56px; }
+  .d-header-left { display: flex; align-items: center; gap: 14px; }
+  .d-page-title { font-family: var(--f-display); font-weight: 700; font-size: 22px; }
+  /* Week stats inline in header */
+  .d-header-stats { display: flex; align-items: center; gap: 16px; padding: 6px 14px; background: var(--elevated); border: 1px solid var(--border); border-radius: 8px; }
+  .d-hstat { display: flex; flex-direction: column; gap: 1px; }
+  .d-hstat-val { font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--blue); line-height: 1; }
+  .d-hstat-lbl { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .d-hstat-sep { width: 1px; height: 24px; background: var(--border); }
+  .d-header-actions { display: flex; gap: 8px; }
+
+  /* Body: two-column split — left: actions + list; right: stats panel */
+  .d-body { display: grid; grid-template-columns: minmax(0,1fr) 320px; min-height: calc(100vh - 56px); }
+  .d-left { padding: 20px 24px 48px; border-right: 1px solid var(--border); }
+  .d-right { padding: 20px 20px 48px; background: var(--card); }
+
+  /* Desktop activity cards slightly denser */
+  .d-act-card { background: var(--elevated); }
+  .d-right .act-card { background: var(--elevated); }
+
+  /* Right panel sections */
+  .d-panel-card { background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .d-panel-title { font-family: var(--f-display); font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 10px; }
+}
+@media (max-width: 899px) { .d-root { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE APP SHELL
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+  <header class="m-header">
+    <h1>Activities</h1>
+    <div style="display:flex;gap:6px">
+      <button class="btn-secondary" style="padding:7px 12px;font-size:12px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+        Sync
+      </button>
+      <button class="btn-primary" style="padding:7px 14px;font-size:12.5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Record
+      </button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- ── Week summary strip ──────────────────────────────────── -->
+    <div class="week-strip">
+      <div class="week-cell">
+        <div class="week-val accent">3</div>
+        <div class="week-lbl">Activities</div>
+      </div>
+      <div class="week-cell">
+        <div class="week-val">28.4<span style="font-size:10px;color:var(--muted)">km</span></div>
+        <div class="week-lbl">Distance</div>
+      </div>
+      <div class="week-cell">
+        <div class="week-val">2h<span style="font-size:10px;color:var(--muted)">47</span></div>
+        <div class="week-lbl">Time</div>
+      </div>
+      <div class="week-cell">
+        <div class="week-val">312<span style="font-size:10px;color:var(--muted)">m</span></div>
+        <div class="week-lbl">Elevation</div>
+      </div>
+    </div>
+
+    <!-- ── Activity control surface ──────────────────────────────── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="eyebrow">ACTIVITY</div>
+      <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">GPS ready</div>
+    </div>
+
+    <!-- Resume banner — highest priority state when it exists -->
+    <div style="background:var(--card);border:1px solid var(--blue-border);border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:inset 3px 0 0 var(--blue)">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulse-dot 1.8s ease-in-out infinite"></div>
+        <span style="font-family:var(--f-mono);font-size:9.5px;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;color:var(--blue)">Recording paused · 14 min ago</span>
+      </div>
+      <div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text);margin-bottom:2px">Morning Run</div>
+      <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim);margin-bottom:10px">
+        <span style="color:var(--blue);font-weight:600">3.2 km</span> · <span style="color:var(--blue);font-weight:600">18:44</span> elapsed · GPS active
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="start-btn" style="flex:1;padding:10px 12px;font-size:13px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Resume recording
+        </button>
+        <button class="start-secondary" style="padding:10px 12px;font-size:12px;color:var(--muted)">Discard</button>
+      </div>
+    </div>
+
+    <!-- Activity type launchers — 2×2 grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+      <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:9px;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div class="act-icon" style="width:30px;height:30px;flex-shrink:0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Run</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">GPS · outdoor</div>
+        </div>
+      </button>
+      <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:9px;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div class="act-icon ride" style="width:30px;height:30px;flex-shrink:0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Ride</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">GPS · outdoor</div>
+        </div>
+      </button>
+      <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:9px;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div class="act-icon hike" style="width:30px;height:30px;flex-shrink:0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-5 4 3 4-7 4 5"/><path d="M3 20h18"/></svg>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Hike</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">GPS · trail</div>
+        </div>
+      </button>
+      <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:9px;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:30px;height:30px;border-radius:7px;background:var(--elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:13px;font-weight:600;color:var(--text-dim)">Manual</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">No GPS</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Operational alt row: sync pending (urgent first) · import · suggested -->
+    <div class="action-alts">
+      <div class="alt-card" style="border-color:rgba(234,179,8,0.28)">
+        <div class="alt-label" style="color:var(--yellow)">Garmin · 3 pending</div>
+        <div class="alt-name">Import activities</div>
+        <div class="alt-meta">Synced 2h ago · waiting</div>
+        <div style="margin-bottom:7px"><span class="intel-badge yellow">3 unimported</span></div>
+        <button class="alt-btn" style="border-color:rgba(234,179,8,0.28);color:var(--yellow)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+          Sync now
+        </button>
+      </div>
+      <div class="alt-card" style="border-color:var(--blue-border);background:rgba(59,130,246,0.04)">
+        <div class="alt-label" style="color:var(--blue)">Suggested today</div>
+        <div class="alt-name">Zone 2 Run</div>
+        <div class="alt-meta">8–12 km · &lt;145 bpm</div>
+        <div style="margin-bottom:7px"><span class="intel-badge cyan">After Lower B</span></div>
+        <button class="alt-btn" style="border-color:var(--blue-border);color:var(--blue)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start
+        </button>
+      </div>
+      <div class="alt-card">
+        <div class="alt-label">Import file</div>
+        <div class="alt-name">GPX / FIT</div>
+        <div class="alt-meta">From any device</div>
+        <div style="margin-bottom:7px"><span class="intel-badge muted">Manual import</span></div>
+        <button class="alt-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Activity type filter ─────────────────────────────────── -->
+    <div class="type-tabs">
+      <button class="type-tab active" onclick="switchTab(this)">All <span class="type-tab-count">94</span></button>
+      <button class="type-tab" onclick="switchTab(this)">Run <span class="type-tab-count">61</span></button>
+      <button class="type-tab" onclick="switchTab(this)">Ride <span class="type-tab-count">18</span></button>
+      <button class="type-tab" onclick="switchTab(this)">Hike <span class="type-tab-count">15</span></button>
+    </div>
+
+    <!-- ── Recent activities ────────────────────────────────────── -->
+    <div class="section-hd">
+      <div class="eyebrow" style="margin-bottom:0">Recent</div>
+      <button class="see-all">All history →</button>
+    </div>
+
+    <div class="act-list">
+
+      <!-- Activity 1: Long run — route preview kept; strongest justification -->
+      <div class="act-card">
+        <div class="act-top">
+          <div class="act-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+          </div>
+          <div class="act-info">
+            <div class="act-date">Sat, May 10 · 06:42</div>
+            <div class="act-title">Tempelhof Loop</div>
+            <div class="act-badges">
+              <span class="intel-badge blue">Run</span>
+              <span class="intel-badge purple">Longest in 6 wks</span>
+            </div>
+          </div>
+          <div class="act-right">
+            <svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="act-stats">
+          <div class="act-stat">
+            <div class="act-stat-val blue">14.2<span style="font-size:9px;color:var(--muted)">km</span></div>
+            <div class="act-stat-lbl">Distance</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">1:14<span style="font-size:9px;color:var(--muted)">:38</span></div>
+            <div class="act-stat-lbl">Duration</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">5:15<span style="font-size:9px;color:var(--muted)">/km</span></div>
+            <div class="act-stat-lbl">Avg pace</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">42<span style="font-size:9px;color:var(--muted)">m</span></div>
+            <div class="act-stat-lbl">Elev gain</div>
+          </div>
+        </div>
+
+        <!-- Route profile — justified: named route, longest in 6 weeks -->
+        <div class="act-route">
+          <svg viewBox="0 0 320 44" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <rect width="320" height="44" fill="#1C1C28"/>
+            <polyline points="20,32 45,28 68,20 95,16 118,12 142,15 162,20 180,24 200,18 220,12 240,16 260,22 278,28 296,32 310,30" stroke="rgba(59,130,246,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <polyline points="20,32 45,28 68,20 95,16 118,12 142,15 162,20 180,24 200,18 220,12 240,16 260,22 278,28 296,32 310,30 310,44 20,44" fill="rgba(59,130,246,0.08)" stroke="none"/>
+            <circle cx="20" cy="32" r="3" fill="#3B82F6"/>
+            <circle cx="310" cy="30" r="3" fill="#3B82F6" opacity="0.5"/>
+          </svg>
+        </div>
+
+        <div class="act-intel positive">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Longest run in 6 weeks — pace held in final 3km, no fade</span>
+        </div>
+
+        <!-- Utility actions -->
+        <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+            Repeat route
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            View splits
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>
+            Compare
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity 2: Recovery run — no route preview; short recovery effort -->
+      <div class="act-card">
+        <div class="act-top">
+          <div class="act-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+          </div>
+          <div class="act-info">
+            <div class="act-date">Wed, May 7 · 18:30</div>
+            <div class="act-title">Evening Recovery Run</div>
+            <div class="act-badges">
+              <span class="intel-badge blue">Run</span>
+              <span class="intel-badge green">Recovery</span>
+            </div>
+          </div>
+          <div class="act-right">
+            <svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="act-stats">
+          <div class="act-stat">
+            <div class="act-stat-val">6.4<span style="font-size:9px;color:var(--muted)">km</span></div>
+            <div class="act-stat-lbl">Distance</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">38<span style="font-size:9px;color:var(--muted)">:12</span></div>
+            <div class="act-stat-lbl">Duration</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">5:58<span style="font-size:9px;color:var(--muted)">/km</span></div>
+            <div class="act-stat-lbl">Avg pace</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">138<span style="font-size:9px;color:var(--muted)">bpm</span></div>
+            <div class="act-stat-lbl">Avg HR</div>
+          </div>
+        </div>
+
+        <div class="act-intel">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Easy effort following Deadlift Day — HR stable, recovery load appropriate</span>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+            Repeat route
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            View splits
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity 3: Ride — route preview removed on mobile; stats + intel sufficient -->
+      <div class="act-card">
+        <div class="act-top">
+          <div class="act-icon ride">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 12 5.5 14 4 17.5"/><path d="M15 6l-1 3-3 2-2 6.5"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg>
+          </div>
+          <div class="act-info">
+            <div class="act-date">Sun, May 4 · 09:15</div>
+            <div class="act-title">Müggelsee Sunday Ride</div>
+            <div class="act-badges">
+              <span class="intel-badge purple">Ride</span>
+              <span class="intel-badge yellow">High effort</span>
+            </div>
+          </div>
+          <div class="act-right">
+            <svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="act-stats">
+          <div class="act-stat">
+            <div class="act-stat-val">42.7<span style="font-size:9px;color:var(--muted)">km</span></div>
+            <div class="act-stat-lbl">Distance</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">1:38<span style="font-size:9px;color:var(--muted)">:00</span></div>
+            <div class="act-stat-lbl">Duration</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">26.2<span style="font-size:9px;color:var(--muted)">km/h</span></div>
+            <div class="act-stat-lbl">Avg speed</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">270<span style="font-size:9px;color:var(--muted)">m</span></div>
+            <div class="act-stat-lbl">Elev gain</div>
+          </div>
+        </div>
+
+        <div class="act-intel warning">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>High effort ride — pace dipped day after; leg day back-loaded this week</span>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+            Repeat route
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            View splits
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>
+            Compare
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity 4: Trail hike -->
+      <div class="act-card">
+        <div class="act-top">
+          <div class="act-icon hike">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-5 4 3 4-7 4 5"/><path d="M3 20h18"/></svg>
+          </div>
+          <div class="act-info">
+            <div class="act-date">Sat, Apr 27 · 10:00</div>
+            <div class="act-title">Grunewald Trails</div>
+            <div class="act-badges">
+              <span class="intel-badge green">Hike</span>
+              <span class="intel-badge muted">Active recovery</span>
+            </div>
+          </div>
+          <div class="act-right">
+            <svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="act-stats">
+          <div class="act-stat">
+            <div class="act-stat-val">8.1<span style="font-size:9px;color:var(--muted)">km</span></div>
+            <div class="act-stat-lbl">Distance</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">2:08<span style="font-size:9px;color:var(--muted)">:00</span></div>
+            <div class="act-stat-lbl">Duration</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">15:48<span style="font-size:9px;color:var(--muted)">/km</span></div>
+            <div class="act-stat-lbl">Avg pace</div>
+          </div>
+          <div class="act-stat">
+            <div class="act-stat-val">185<span style="font-size:9px;color:var(--muted)">m</span></div>
+            <div class="act-stat-lbl">Elev gain</div>
+          </div>
+        </div>
+
+        <div class="act-intel positive">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          <span>Best recovery week activity — low HR, good for prep before squat block</span>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+            Repeat route
+          </button>
+          <button style="flex:1;padding:7px 8px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            View splits
+          </button>
+        </div>
+      </div>
+
+      <!-- Show more -->
+      <button class="btn-secondary" style="width:100%;justify-content:center;padding:11px">
+        Show older activities
+      </button>
+
+    </div><!-- /act-list -->
+  </div><!-- /main -->
+</div><!-- /app-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE TAB BAR
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="tabbar">
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Home
+  </button>
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+    Workouts
+  </button>
+  <button class="tab-fab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="tab-item active">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Activities
+  </button>
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DESKTOP LAYOUT
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="d-root">
+  <!-- Sidebar -->
+  <nav class="d-sidebar">
+    <div class="sidebar-logo"><div class="logo-bolt"></div><span class="logo-name">Volt</span></div>
+    <div class="sidebar-nav">
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+      <button class="nav-item active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Progress</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Exercises</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar">MK</div>
+      <div><div class="sidebar-footer-name">Marcus K.</div><div class="sidebar-footer-sub">@marcusk</div></div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="d-main">
+
+    <!-- Desktop header with week stats inline -->
+    <div class="d-header">
+      <div class="d-header-left">
+        <div class="d-page-title">Activities</div>
+        <!-- Inline week summary -->
+        <div class="d-header-stats">
+          <div class="d-hstat"><div class="d-hstat-val">3</div><div class="d-hstat-lbl">This week</div></div>
+          <div class="d-hstat-sep"></div>
+          <div class="d-hstat"><div class="d-hstat-val" style="color:var(--text)">28.4<span style="font-size:10px;color:var(--muted)">km</span></div><div class="d-hstat-lbl">Distance</div></div>
+          <div class="d-hstat-sep"></div>
+          <div class="d-hstat"><div class="d-hstat-val" style="color:var(--text)">2h 47m</div><div class="d-hstat-lbl">Moving time</div></div>
+          <div class="d-hstat-sep"></div>
+          <div class="d-hstat"><div class="d-hstat-val" style="color:var(--text)">312<span style="font-size:10px;color:var(--muted)">m</span></div><div class="d-hstat-lbl">Elevation</div></div>
+        </div>
+      </div>
+      <div class="d-header-actions">
+        <button class="btn-secondary" style="font-size:12.5px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import GPX
+        </button>
+        <button class="btn-secondary" style="font-size:12.5px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+          Sync devices
+        </button>
+        <button class="btn-primary" style="font-size:12.5px;padding:8px 16px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Record activity
+        </button>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="d-body">
+
+      <!-- LEFT: actions + activity list -->
+      <div class="d-left">
+
+        <!-- Activity control surface — state-aware, multi-path -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="eyebrow">ACTIVITY</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted)">GPS ready · Garmin connected</div>
+        </div>
+
+        <!-- Resume state — highest priority -->
+        <div style="background:var(--card);border:1px solid var(--blue-border);border-radius:10px;padding:14px 16px;margin-bottom:14px;box-shadow:inset 3px 0 0 var(--blue)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+                <div style="width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulse-dot 1.8s ease-in-out infinite"></div>
+                <span style="font-family:var(--f-mono);font-size:9.5px;font-weight:500;text-transform:uppercase;letter-spacing:0.15em;color:var(--blue)">Recording paused · 14 min ago</span>
+              </div>
+              <div style="font-family:var(--f-display);font-weight:700;font-size:18px;color:var(--text);margin-bottom:4px">Morning Run</div>
+              <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim)">
+                <span style="color:var(--blue);font-weight:600">3.2 km</span> logged · <span style="color:var(--blue);font-weight:600">18:44</span> elapsed · GPS lock active
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:156px">
+              <button class="start-btn" style="padding:10px 14px;font-size:13px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Resume recording
+              </button>
+              <button class="start-secondary" style="padding:8px 14px;font-size:12px;color:var(--muted);justify-content:center">Discard session</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start by activity type — compact 4-tile grid -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+          <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div class="act-icon" style="width:32px;height:32px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">Run</div>
+          </button>
+          <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div class="act-icon ride" style="width:32px;height:32px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">Ride</div>
+          </button>
+          <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div class="act-icon hike" style="width:32px;height:32px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-5 4 3 4-7 4 5"/><path d="M3 20h18"/></svg>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">Hike</div>
+          </button>
+          <button style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:border-color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-dim)">Manual</div>
+          </button>
+        </div>
+
+        <!-- Utility bar: sync pending (urgent) · suggested · import -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:20px">
+          <div style="background:var(--card);border:1px solid rgba(234,179,8,0.28);border-radius:10px;padding:10px 12px">
+            <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:var(--yellow);margin-bottom:4px">Garmin · 3 pending</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">Import activities</div>
+            <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-dim);margin-bottom:7px">Synced 2h ago · waiting</div>
+            <button class="alt-btn" style="border-color:rgba(234,179,8,0.28);color:var(--yellow)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+              Sync now
+            </button>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--blue-border);border-radius:10px;padding:10px 12px;background:rgba(59,130,246,0.04)">
+            <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:var(--blue);margin-bottom:4px">Suggested today</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">Zone 2 Run</div>
+            <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-dim);margin-bottom:7px">8–12 km · &lt;145 bpm</div>
+            <button class="alt-btn" style="border-color:var(--blue-border);color:var(--blue)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Start
+            </button>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+            <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin-bottom:4px">Import file</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">GPX / FIT</div>
+            <div style="font-family:var(--f-mono);font-size:10px;color:var(--text-dim);margin-bottom:7px">From any device</div>
+            <button class="alt-btn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="type-tabs">
+          <button class="type-tab active" onclick="switchTab(this)">All <span class="type-tab-count">94</span></button>
+          <button class="type-tab" onclick="switchTab(this)">Run <span class="type-tab-count">61</span></button>
+          <button class="type-tab" onclick="switchTab(this)">Ride <span class="type-tab-count">18</span></button>
+          <button class="type-tab" onclick="switchTab(this)">Hike <span class="type-tab-count">15</span></button>
+        </div>
+
+        <div class="section-hd">
+          <div class="eyebrow" style="margin-bottom:0">Recent activities</div>
+          <button class="see-all">Full history →</button>
+        </div>
+
+        <!-- Activity cards (desktop — full width left column) -->
+        <div class="act-list" style="margin-top:10px">
+
+          <!-- Activity 1: Long run -->
+          <div class="act-card d-act-card">
+            <div class="act-top">
+              <div class="act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+              <div class="act-info">
+                <div class="act-date">Sat, May 10 · 06:42</div>
+                <div class="act-title">Tempelhof Loop</div>
+                <div class="act-badges">
+                  <span class="intel-badge blue">Run</span>
+                  <span class="intel-badge purple">Longest in 6 wks</span>
+                </div>
+              </div>
+              <div class="act-right">
+                <svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 280px;gap:12px;align-items:start">
+              <div>
+                <div class="act-stats" style="margin-bottom:8px">
+                  <div class="act-stat"><div class="act-stat-val blue">14.2<span style="font-size:9px;color:var(--muted)">km</span></div><div class="act-stat-lbl">Distance</div></div>
+                  <div class="act-stat"><div class="act-stat-val">1:14<span style="font-size:9px;color:var(--muted)">:38</span></div><div class="act-stat-lbl">Duration</div></div>
+                  <div class="act-stat"><div class="act-stat-val">5:15<span style="font-size:9px;color:var(--muted)">/km</span></div><div class="act-stat-lbl">Avg pace</div></div>
+                  <div class="act-stat"><div class="act-stat-val">42<span style="font-size:9px;color:var(--muted)">m</span></div><div class="act-stat-lbl">Elev</div></div>
+                  <div class="act-stat"><div class="act-stat-val">152<span style="font-size:9px;color:var(--muted)">bpm</span></div><div class="act-stat-lbl">Avg HR</div></div>
+                </div>
+                <div class="act-intel positive">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  <span>Longest run in 6 weeks — strong finish, pace held through final 3km</span>
+                </div>
+                <!-- Utility actions -->
+                <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+                    Repeat route
+                  </button>
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    View splits
+                  </button>
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>
+                    Compare pace
+                  </button>
+                </div>
+              </div>
+              <div class="act-route" style="height:80px">
+                <svg viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                  <rect width="280" height="80" fill="#1C1C28"/>
+                  <polyline points="14,60 38,50 62,36 86,24 108,18 132,26 152,36 170,28 192,18 214,12 236,22 256,36 272,50 276,56" stroke="rgba(59,130,246,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <polyline points="14,60 38,50 62,36 86,24 108,18 132,26 152,36 170,28 192,18 214,12 236,22 256,36 272,50 276,56 276,80 14,80" fill="rgba(59,130,246,0.08)" stroke="none"/>
+                  <circle cx="14" cy="60" r="4" fill="#3B82F6"/>
+                  <circle cx="276" cy="56" r="4" fill="#3B82F6" opacity="0.5"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity 2: Recovery run -->
+          <div class="act-card d-act-card">
+            <div class="act-top">
+              <div class="act-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg></div>
+              <div class="act-info">
+                <div class="act-date">Wed, May 7 · 18:30</div>
+                <div class="act-title">Evening Recovery Run</div>
+                <div class="act-badges"><span class="intel-badge blue">Run</span><span class="intel-badge green">Recovery</span></div>
+              </div>
+              <div class="act-right"><svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+            </div>
+            <div class="act-stats" style="margin-bottom:8px">
+              <div class="act-stat"><div class="act-stat-val">6.4<span style="font-size:9px;color:var(--muted)">km</span></div><div class="act-stat-lbl">Distance</div></div>
+              <div class="act-stat"><div class="act-stat-val">38<span style="font-size:9px;color:var(--muted)">:12</span></div><div class="act-stat-lbl">Duration</div></div>
+              <div class="act-stat"><div class="act-stat-val">5:58<span style="font-size:9px;color:var(--muted)">/km</span></div><div class="act-stat-lbl">Avg pace</div></div>
+              <div class="act-stat"><div class="act-stat-val">138<span style="font-size:9px;color:var(--muted)">bpm</span></div><div class="act-stat-lbl">Avg HR</div></div>
+              <div class="act-stat"><div class="act-stat-val">18<span style="font-size:9px;color:var(--muted)">m</span></div><div class="act-stat-lbl">Elev</div></div>
+            </div>
+            <div class="act-intel" style="margin-bottom:8px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Easy effort following Deadlift Day — HR stable, recovery load appropriate</span>
+            </div>
+            <div style="display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border)">
+              <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+                Repeat route
+              </button>
+              <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                View splits
+              </button>
+              <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>
+                Compare pace
+              </button>
+            </div>
+          </div>
+
+          <!-- Activity 3: Ride -->
+          <div class="act-card d-act-card">
+            <div class="act-top">
+              <div class="act-icon ride"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 12 5.5 14 4 17.5"/><path d="M15 6l-1 3-3 2-2 6.5"/><line x1="15" y1="6" x2="18.5" y2="17.5"/></svg></div>
+              <div class="act-info">
+                <div class="act-date">Sun, May 4 · 09:15</div>
+                <div class="act-title">Müggelsee Sunday Ride</div>
+                <div class="act-badges"><span class="intel-badge purple">Ride</span><span class="intel-badge yellow">High effort</span></div>
+              </div>
+              <div class="act-right"><svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 280px;gap:12px;align-items:start">
+              <div>
+                <div class="act-stats" style="margin-bottom:8px">
+                  <div class="act-stat"><div class="act-stat-val">42.7<span style="font-size:9px;color:var(--muted)">km</span></div><div class="act-stat-lbl">Distance</div></div>
+                  <div class="act-stat"><div class="act-stat-val">1:38<span style="font-size:9px;color:var(--muted)">:00</span></div><div class="act-stat-lbl">Duration</div></div>
+                  <div class="act-stat"><div class="act-stat-val">26.2<span style="font-size:9px;color:var(--muted)">km/h</span></div><div class="act-stat-lbl">Avg spd</div></div>
+                  <div class="act-stat"><div class="act-stat-val">270<span style="font-size:9px;color:var(--muted)">m</span></div><div class="act-stat-lbl">Elev</div></div>
+                  <div class="act-stat"><div class="act-stat-val">162<span style="font-size:9px;color:var(--muted)">bpm</span></div><div class="act-stat-lbl">Avg HR</div></div>
+                </div>
+                <div class="act-intel warning" style="margin-bottom:8px">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span>High effort ride — pace dipped day after; leg day back-loaded this week</span>
+                </div>
+                <div style="display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border)">
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+                    Repeat route
+                  </button>
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    View splits
+                  </button>
+                  <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>
+                    Compare
+                  </button>
+                </div>
+              </div>
+              <!-- Elevation profile — analytical, not a map -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;height:100%;min-height:100px;padding:10px 10px 6px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:6px">Elevation profile</div>
+                <div style="flex:1;display:flex;align-items:flex-end;gap:2px;min-height:48px">
+                  <svg viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:48px" preserveAspectRatio="none">
+                    <defs><linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(139,92,246,0.35)"/><stop offset="100%" stop-color="rgba(139,92,246,0.04)"/></linearGradient></defs>
+                    <polyline points="0,44 18,38 34,28 50,20 66,14 82,18 98,26 114,20 130,10 146,6 162,14 178,24 196,36 200,40" stroke="rgba(139,92,246,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <polygon points="0,44 18,38 34,28 50,20 66,14 82,18 98,26 114,20 130,10 146,6 162,14 178,24 196,36 200,40 200,48 0,48" fill="url(#elevGrad)"/>
+                  </svg>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px">
+                  <span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">0 km</span>
+                  <span style="font-family:var(--f-mono);font-size:9px;color:var(--purple)">↑ 270m gain</span>
+                  <span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">42.7 km</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity 4: Hike -->
+          <div class="act-card d-act-card">
+            <div class="act-top">
+              <div class="act-icon hike"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l4-5 4 3 4-7 4 5"/><path d="M3 20h18"/></svg></div>
+              <div class="act-info">
+                <div class="act-date">Sat, Apr 27 · 10:00</div>
+                <div class="act-title">Grunewald Trails</div>
+                <div class="act-badges"><span class="intel-badge green">Hike</span><span class="intel-badge muted">Active recovery</span></div>
+              </div>
+              <div class="act-right"><svg class="act-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+            </div>
+            <div class="act-stats" style="margin-bottom:8px">
+              <div class="act-stat"><div class="act-stat-val">8.1<span style="font-size:9px;color:var(--muted)">km</span></div><div class="act-stat-lbl">Distance</div></div>
+              <div class="act-stat"><div class="act-stat-val">2:08<span style="font-size:9px;color:var(--muted)">:00</span></div><div class="act-stat-lbl">Duration</div></div>
+              <div class="act-stat"><div class="act-stat-val">15:48<span style="font-size:9px;color:var(--muted)">/km</span></div><div class="act-stat-lbl">Avg pace</div></div>
+              <div class="act-stat"><div class="act-stat-val">185<span style="font-size:9px;color:var(--muted)">m</span></div><div class="act-stat-lbl">Elev</div></div>
+              <div class="act-stat"><div class="act-stat-val">112<span style="font-size:9px;color:var(--muted)">bpm</span></div><div class="act-stat-lbl">Avg HR</div></div>
+            </div>
+            <div style="display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border)">
+              <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--blue-border)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+                Repeat route
+              </button>
+              <button style="flex:1;padding:7px 8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color 0.15s,color 0.15s" onmouseover="this.style.borderColor='var(--border-strong)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                View splits
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-secondary" style="width:100%;justify-content:center;font-size:12px;padding:10px">
+            Show older activities
+          </button>
+
+        </div><!-- /act-list desktop -->
+      </div><!-- /d-left -->
+
+      <!-- RIGHT: analytics panel -->
+      <div class="d-right">
+
+        <!-- 4-week volume chart -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">4-week distance</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:64px;margin-bottom:6px">
+            <!-- weekly bars — Run = blue, Ride = purple, Hike = green -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;height:100%;justify-content:flex-end">
+              <div style="height:30%;background:rgba(59,130,246,0.35);border-radius:2px 2px 0 0"></div>
+              <div style="height:8%;background:rgba(139,92,246,0.35);border-radius:2px 2px 0 0"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;height:100%;justify-content:flex-end">
+              <div style="height:55%;background:rgba(59,130,246,0.35);border-radius:2px 2px 0 0"></div>
+              <div style="height:20%;background:rgba(139,92,246,0.35);border-radius:2px 2px 0 0"></div>
+              <div style="height:10%;background:rgba(34,197,94,0.35);border-radius:2px 2px 0 0"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;height:100%;justify-content:flex-end">
+              <div style="height:48%;background:rgba(59,130,246,0.4);border-radius:2px 2px 0 0"></div>
+              <div style="height:32%;background:rgba(139,92,246,0.4);border-radius:2px 2px 0 0"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;height:100%;justify-content:flex-end">
+              <div style="height:70%;background:var(--blue);border-radius:2px 2px 0 0;opacity:0.7"></div>
+              <div style="height:12%;background:var(--green);border-radius:2px 2px 0 0;opacity:0.7"></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">Apr 22</span>
+            <span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">This week</span>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:7px;height:7px;border-radius:1px;background:var(--blue)"></div><span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">Run</span></div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:7px;height:7px;border-radius:1px;background:var(--purple)"></div><span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">Ride</span></div>
+            <div style="display:flex;align-items:center;gap:4px"><div style="width:7px;height:7px;border-radius:1px;background:var(--green)"></div><span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">Hike</span></div>
+          </div>
+        </div>
+
+        <!-- Recent pace trend -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Run pace — last 8 sessions</div>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:52px;margin-bottom:6px">
+            <!-- pace bars — taller = faster (inverted) — values roughly 4:50–6:20/km -->
+            <div style="flex:1;height:55%;background:rgba(59,130,246,0.3);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:62%;background:rgba(59,130,246,0.3);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:58%;background:rgba(59,130,246,0.3);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:72%;background:rgba(59,130,246,0.35);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:48%;background:rgba(59,130,246,0.3);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:68%;background:rgba(59,130,246,0.35);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:45%;background:rgba(59,130,246,0.3);border-radius:2px 2px 0 0"></div>
+            <div style="flex:1;height:78%;background:var(--blue);border-radius:2px 2px 0 0;opacity:0.75"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-family:var(--f-mono);font-size:9px;color:var(--muted)">8 runs ago</span>
+            <span style="font-family:var(--f-mono);font-size:9px;color:var(--blue)">Latest · 5:15/km</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;color:var(--text-dim)">Avg pace (4 wk)</span>
+            <span style="font-family:var(--f-mono);font-size:12.5px;font-weight:600;color:var(--text)">5:28<span style="font-size:10px;color:var(--muted)">/km</span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+            <span style="font-size:12px;color:var(--text-dim)">vs prior 4 wk</span>
+            <span style="font-family:var(--f-mono);font-size:12px;color:var(--green)">↑ 0:08/km faster</span>
+          </div>
+        </div>
+
+        <!-- Cross-discipline notes -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Training context</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:4px">Cardio load this week</div>
+              <!-- Load bar -->
+              <div style="height:5px;background:var(--elevated);border-radius:3px;overflow:hidden;margin-bottom:4px">
+                <div style="height:100%;width:60%;background:var(--blue);border-radius:3px"></div>
+              </div>
+              <div style="font-size:12px;color:var(--text-dim)">Moderate — within hybrid-athlete target range</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:4px">Strength vs cardio split</div>
+              <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;margin-bottom:4px">
+                <div style="flex:3;background:var(--cyan)"></div>
+                <div style="flex:2;background:var(--blue)"></div>
+              </div>
+              <div style="font-size:12px;color:var(--text-dim)">60% lift · 40% cardio — balanced for peaking</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--green-border);border-radius:8px">
+              <div style="font-size:12px;color:var(--text-dim)">
+                <span style="color:var(--green);font-weight:600">Zone 2 run today</span> recommended — follows Lower B from yesterday. Keeps cardio load without impacting strength recovery.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Device connections -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Connected devices</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text)">Garmin Forerunner 965</div>
+                <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-top:2px">Last sync: 2h ago · 3 pending</div>
+              </div>
+              <span class="intel-badge green">Synced</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text)">Apple Health</div>
+                <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-top:2px">HR + HRV · passive import</div>
+              </div>
+              <span class="intel-badge green">Active</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /d-right -->
+    </div><!-- /d-body -->
+  </div><!-- /d-main -->
+</div><!-- /d-root -->
+
+<script>
+function switchTab(btn) {
+  btn.closest('.type-tabs').querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

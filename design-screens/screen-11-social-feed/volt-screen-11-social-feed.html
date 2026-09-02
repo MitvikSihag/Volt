@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Volt — Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #09090E;
+  --card:          #111118;
+  --elevated:      #1C1C28;
+  --border:        #2A2A3C;
+  --border-strong: #3A3A50;
+  --text:          #F0F0F8;
+  --text-dim:      #A1A1B0;
+  --muted:         #6B7280;
+  --cyan:          #06B6D4;
+  --cyan-dim:      rgba(6,182,212,0.10);
+  --cyan-border:   rgba(6,182,212,0.30);
+  --green:         #22C55E;
+  --green-dim:     rgba(34,197,94,0.12);
+  --green-border:  rgba(34,197,94,0.28);
+  --blue:          #3B82F6;
+  --blue-dim:      rgba(59,130,246,0.12);
+  --blue-border:   rgba(59,130,246,0.30);
+  --yellow:        #EAB308;
+  --yellow-dim:    rgba(234,179,8,0.12);
+  --red:           #EF4444;
+  --purple:        #8B5CF6;
+  --f-display: 'Syne', sans-serif;
+  --f-sans:    'Inter', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+  --sidebar-w: 220px;
+  --tabbar-h:  64px;
+  --header-h:  56px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: var(--f-sans); min-height: 100dvh; overflow-x: hidden; }
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+svg { display: block; flex-shrink: 0; }
+
+/* ─── SHARED ATOMS ────────────────────────────────────────────────────────── */
+.eyebrow { font-family: var(--f-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 100px; font-family: var(--f-mono); font-size: 10px; font-weight: 500; white-space: nowrap; }
+.chip.cyan   { background: var(--cyan-dim);              border: 1px solid var(--cyan-border);            color: var(--cyan); }
+.chip.blue   { background: var(--blue-dim);              border: 1px solid var(--blue-border);            color: var(--blue); }
+.chip.green  { background: var(--green-dim);             border: 1px solid var(--green-border);           color: var(--green); }
+.chip.yellow { background: var(--yellow-dim);            border: 1px solid rgba(234,179,8,0.28);           color: var(--yellow); }
+.chip.purple { background: rgba(139,92,246,0.12);        border: 1px solid rgba(139,92,246,0.28);          color: var(--purple); }
+.chip.muted  { background: var(--elevated);              border: 1px solid var(--border);                 color: var(--muted); }
+.chip.hybrid { background: linear-gradient(90deg,rgba(6,182,212,0.12),rgba(59,130,246,0.12)); border: 1px solid var(--cyan-border); color: var(--cyan); }
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.d-sidebar { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 24px; border-bottom: 1px solid var(--border); }
+.logo-bolt { width: 22px; height: 22px; background: var(--cyan); clip-path: polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%); flex-shrink: 0; }
+.logo-name { font-family: var(--f-display); font-weight: 800; font-size: 17px; color: var(--text); letter-spacing: -0.01em; }
+.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-dim); transition: background 0.15s, color 0.15s; }
+.nav-item:hover { background: var(--elevated); color: var(--text); }
+.nav-item.active { background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan-border); }
+.nav-item svg { opacity: 0.7; } .nav-item.active svg { opacity: 1; }
+.sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.sf-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--cyan)); display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-weight: 800; font-size: 11px; color: #fff; flex-shrink: 0; }
+.sidebar-footer-name { font-size: 13px; font-weight: 500; }
+.sidebar-footer-sub  { font-size: 11px; color: var(--muted); }
+
+/* ─── MOBILE SHELL ────────────────────────────────────────────────────────── */
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--tabbar-h); background: var(--card); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; z-index: 50; padding: 0 4px; }
+.tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 12px; color: var(--muted); font-size: 10px; font-weight: 500; border-radius: 8px; transition: color 0.15s; flex: 1; }
+.tab-item.active { color: var(--cyan); }
+.tab-fab { width: 52px; height: 52px; border-radius: 50%; background: var(--cyan); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px var(--bg), 0 4px 16px rgba(6,182,212,0.4); flex-shrink: 0; margin-bottom: 8px; }
+.app-shell { min-height: 100dvh; padding-bottom: var(--tabbar-h); }
+
+/* ─── MOBILE HEADER ───────────────────────────────────────────────────────── */
+.m-header { position: sticky; top: 0; z-index: 40; height: var(--header-h); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+.m-header h1 { font-family: var(--f-display); font-weight: 700; font-size: 20px; }
+.m-icon-btn { width: 34px; height: 34px; border-radius: 8px; background: var(--elevated); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-dim); }
+.m-icon-btn:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ─── FEED FILTER TABS ────────────────────────────────────────────────────── */
+.feed-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.feed-tabs::-webkit-scrollbar { display: none; }
+.feed-tab { padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; white-space: nowrap; flex-shrink: 0; }
+.feed-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.feed-tab-count { display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; border-radius: 100px; background: var(--elevated); font-family: var(--f-mono); font-size: 9.5px; font-weight: 600; color: var(--text-dim); margin-left: 4px; }
+.feed-tab.active .feed-tab-count { background: var(--cyan-dim); color: var(--cyan); }
+
+/* ─── FEED LIST ───────────────────────────────────────────────────────────── */
+.feed-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 20px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHARED POST CARD STRUCTURE
+   post-card → post-header · post-body (varies by type) · post-footer
+═══════════════════════════════════════════════════════════════════════════ */
+.post-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.post-card:hover { border-color: var(--border-strong); }
+
+/* Domain accent left border */
+.post-card.strength { box-shadow: inset 3px 0 0 var(--cyan); }
+.post-card.cardio   { box-shadow: inset 3px 0 0 var(--blue); }
+.post-card.hybrid   { box-shadow: inset 3px 0 0 var(--green); }
+.post-card.medal    { box-shadow: inset 3px 0 0 var(--yellow); }
+.post-card.pr       { box-shadow: inset 3px 0 0 var(--cyan); border-color: var(--cyan-border); }
+
+/* ── Post header ─────────────────────────────────────────────────────────── */
+.post-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px 10px;
+}
+.post-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-display); font-weight: 700; font-size: 12px;
+  color: #fff; flex-shrink: 0;
+}
+.post-meta { flex: 1; min-width: 0; }
+.post-name { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.post-context { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.post-context .dot { color: var(--border-strong); }
+.post-type-tag { font-family: var(--f-mono); font-size: 9px; font-weight: 500; padding: 1px 7px; border-radius: 4px; }
+
+/* ── Post stat grid ──────────────────────────────────────────────────────── */
+.post-stats {
+  display: flex; gap: 1px;
+  background: var(--border);
+  margin: 0 14px 10px;
+  border-radius: 8px; overflow: hidden;
+}
+.pstat { flex: 1; background: var(--elevated); padding: 8px 10px; }
+.pstat-val { font-family: var(--f-mono); font-size: 14px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 3px; }
+.pstat-val.cyan   { color: var(--cyan); }
+.pstat-val.blue   { color: var(--blue); }
+.pstat-val.green  { color: var(--green); }
+.pstat-lbl { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+
+/* ── Post set table (strength posts) ─────────────────────────────────────── */
+.post-sets { padding: 0 14px 10px; }
+.set-row-mini { display: grid; grid-template-columns: 20px 1fr auto auto; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.set-row-mini:last-child { border-bottom: none; }
+.srm-num { font-family: var(--f-mono); font-size: 10px; color: var(--muted); text-align: center; }
+.srm-type { font-family: var(--f-mono); font-size: 9px; padding: 1px 6px; border-radius: 3px; background: var(--elevated); color: var(--text-dim); border: 1px solid var(--border); }
+.srm-type.warmup { background: rgba(234,179,8,0.12); color: var(--yellow); border: none; }
+.srm-perf { font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--text); }
+.srm-perf.pr { color: var(--cyan); }
+.srm-pr-tag { font-family: var(--f-mono); font-size: 9px; background: var(--cyan-dim); border: 1px solid var(--cyan-border); color: var(--cyan); border-radius: 3px; padding: 1px 5px; }
+.srm-check { width: 16px; height: 16px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.srm-check-pr { width: 16px; height: 16px; border-radius: 50%; background: var(--cyan); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* ── Volt intelligence note ──────────────────────────────────────────────── */
+.post-intel {
+  margin: 0 14px 10px;
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 10px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px; color: var(--text-dim); line-height: 1.4;
+}
+.post-intel svg { flex-shrink: 0; margin-top: 1px; }
+.post-intel.positive svg { color: var(--green); }
+.post-intel.info     svg { color: var(--blue); }
+.post-intel.hybrid   svg { color: var(--cyan); }
+.post-intel.caution  svg { color: var(--yellow); }
+
+/* ── Route / elevation strip (cardio posts) ──────────────────────────────── */
+.post-route {
+  margin: 0 14px 10px;
+  border-radius: 8px; overflow: hidden;
+  background: #0D0D18;
+  position: relative; height: 64px;
+}
+.post-route svg { width: 100%; height: 100%; }
+
+.post-elevation {
+  margin: 0 14px 10px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--elevated); border: 1px solid var(--border);
+  padding: 8px 10px 6px;
+}
+.elev-label { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 5px; display: flex; justify-content: space-between; }
+.elev-chart { height: 32px; }
+.elev-chart svg { width: 100%; height: 100%; }
+
+/* ── Caption (brief, optional) ───────────────────────────────────────────── */
+.post-caption {
+  padding: 0 14px 10px;
+  font-size: 13px; color: var(--text-dim); line-height: 1.45;
+}
+.post-caption strong { color: var(--text); font-weight: 500; }
+
+/* ── Medal post body ─────────────────────────────────────────────────────── */
+.medal-body {
+  margin: 0 14px 10px;
+  padding: 14px;
+  border-radius: 10px;
+  display: flex; align-items: center; gap: 14px;
+}
+.medal-icon-large {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.medal-text { flex: 1; }
+.medal-post-name { font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--text); margin-bottom: 4px; }
+.medal-post-val { font-family: var(--f-mono); font-size: 22px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.medal-post-sub { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+/* ── Hybrid post — split context ─────────────────────────────────────────── */
+.hybrid-split {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  margin: 0 14px 10px; border-radius: 8px; overflow: hidden;
+}
+.hybrid-half { background: var(--elevated); padding: 10px 12px; }
+.hybrid-half-label { font-family: var(--f-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+.hybrid-half-label-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.hybrid-half-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.hybrid-half-stat { font-family: var(--f-mono); font-size: 12px; color: var(--text-dim); }
+
+/* ── Post footer: reactions ──────────────────────────────────────────────── */
+.post-footer {
+  display: flex; align-items: center;
+  padding: 9px 14px;
+  border-top: 1px solid var(--border);
+  gap: 6px;
+}
+.kudos-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: var(--f-mono); font-size: 11px; font-weight: 500;
+  color: var(--text-dim);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.kudos-btn:hover { border-color: var(--cyan-border); color: var(--cyan); background: var(--cyan-dim); }
+.kudos-btn.active { border-color: var(--cyan-border); color: var(--cyan); background: var(--cyan-dim); }
+.comment-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: var(--f-mono); font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  transition: border-color 0.15s, color 0.15s;
+}
+.comment-btn:hover { border-color: var(--border-strong); color: var(--text-dim); }
+.footer-sep { flex: 1; }
+.save-btn {
+  width: 30px; height: 30px;
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: border-color 0.15s, color 0.15s;
+}
+.save-btn:hover { border-color: var(--border-strong); color: var(--text-dim); }
+.post-time { font-family: var(--f-mono); font-size: 10px; color: var(--muted); }
+
+/* ─── DESKTOP ─────────────────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  .tabbar { display: none; }
+  .app-shell { display: none; }
+
+  .d-root { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100dvh; }
+  .d-main { overflow-y: auto; }
+
+  .d-header { position: sticky; top: 0; z-index: 30; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 0; height: 56px; }
+  .d-header-left { display: flex; align-items: center; gap: 0; height: 100%; }
+  .d-header-title { font-family: var(--f-display); font-weight: 700; font-size: 22px; padding: 0 24px; border-right: 1px solid var(--border); height: 100%; display: flex; align-items: center; }
+  .d-header-tabs { display: flex; height: 100%; }
+  .d-header-tab { display: flex; align-items: center; padding: 0 16px; font-size: 13px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; cursor: pointer; }
+  .d-header-tab:hover { color: var(--text-dim); }
+  .d-header-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .d-header-right { display: flex; gap: 8px; padding: 0 24px; }
+
+  /* Two-column: feed + sidebar panel */
+  .d-body { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 0; min-height: calc(100vh - 56px); }
+  .d-feed { padding: 14px 20px 48px; }
+  .d-panel { padding: 16px 18px 48px; background: var(--card); border-left: 1px solid var(--border); }
+
+  /* Desktop: feed cards slightly wider, no horizontal padding on some elements */
+  .d-panel-card { background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .d-panel-title { font-family: var(--f-display); font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 10px; }
+}
+@media (max-width: 899px) { .d-root { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE APP SHELL
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+  <header class="m-header">
+    <h1>Feed</h1>
+    <div style="display:flex;gap:6px">
+      <button class="m-icon-btn" title="Find athletes">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="m-icon-btn" title="Notifications">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Feed type tabs -->
+  <div class="feed-tabs">
+    <button class="feed-tab active" onclick="switchTab(this)">Following <span class="feed-tab-count">24</span></button>
+    <button class="feed-tab" onclick="switchTab(this)">PRs <span class="feed-tab-count">8</span></button>
+    <button class="feed-tab" onclick="switchTab(this)">Workouts</button>
+    <button class="feed-tab" onclick="switchTab(this)">Activities</button>
+    <button class="feed-tab" onclick="switchTab(this)">Milestones</button>
+    <button class="feed-tab" onclick="switchTab(this)">You</button>
+  </div>
+
+  <div class="feed-list">
+
+    <!-- ══ POST 1: Strength — PR post (highest signal) ══════════════════ -->
+    <div class="post-card strength pr">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,#1C1C2E,#2E1C3A)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Sara Lindström <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@saral</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-border)">PR</span>
+            <span class="dot">·</span>
+            <span>Bench Day · Upper A</span>
+            <span class="dot">·</span>
+            <span>41 min ago</span>
+          </div>
+        </div>
+        <span class="chip cyan">⚡ New PR</span>
+      </div>
+
+      <!-- PR hero display -->
+      <div style="margin:0 14px 10px;padding:14px;background:rgba(6,182,212,0.05);border:1px solid var(--cyan-border);border-radius:10px;display:flex;align-items:flex-start;gap:14px">
+        <div style="flex:1">
+          <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--cyan);margin-bottom:4px">Personal record</div>
+          <div style="font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--text);margin-bottom:4px">Barbell Bench Press</div>
+          <div style="font-family:var(--f-mono);font-size:26px;font-weight:600;color:var(--cyan);line-height:1;margin-bottom:4px">95<span style="font-size:14px;color:var(--muted)">kg</span> × 5</div>
+          <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--text-dim)">est. 1RM → 112kg &nbsp;·&nbsp; <span style="color:var(--green)">↑ +5kg</span> vs prior best</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">Best sets</div>
+          <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim)">90kg × 5</div>
+          <div style="font-family:var(--f-mono);font-size:11px;color:var(--cyan);font-weight:600">95kg × 5 ★</div>
+          <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim)">95kg × 4</div>
+        </div>
+      </div>
+
+      <!-- Volume summary -->
+      <div class="post-stats">
+        <div class="pstat">
+          <div class="pstat-val">4</div>
+          <div class="pstat-lbl">Sets</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">1,680<span style="font-size:9px;color:var(--muted)">kg</span></div>
+          <div class="pstat-lbl">Volume</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val cyan">112<span style="font-size:9px;color:var(--muted)">kg</span></div>
+          <div class="pstat-lbl">Est. 1RM</div>
+        </div>
+      </div>
+
+      <div class="post-intel info">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Best bench volume this month — came off a 3-day Zone 2 week with no lower intensity.</span>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn active">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 14
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          3
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">41m</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ POST 2: Cardio — Activity post ════════════════════════════════ -->
+    <div class="post-card cardio">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,#0D1A2E,#1A2E3A)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Tom Adeyemi <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@tomade</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)">Run</span>
+            <span class="dot">·</span>
+            <span>Tempelhof Field · Berlin</span>
+            <span class="dot">·</span>
+            <span>2h ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity title + stats -->
+      <div style="padding:0 14px 10px">
+        <div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text);margin-bottom:2px">Long Sunday Run</div>
+        <div style="font-family:var(--f-mono);font-size:11px;color:var(--muted)">Sat, May 10 · 06:42</div>
+      </div>
+
+      <!-- Route schematic -->
+      <div class="post-route">
+        <svg viewBox="0 0 330 64" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <rect width="330" height="64" fill="#0D0D18"/>
+          <rect width="330" height="64" fill="url(#feedGrid)" opacity="0.03"/>
+          <defs>
+            <pattern id="feedGrid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0L0 0 0 16" fill="none" stroke="#fff" stroke-width="0.5"/></pattern>
+            <linearGradient id="feedRouteGlow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.5"/>
+              <stop offset="55%" stop-color="#3B82F6" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.5"/>
+            </linearGradient>
+          </defs>
+          <!-- Loop route -->
+          <path d="M 40 50 C 20 42 14 30 20 16 C 28 5 50 3 75 6 C 110 10 160 16 210 12 C 250 8 278 16 290 30 C 302 44 294 54 275 58 C 248 62 200 58 160 54 C 120 50 80 54 40 50 Z"
+            stroke="rgba(59,130,246,0.15)" stroke-width="8" fill="none"/>
+          <path d="M 40 50 C 20 42 14 30 20 16 C 28 5 50 3 75 6 C 110 10 160 16 210 12 C 250 8 278 16 290 30 C 302 44 294 54 275 58 C 248 62 200 58 160 54 C 120 50 80 54 40 50 Z"
+            stroke="url(#feedRouteGlow)" stroke-width="2" fill="none"/>
+          <circle cx="40" cy="50" r="4" fill="#3B82F6"/>
+          <circle cx="40" cy="50" r="7" fill="rgba(59,130,246,0.2)"/>
+          <!-- Pace highlight: fastest section -->
+          <path d="M 210 12 C 250 8 278 16 290 30 C 302 44 294 54 275 58"
+            stroke="rgba(59,130,246,0.9)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="post-stats">
+        <div class="pstat">
+          <div class="pstat-val blue">14.2<span style="font-size:9px;color:var(--muted)">km</span></div>
+          <div class="pstat-lbl">Distance</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">1:14<span style="font-size:9px;color:var(--muted)">:38</span></div>
+          <div class="pstat-lbl">Duration</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">5:15<span style="font-size:9px;color:var(--muted)">/km</span></div>
+          <div class="pstat-lbl">Avg pace</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">42<span style="font-size:9px;color:var(--muted)">m</span></div>
+          <div class="pstat-lbl">Elev</div>
+        </div>
+      </div>
+
+      <div class="post-intel positive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Longest run in 6 weeks — negative split, pace improved after km 7.</span>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 22
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          5
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">2h</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ POST 3: Hybrid milestone — Dual-domain achievement ════════════ -->
+    <div class="post-card hybrid">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,var(--cyan-dim),var(--blue-dim));border:1px solid var(--cyan-border)">
+          <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--cyan)">AI</span>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Aiko Inoue <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@aikoi</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:rgba(34,197,94,0.12);color:var(--green);border:1px solid var(--green-border)">Hybrid</span>
+            <span class="dot">·</span>
+            <span>Achievement unlocked</span>
+            <span class="dot">·</span>
+            <span>4h ago</span>
+          </div>
+        </div>
+        <span class="chip green">⚡ Volt-only</span>
+      </div>
+
+      <!-- Hybrid: lift PR + run PR same week -->
+      <div class="hybrid-split">
+        <div class="hybrid-half">
+          <div class="hybrid-half-label"><div class="hybrid-half-label-dot" style="background:var(--cyan)"></div>Strength</div>
+          <div class="hybrid-half-title">Squat PR</div>
+          <div class="hybrid-half-stat" style="color:var(--cyan);font-size:14px;font-weight:600">148kg × 5</div>
+          <div class="hybrid-half-stat" style="margin-top:2px">est. 1RM 174kg</div>
+        </div>
+        <div class="hybrid-half" style="border-left:1px solid var(--border)">
+          <div class="hybrid-half-label"><div class="hybrid-half-label-dot" style="background:var(--blue)"></div>Cardio</div>
+          <div class="hybrid-half-title">10k PR</div>
+          <div class="hybrid-half-stat" style="color:var(--blue);font-size:14px;font-weight:600">48:42</div>
+          <div class="hybrid-half-stat" style="margin-top:2px">4:52/km avg</div>
+        </div>
+      </div>
+
+      <div style="margin:0 14px 10px;padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid var(--green-border);border-radius:8px">
+        <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--green);margin-bottom:4px">Dual-domain week · May 6–12</div>
+        <div style="font-size:12.5px;color:var(--text-dim)"><strong style="color:var(--text)">Lift PR and Run PR in the same 7-day window.</strong> Volt has recorded this 1× in your history.</div>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 41
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          9
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">4h</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ POST 4: Workout — full session ════════════════════════════════ -->
+    <div class="post-card strength">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,#1A1A2E,#0E1428)">
+          <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--purple)">KM</span>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Kai Müller <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@kaimu</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:var(--elevated);color:var(--text-dim);border:1px solid var(--border)">Workout</span>
+            <span class="dot">·</span>
+            <span>Squat Day · SBD Block</span>
+            <span class="dot">·</span>
+            <span>6h ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 14px 8px">
+        <div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text);margin-bottom:2px">Heavy Squat Session</div>
+      </div>
+
+      <div class="post-stats">
+        <div class="pstat">
+          <div class="pstat-val">72<span style="font-size:9px;color:var(--muted)">m</span></div>
+          <div class="pstat-lbl">Duration</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" style="font-size:12px">9,120<span style="font-size:9px;color:var(--muted)">kg</span></div>
+          <div class="pstat-lbl">Volume</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">5</div>
+          <div class="pstat-lbl">Exercises</div>
+        </div>
+      </div>
+
+      <!-- Key sets preview -->
+      <div class="post-sets">
+        <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">Key sets</div>
+        <div class="set-row-mini">
+          <div class="srm-num">1</div>
+          <div><span class="srm-type warmup">Warmup</span></div>
+          <div class="srm-perf">100kg × 5</div>
+          <div class="srm-check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="set-row-mini">
+          <div class="srm-num">3</div>
+          <div><span class="srm-type">Normal</span></div>
+          <div class="srm-perf">140kg × 5</div>
+          <div class="srm-check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="set-row-mini">
+          <div class="srm-num">4</div>
+          <div><span class="srm-type">Normal</span></div>
+          <div class="srm-perf pr">147.5kg × 5 <span class="srm-pr-tag">PR</span></div>
+          <div class="srm-check-pr"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+
+      <div class="post-intel caution">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Volume up +8% on a week with 2 hard rides — monitor recovery before next lower session.</span>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 18
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          2
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">6h</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ POST 5: Medal — distance milestone ════════════════════════════ -->
+    <div class="post-card medal">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,#1A1A0E,#2E2A0E)">
+          <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--yellow)">RH</span>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Rosa Hoffmann <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@rosah</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(234,179,8,0.28)">Medal</span>
+            <span class="dot">·</span>
+            <span>Distance milestone</span>
+            <span class="dot">·</span>
+            <span>Yesterday</span>
+          </div>
+        </div>
+        <span class="chip yellow">★ Milestone</span>
+      </div>
+
+      <div class="medal-body" style="background:rgba(234,179,8,0.05);border:1px solid rgba(234,179,8,0.25)">
+        <div class="medal-icon-large" style="background:rgba(234,179,8,0.12);border:2px solid rgba(234,179,8,0.35)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.8"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div class="medal-text">
+          <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--yellow);margin-bottom:4px">1,000 km landmark</div>
+          <div class="medal-post-name">Lifetime run distance</div>
+          <div class="medal-post-val" style="color:var(--yellow)">1,012<span style="font-size:13px;color:var(--muted)">km</span></div>
+          <div class="medal-post-sub">Reached during a 14.2km long run · Tempelhof</div>
+        </div>
+      </div>
+
+      <div class="post-intel info">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Running 3× /wk for 8 months while maintaining a 4-day lift block. Hybrid consistency at its cleanest.</span>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 67
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          12
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">1d</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ POST 6: Ride — activity post ══════════════════════════════════ -->
+    <div class="post-card cardio">
+      <div class="post-header">
+        <div class="post-avatar" style="background:linear-gradient(135deg,#1A0E2E,#0E1A2E)">
+          <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--purple)">JB</span>
+        </div>
+        <div class="post-meta">
+          <div class="post-name">Jules Bernard <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@julesb</span></div>
+          <div class="post-context">
+            <span class="post-type-tag" style="background:rgba(139,92,246,0.12);color:var(--purple);border:1px solid rgba(139,92,246,0.28)">Ride</span>
+            <span class="dot">·</span>
+            <span>Müggelsee loop · Berlin</span>
+            <span class="dot">·</span>
+            <span>1d ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 14px 8px">
+        <div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text);margin-bottom:2px">Sunday Long Ride</div>
+      </div>
+
+      <!-- Elevation profile instead of route map -->
+      <div class="post-elevation">
+        <div class="elev-label">
+          <span>Elevation · 42.7 km</span>
+          <span>↑ 270m gain</span>
+        </div>
+        <div class="elev-chart">
+          <svg viewBox="0 0 300 32" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <defs><linearGradient id="rideElevG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(139,92,246,0.35)"/><stop offset="100%" stop-color="rgba(139,92,246,0.04)"/></linearGradient></defs>
+            <polyline points="0,28 24,24 48,18 72,12 96,8 120,13 144,18 168,13 192,8 216,5 240,10 264,17 288,24 300,28"
+              stroke="rgba(139,92,246,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <polygon points="0,28 24,24 48,18 72,12 96,8 120,13 144,18 168,13 192,8 216,5 240,10 264,17 288,24 300,28 300,32 0,32"
+              fill="url(#rideElevG)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="post-stats">
+        <div class="pstat">
+          <div class="pstat-val" style="color:var(--purple)">42.7<span style="font-size:9px;color:var(--muted)">km</span></div>
+          <div class="pstat-lbl">Distance</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">1:38<span style="font-size:9px;color:var(--muted)">:00</span></div>
+          <div class="pstat-lbl">Duration</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">26.2<span style="font-size:9px;color:var(--muted)">km/h</span></div>
+          <div class="pstat-lbl">Avg speed</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">270<span style="font-size:9px;color:var(--muted)">m</span></div>
+          <div class="pstat-lbl">Elev</div>
+        </div>
+      </div>
+
+      <div class="post-intel caution">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>High-effort ride day before Lower B — Volt flagged possible squat volume dip based on prior pattern.</span>
+      </div>
+
+      <div class="post-footer">
+        <button class="kudos-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Kudos · 11
+        </button>
+        <button class="comment-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          1
+        </button>
+        <div class="footer-sep"></div>
+        <span class="post-time">1d</span>
+        <button class="save-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Load more -->
+    <button style="width:100%;padding:11px;background:var(--elevated);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color 0.15s,color 0.15s">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      Show older posts
+    </button>
+
+  </div><!-- /feed-list -->
+</div><!-- /app-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE TAB BAR
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="tabbar">
+  <button class="tab-item active">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Feed
+  </button>
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+    Workouts
+  </button>
+  <button class="tab-fab">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Activities
+  </button>
+  <button class="tab-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DESKTOP LAYOUT
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="d-root">
+  <!-- Sidebar -->
+  <nav class="d-sidebar">
+    <div class="sidebar-logo"><div class="logo-bolt"></div><span class="logo-name">Volt</span></div>
+    <div class="sidebar-nav">
+      <button class="nav-item active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Feed</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Progress</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Exercises</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sf-avatar">MK</div>
+      <div><div class="sidebar-footer-name">Marcus K.</div><div class="sidebar-footer-sub">@marcusk</div></div>
+    </div>
+  </nav>
+
+  <div class="d-main">
+    <!-- Desktop header with inline tabs -->
+    <div class="d-header">
+      <div class="d-header-left">
+        <div class="d-header-title">Feed</div>
+        <div class="d-header-tabs">
+          <div class="d-header-tab active" onclick="switchDTab(this)">Following</div>
+          <div class="d-header-tab" onclick="switchDTab(this)">PRs <span style="font-family:var(--f-mono);font-size:9px;background:var(--elevated);border:1px solid var(--border);border-radius:4px;padding:0 5px;color:var(--muted);margin-left:4px">8</span></div>
+          <div class="d-header-tab" onclick="switchDTab(this)">Workouts</div>
+          <div class="d-header-tab" onclick="switchDTab(this)">Activities</div>
+          <div class="d-header-tab" onclick="switchDTab(this)">Milestones</div>
+          <div class="d-header-tab" onclick="switchDTab(this)">You</div>
+        </div>
+      </div>
+      <div class="d-header-right">
+        <button style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:500;color:var(--text-dim);transition:border-color 0.15s,color 0.15s">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find athletes
+        </button>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="d-body">
+
+      <!-- Feed column -->
+      <div class="d-feed">
+        <div style="display:flex;flex-direction:column;gap:10px">
+
+          <!-- POST 1: Sara — Bench PR -->
+          <div class="post-card strength pr">
+            <div class="post-header">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1C1C2E,#2E1C3A)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div class="post-meta">
+                <div class="post-name">Sara Lindström <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@saral</span></div>
+                <div class="post-context">
+                  <span class="post-type-tag" style="background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-border)">PR</span>
+                  <span class="dot">·</span>
+                  <span>Bench Day · Upper A</span>
+                  <span class="dot">·</span>
+                  <span>41 min ago</span>
+                </div>
+              </div>
+              <span class="chip cyan">⚡ New PR</span>
+            </div>
+
+            <div style="margin:0 14px 10px;padding:14px;background:rgba(6,182,212,0.05);border:1px solid var(--cyan-border);border-radius:10px;display:flex;align-items:flex-start;gap:14px">
+              <div style="flex:1">
+                <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--cyan);margin-bottom:4px">Personal record</div>
+                <div style="font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--text);margin-bottom:4px">Barbell Bench Press</div>
+                <div style="font-family:var(--f-mono);font-size:26px;font-weight:600;color:var(--cyan);line-height:1;margin-bottom:4px">95<span style="font-size:14px;color:var(--muted)">kg</span> × 5</div>
+                <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--text-dim)">est. 1RM → 112kg &nbsp;·&nbsp; <span style="color:var(--green)">↑ +5kg</span> vs prior best</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px">Best sets</div>
+                <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim)">90kg × 5</div>
+                <div style="font-family:var(--f-mono);font-size:11px;color:var(--cyan);font-weight:600">95kg × 5 ★</div>
+                <div style="font-family:var(--f-mono);font-size:11px;color:var(--text-dim)">95kg × 4</div>
+              </div>
+            </div>
+
+            <div class="post-stats">
+              <div class="pstat"><div class="pstat-val">4</div><div class="pstat-lbl">Sets</div></div>
+              <div class="pstat"><div class="pstat-val">1,680<span style="font-size:9px;color:var(--muted)">kg</span></div><div class="pstat-lbl">Volume</div></div>
+              <div class="pstat"><div class="pstat-val cyan">112<span style="font-size:9px;color:var(--muted)">kg</span></div><div class="pstat-lbl">Est. 1RM</div></div>
+            </div>
+
+            <div class="post-intel info">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Best bench volume this month — came off a 3-day Zone 2 week with no lower intensity.</span>
+            </div>
+
+            <div class="post-footer">
+              <button class="kudos-btn active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>Kudos · 14</button>
+              <button class="comment-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>3</button>
+              <div class="footer-sep"></div>
+              <span class="post-time">41m</span>
+              <button class="save-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+
+          <!-- POST 2: Tom — Activity (desktop layout: route map wider) -->
+          <div class="post-card cardio">
+            <div class="post-header">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#0D1A2E,#1A2E3A)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+              </div>
+              <div class="post-meta">
+                <div class="post-name">Tom Adeyemi <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@tomade</span></div>
+                <div class="post-context">
+                  <span class="post-type-tag" style="background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)">Run</span>
+                  <span class="dot">·</span><span>Tempelhof Field</span><span class="dot">·</span><span>2h ago</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 14px 8px"><div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text);margin-bottom:2px">Long Sunday Run</div></div>
+
+            <!-- Desktop: side-by-side route + stats -->
+            <div style="display:grid;grid-template-columns:1fr 200px;gap:10px;margin:0 14px 10px;align-items:start">
+              <div class="post-stats" style="margin:0">
+                <div class="pstat"><div class="pstat-val blue">14.2<span style="font-size:9px;color:var(--muted)">km</span></div><div class="pstat-lbl">Distance</div></div>
+                <div class="pstat"><div class="pstat-val">1:14<span style="font-size:9px;color:var(--muted)">:38</span></div><div class="pstat-lbl">Duration</div></div>
+                <div class="pstat"><div class="pstat-val">5:15<span style="font-size:9px;color:var(--muted)">/km</span></div><div class="pstat-lbl">Avg pace</div></div>
+                <div class="pstat"><div class="pstat-val">42<span style="font-size:9px;color:var(--muted)">m</span></div><div class="pstat-lbl">Elev</div></div>
+              </div>
+              <div class="post-route" style="margin:0;height:72px">
+                <svg viewBox="0 0 200 72" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                  <rect width="200" height="72" fill="#0D0D18"/>
+                  <defs><linearGradient id="dRouteGlow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#3B82F6" stop-opacity="0.5"/><stop offset="50%" stop-color="#3B82F6" stop-opacity="1"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0.5"/></linearGradient></defs>
+                  <path d="M 24 56 C 10 48 8 34 14 18 C 22 5 42 2 62 6 C 90 11 120 18 148 14 C 168 10 182 20 190 34 C 198 48 192 58 176 62 C 154 66 120 62 90 58 C 66 54 44 58 24 56 Z"
+                    stroke="rgba(59,130,246,0.12)" stroke-width="6" fill="none"/>
+                  <path d="M 24 56 C 10 48 8 34 14 18 C 22 5 42 2 62 6 C 90 11 120 18 148 14 C 168 10 182 20 190 34 C 198 48 192 58 176 62 C 154 66 120 62 90 58 C 66 54 44 58 24 56 Z"
+                    stroke="url(#dRouteGlow)" stroke-width="1.8" fill="none"/>
+                  <circle cx="24" cy="56" r="3" fill="#3B82F6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="post-intel positive">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Longest run in 6 weeks — negative split, pace held through final 3km.</span>
+            </div>
+            <div class="post-footer">
+              <button class="kudos-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>Kudos · 22</button>
+              <button class="comment-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>5</button>
+              <div class="footer-sep"></div><span class="post-time">2h</span>
+              <button class="save-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+
+          <!-- POST 3: Aiko — Hybrid -->
+          <div class="post-card hybrid">
+            <div class="post-header">
+              <div class="post-avatar" style="background:linear-gradient(135deg,var(--cyan-dim),var(--blue-dim));border:1px solid var(--cyan-border)">
+                <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--cyan)">AI</span>
+              </div>
+              <div class="post-meta">
+                <div class="post-name">Aiko Inoue <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@aikoi</span></div>
+                <div class="post-context">
+                  <span class="post-type-tag" style="background:rgba(34,197,94,0.12);color:var(--green);border:1px solid var(--green-border)">Hybrid</span>
+                  <span class="dot">·</span><span>Achievement</span><span class="dot">·</span><span>4h ago</span>
+                </div>
+              </div>
+              <span class="chip green">⚡ Volt-only</span>
+            </div>
+
+            <div class="hybrid-split">
+              <div class="hybrid-half">
+                <div class="hybrid-half-label"><div class="hybrid-half-label-dot" style="background:var(--cyan)"></div>Strength</div>
+                <div class="hybrid-half-title">Squat PR</div>
+                <div class="hybrid-half-stat" style="color:var(--cyan);font-size:14px;font-weight:600">148kg × 5</div>
+                <div class="hybrid-half-stat" style="margin-top:2px">est. 1RM 174kg</div>
+              </div>
+              <div class="hybrid-half" style="border-left:1px solid var(--border)">
+                <div class="hybrid-half-label"><div class="hybrid-half-label-dot" style="background:var(--blue)"></div>Cardio</div>
+                <div class="hybrid-half-title">10k PR</div>
+                <div class="hybrid-half-stat" style="color:var(--blue);font-size:14px;font-weight:600">48:42</div>
+                <div class="hybrid-half-stat" style="margin-top:2px">4:52/km avg</div>
+              </div>
+            </div>
+
+            <div style="margin:0 14px 10px;padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid var(--green-border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--green);margin-bottom:4px">Dual-domain week · May 6–12</div>
+              <div style="font-size:12.5px;color:var(--text-dim)"><strong style="color:var(--text)">Lift PR and Run PR in the same 7-day window.</strong> Volt has recorded this 1× in your history.</div>
+            </div>
+
+            <div class="post-footer">
+              <button class="kudos-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>Kudos · 41</button>
+              <button class="comment-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>9</button>
+              <div class="footer-sep"></div><span class="post-time">4h</span>
+              <button class="save-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+
+          <!-- POST 4: Kai — Workout -->
+          <div class="post-card strength">
+            <div class="post-header">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1A1A2E,#0E1428)">
+                <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--purple)">KM</span>
+              </div>
+              <div class="post-meta">
+                <div class="post-name">Kai Müller <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@kaimu</span></div>
+                <div class="post-context">
+                  <span class="post-type-tag" style="background:var(--elevated);color:var(--text-dim);border:1px solid var(--border)">Workout</span>
+                  <span class="dot">·</span><span>Squat Day · SBD Block</span><span class="dot">·</span><span>6h ago</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 14px 8px"><div style="font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--text)">Heavy Squat Session</div></div>
+            <div class="post-stats">
+              <div class="pstat"><div class="pstat-val">72<span style="font-size:9px;color:var(--muted)">m</span></div><div class="pstat-lbl">Duration</div></div>
+              <div class="pstat"><div class="pstat-val" style="font-size:12px">9,120<span style="font-size:9px;color:var(--muted)">kg</span></div><div class="pstat-lbl">Volume</div></div>
+              <div class="pstat"><div class="pstat-val">5</div><div class="pstat-lbl">Exercises</div></div>
+              <div class="pstat"><div class="pstat-val cyan">1 <span style="font-size:10px">PR</span></div><div class="pstat-lbl">PRs hit</div></div>
+            </div>
+            <div class="post-sets">
+              <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:5px">Key sets</div>
+              <div class="set-row-mini"><div class="srm-num">1</div><div><span class="srm-type warmup">Warmup</span></div><div class="srm-perf">100kg × 5</div><div class="srm-check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+              <div class="set-row-mini"><div class="srm-num">3</div><div><span class="srm-type">Normal</span></div><div class="srm-perf">140kg × 5</div><div class="srm-check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+              <div class="set-row-mini"><div class="srm-num">4</div><div><span class="srm-type">Normal</span></div><div class="srm-perf pr">147.5kg × 5 <span class="srm-pr-tag">PR</span></div><div class="srm-check-pr"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+            </div>
+            <div class="post-intel caution">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Volume up +8% on a week with 2 hard rides — monitor recovery before next lower session.</span>
+            </div>
+            <div class="post-footer">
+              <button class="kudos-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>Kudos · 18</button>
+              <button class="comment-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2</button>
+              <div class="footer-sep"></div><span class="post-time">6h</span>
+              <button class="save-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Rosa — Medal -->
+          <div class="post-card medal">
+            <div class="post-header">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1A1A0E,#2E2A0E)">
+                <span style="font-family:var(--f-display);font-weight:800;font-size:13px;color:var(--yellow)">RH</span>
+              </div>
+              <div class="post-meta">
+                <div class="post-name">Rosa Hoffmann <span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);font-weight:400">@rosah</span></div>
+                <div class="post-context">
+                  <span class="post-type-tag" style="background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(234,179,8,0.28)">Medal</span>
+                  <span class="dot">·</span><span>Distance milestone</span><span class="dot">·</span><span>Yesterday</span>
+                </div>
+              </div>
+              <span class="chip yellow">★ Milestone</span>
+            </div>
+            <div class="medal-body" style="background:rgba(234,179,8,0.05);border:1px solid rgba(234,179,8,0.25)">
+              <div class="medal-icon-large" style="background:rgba(234,179,8,0.12);border:2px solid rgba(234,179,8,0.35)">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.8"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              </div>
+              <div class="medal-text">
+                <div style="font-family:var(--f-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--yellow);margin-bottom:4px">1,000 km landmark</div>
+                <div class="medal-post-name">Lifetime run distance</div>
+                <div class="medal-post-val" style="color:var(--yellow)">1,012<span style="font-size:13px;color:var(--muted)">km</span></div>
+                <div class="medal-post-sub">Running 3×/wk for 8 months alongside a 4-day lift block.</div>
+              </div>
+            </div>
+            <div class="post-intel info">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span>Hybrid consistency at its cleanest — no strength sacrifice at this run volume.</span>
+            </div>
+            <div class="post-footer">
+              <button class="kudos-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>Kudos · 67</button>
+              <button class="comment-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>12</button>
+              <div class="footer-sep"></div><span class="post-time">1d</span>
+              <button class="save-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+          </div>
+
+        </div><!-- /feed column -->
+      </div><!-- /d-feed -->
+
+      <!-- RIGHT: sidebar panel -->
+      <div class="d-panel">
+
+        <!-- Active in your network -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Active now</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1C1C2E,#2E1C3A);width:28px;height:28px;font-size:10px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Sara Lindström</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--cyan)">⚡ PR just now</div>
+              </div>
+              <div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#0D1A2E,#1A2E3A);width:28px;height:28px;font-size:10px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Tom Adeyemi</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--blue)">Ran 14.2km</div>
+              </div>
+              <div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div class="post-avatar" style="background:linear-gradient(135deg,var(--cyan-dim),var(--blue-dim));border:1px solid var(--cyan-border);width:28px;height:28px;font-size:10px;color:var(--cyan)">AI</div>
+              <div style="flex:1">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Aiko Inoue</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--green)">Dual-domain week</div>
+              </div>
+              <div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#1A1A0E,#2E2A0E);width:28px;height:28px;font-size:10px;color:var(--yellow)">RH</div>
+              <div style="flex:1">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Rosa Hoffmann</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--yellow)">★ 1000km milestone</div>
+              </div>
+              <div style="width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRs in your network today -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">PRs today</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--cyan-border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-bottom:3px">Sara · Bench Press</div>
+              <div style="font-family:var(--f-mono);font-size:14px;font-weight:600;color:var(--cyan)">95kg × 5</div>
+              <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--green)">↑ +5kg · est. 1RM 112kg</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--cyan-border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-bottom:3px">Kai · Back Squat</div>
+              <div style="font-family:var(--f-mono);font-size:14px;font-weight:600;color:var(--cyan)">147.5kg × 5</div>
+              <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--green)">↑ +2.5kg</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg);border:1px solid var(--blue-border);border-radius:8px">
+              <div style="font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-bottom:3px">Aiko · 10k run</div>
+              <div style="font-family:var(--f-mono);font-size:14px;font-weight:600;color:var(--blue)">48:42</div>
+              <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--green)">↓ −1:16 faster</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggest to follow -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Athletes you might follow</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#0E2E1A,#1A2E1A);width:32px;height:32px;font-size:11px;color:var(--green)">EP</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Elena Park</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--muted)">Marathon build · 5-day lift</div>
+                <div style="display:flex;gap:4px;margin-top:3px">
+                  <span class="chip blue" style="font-size:9px;padding:1px 6px">Runner</span>
+                  <span class="chip cyan" style="font-size:9px;padding:1px 6px">Powerlifter</span>
+                </div>
+              </div>
+              <button style="padding:5px 10px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);white-space:nowrap;transition:border-color 0.15s,color 0.15s">Follow</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="post-avatar" style="background:linear-gradient(135deg,#0E1A2E,#1A0E2E);width:32px;height:32px;font-size:11px;color:var(--blue)">DO</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:500;color:var(--text)">Dan Owens</div>
+                <div style="font-family:var(--f-mono);font-size:10px;color:var(--muted)">Upper/lower + triathlon</div>
+                <div style="display:flex;gap:4px;margin-top:3px">
+                  <span class="chip green" style="font-size:9px;padding:1px 6px">Hybrid</span>
+                  <span class="chip purple" style="font-size:9px;padding:1px 6px">Triathlete</span>
+                </div>
+              </div>
+              <button style="padding:5px 10px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;font-size:11.5px;font-weight:500;color:var(--text-dim);white-space:nowrap;transition:border-color 0.15s,color 0.15s">Follow</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /d-panel -->
+    </div><!-- /d-body -->
+  </div><!-- /d-main -->
+</div><!-- /d-root -->
+
+<script>
+function switchTab(btn) {
+  btn.closest('.feed-tabs').querySelectorAll('.feed-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function switchDTab(el) {
+  el.closest('.d-header-tabs').querySelectorAll('.d-header-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

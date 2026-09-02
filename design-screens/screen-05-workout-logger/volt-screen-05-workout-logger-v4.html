@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Volt — Workout Logger</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090E;--card:#111118;--elevated:#1C1C28;
+  --border:#2A2A3C;--border-strong:#3A3A50;
+  --cyan:#06B6D4;--cyan-dim:rgba(6,182,212,0.10);
+  --text:#F0F0F8;--text-dim:#A1A1B0;--muted:#6B7280;
+  --green:#22C55E;--blue:#3B82F6;--yellow:#EAB308;--red:#EF4444;--purple:#8B5CF6;
+  --font-d:'Syne',sans-serif;--font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--cyan);color:var(--bg)}
+button{font-family:var(--font-b);cursor:pointer}
+
+/* ─── LAYOUT ─── */
+.app{display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:24px 16px;z-index:50}
+.sidebar-logo{font-family:var(--font-d);font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;padding:0 8px;margin-bottom:32px;color:var(--text)}
+.logo-bolt{width:20px;height:20px;background:var(--cyan);clip-path:polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%);flex-shrink:0}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--text-dim);cursor:pointer;transition:all 0.15s;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.sidebar-item:hover{background:var(--elevated);color:var(--text)}
+.sidebar-item.active{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(6,182,212,0.25)}
+.sidebar-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 8px}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:var(--elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--cyan);flex-shrink:0}
+.sidebar-user{font-size:13px;color:var(--text-dim);flex:1}
+.sidebar-settings{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;transition:color 0.15s}
+.sidebar-settings:hover{color:var(--text)}
+.sidebar-settings svg{width:18px;height:18px}
+
+/* ─── MAIN ─── */
+.main{flex:1;margin-left:220px;display:flex;flex-direction:column;min-height:100vh}
+
+/* ─── STICKY HEADER ─── */
+.workout-header{position:sticky;top:0;z-index:40;background:rgba(9,9,14,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:10px}
+.btn-icon{background:none;border:none;cursor:pointer;color:var(--text-dim);padding:6px;border-radius:8px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-icon:hover{background:var(--elevated);color:var(--text)}
+.btn-icon svg{width:20px;height:20px;stroke-width:2}
+.workout-title-input{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text);background:none;border:none;outline:none;flex:1;min-width:0;padding:4px 8px;border-radius:6px;letter-spacing:-0.3px}
+.workout-title-input:hover{background:var(--elevated)}
+.workout-title-input:focus{background:var(--elevated);box-shadow:0 0 0 1px var(--cyan)}
+.elapsed-timer{font-family:var(--font-m);font-size:13px;font-weight:600;color:var(--cyan);white-space:nowrap;padding:5px 12px;background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.25);border-radius:8px;flex-shrink:0}
+
+/* ─── KEBAB DROPDOWN ─── */
+.header-right{position:relative}
+.kebab-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:4px;min-width:192px;z-index:60;box-shadow:0 16px 48px rgba(0,0,0,0.6);display:none}
+.kebab-menu.open{display:block}
+.kebab-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:6px;font-size:13px;color:var(--text-dim);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all 0.12s}
+.kebab-item:hover{background:var(--card);color:var(--text)}
+.kebab-item.danger{color:var(--red)}
+.kebab-item.danger:hover{background:rgba(239,68,68,0.08)}
+.kebab-item svg{width:15px;height:15px;flex-shrink:0;stroke-width:2}
+
+/* ─── EXERCISE LIST ─── */
+.exercise-list{flex:1;padding:16px 24px 140px;display:flex;flex-direction:column;gap:14px;max-width:700px;width:100%}
+
+/* ─── EXERCISE CARD ─── */
+.ex-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:visible;position:relative}
+
+/* ─── EXERCISE HEADER ─── */
+.ex-header{padding:14px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ex-header-left{flex:1;min-width:0}
+.ex-name{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.2px;cursor:pointer}
+.ex-name:hover{color:var(--cyan)}
+.ex-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.ex-meta-tag{font-family:var(--font-m);font-size:10px;color:var(--muted);letter-spacing:0.04em}
+.ex-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--border-strong)}
+
+/* ─── EXERCISE CONTEXT STRIP ─── */
+.ex-context{display:flex;gap:0;margin:10px 16px 0;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ex-ctx-item{flex:1;padding:9px 10px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.ex-ctx-item:last-child{border-right:none}
+.ex-ctx-label{font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.ex-ctx-val{font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--text-dim)}
+.ex-ctx-val.pr{color:var(--cyan)}
+
+/* ─── QUICK PROGRESSION CHIPS ─── */
+.ex-progression{display:flex;align-items:center;gap:6px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.ex-progression::-webkit-scrollbar{display:none}
+.prog-label{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;font-weight:500}
+.prog-chip{font-family:var(--font-m);font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--elevated);color:var(--text-dim);white-space:nowrap;flex-shrink:0;transition:all 0.12s}
+.prog-chip:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+.prog-chip.repeat{color:var(--text-dim)}
+.prog-chip.increase{color:var(--green);border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.07)}
+.prog-chip.increase:hover{background:rgba(34,197,94,0.15);border-color:var(--green)}
+.prog-chip.decrease{color:var(--muted)}
+
+/* ─── SET TABLE ─── */
+.set-table{padding:0 16px;margin-top:4px}
+.set-col-headers{display:grid;grid-template-columns:22px 60px 1fr 24px;gap:8px;padding:6px 0;font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid var(--border)}
+.set-col-headers span:last-child{text-align:center}
+
+/* ─── SET ROW ─── */
+.set-row{display:grid;grid-template-columns:22px 60px 1fr 24px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);position:relative;cursor:pointer;transition:background 0.1s;border-radius:0}
+.set-row:last-of-type{border-bottom:none}
+.set-row:hover{background:rgba(255,255,255,0.018)}
+.set-row.is-next{background:rgba(6,182,212,0.04)}
+.set-num{font-size:11px;font-weight:600;color:var(--muted);text-align:center}
+
+/* SET TYPE CHIP */
+.stype{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:2px 7px;border-radius:4px;text-align:center;white-space:nowrap;display:inline-block}
+.stype-warmup{background:rgba(234,179,8,0.15);color:var(--yellow)}
+.stype-normal{background:var(--elevated);color:var(--text-dim)}
+.stype-drop{background:rgba(6,182,212,0.15);color:var(--cyan)}
+.stype-failure{background:rgba(239,68,68,0.15);color:var(--red)}
+.stype-super{background:rgba(139,92,246,0.15);color:#A78BFA}
+
+/* SET VALUES CELL */
+.set-values-cell{display:flex;flex-direction:column;gap:1px;min-width:0}
+.set-entry{font-family:var(--font-m);font-size:13px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:3px}
+.set-entry .u{font-size:10px;color:var(--muted);font-weight:400}
+.set-entry .x{color:var(--muted);font-size:11px;margin:0 1px}
+.set-entry.pr-val{color:var(--cyan)}
+/* Empty set: dashes + prior hint */
+.set-entry.empty-dashes{color:var(--border-strong);font-size:14px;letter-spacing:0.08em}
+.set-hint{font-family:var(--font-m);font-size:9px;color:var(--muted);letter-spacing:0.02em;margin-top:0;opacity:0.75}
+/* Inline PR medal marker on set row */
+.pr-inline-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-m);font-size:9px;color:var(--cyan);background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.3);padding:1px 6px;border-radius:4px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+
+/* CHECKMARK */
+.set-check{width:24px;height:24px;border-radius:7px;border:1.5px solid var(--border-strong);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;padding:0;flex-shrink:0}
+.set-check:hover{border-color:var(--muted);background:rgba(255,255,255,0.04)}
+.set-check.done{background:var(--green);border-color:var(--green)}
+.set-check.is-pr{background:var(--cyan);border-color:var(--cyan)}
+.set-check.done svg,.set-check.is-pr svg{stroke:var(--bg);width:14px;height:14px;stroke-width:2.5}
+/* Pulse affordance on the next-up empty check */
+@keyframes checkPulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,0)}50%{box-shadow:0 0 0 4px rgba(6,182,212,0.18)}}
+.set-check.next-pulse{animation:checkPulse 2s infinite;border-color:rgba(6,182,212,0.5)}
+
+/* ─── TAP-TO-ENTER EDITABLE SET ROW ─── */
+/* The active set row expands into an inline entry state when tapped */
+.set-row.editing{background:rgba(6,182,212,0.05);border-radius:8px;outline:1px solid rgba(6,182,212,0.25)}
+.set-row.editing .set-values-cell{display:flex;flex-direction:column;gap:4px}
+.set-inputs{display:flex;align-items:center;gap:6px}
+.set-input{font-family:var(--font-m);font-size:14px;font-weight:600;color:var(--text);background:var(--elevated);border:1px solid var(--border-strong);border-radius:7px;padding:5px 8px;width:56px;text-align:center;outline:none;-moz-appearance:textfield}
+.set-input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(6,182,212,0.15)}
+.set-input::-webkit-inner-spin-button,.set-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.set-input-x{font-family:var(--font-m);font-size:11px;color:var(--muted)}
+.set-input-unit{font-size:10px;color:var(--muted);font-family:var(--font-m)}
+/* tap-hint removed — active rows use inline inputs instead */
+
+/* ─── PROG CHIP ACTIVE STATE (applied state, not just hover) ─── */
+.prog-chip.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan)}
+.prog-chip.active.increase{background:rgba(34,197,94,0.15);border-color:var(--green);color:var(--green)}
+
+/* ─── SET ROW INTERACTION AFFORDANCES ─── */
+/* Swipe reveal area (shown as static indicator in prototype) */
+.set-row-wrap{position:relative;overflow:hidden}
+.set-swipe-hint{position:absolute;right:0;top:0;bottom:0;width:72px;background:linear-gradient(to left,rgba(239,68,68,0.12) 0%,transparent 100%);display:flex;align-items:center;justify-content:flex-end;padding-right:12px;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.set-row-wrap:hover .set-swipe-hint{opacity:1}
+.set-swipe-icon{color:var(--red);display:flex;align-items:center;gap:3px;font-size:10px;font-weight:600}
+.set-swipe-icon svg{width:13px;height:13px;stroke-width:2}
+
+/* Long-press menu (shown as static tooltip in prototype) */
+.longpress-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 6px);background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--text-dim);white-space:nowrap;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;pointer-events:none}
+.longpress-hint::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border)}
+.set-row-wrap:hover .longpress-hint.show{display:block}
+
+/* ─── EXERCISE BOTTOM SHEET ─── */
+.ex-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:150;opacity:0;pointer-events:none;transition:opacity 0.22s}
+.ex-sheet-overlay.show{opacity:1;pointer-events:auto}
+.ex-sheet{position:fixed;bottom:0;left:220px;right:0;background:var(--card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:0 0 32px;z-index:151;transform:translateY(100%);transition:transform 0.28s cubic-bezier(0.32,0.72,0,1)}
+.ex-sheet.show{transform:translateY(0)}
+.ex-sheet-handle-row{display:flex;justify-content:center;padding:12px 0 8px}
+.ex-sheet-handle{width:36px;height:4px;background:var(--border-strong);border-radius:4px}
+.ex-sheet-title{font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);padding:0 20px 12px;border-bottom:1px solid var(--border)}
+.ex-sheet-option{display:flex;align-items:center;gap:13px;padding:14px 20px;cursor:pointer;border:none;background:none;width:100%;text-align:left;border-bottom:1px solid var(--border);transition:background 0.12s}
+.ex-sheet-option:last-child{border-bottom:none}
+.ex-sheet-option:hover{background:var(--elevated)}
+.ex-sheet-icon{width:32px;height:32px;border-radius:8px;background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ex-sheet-icon svg{width:16px;height:16px;stroke:var(--cyan);stroke-width:2}
+.ex-sheet-label{font-size:14px;font-weight:500;color:var(--text)}
+.ex-sheet-sub{font-size:12px;color:var(--muted);margin-top:1px}
+/* Exercise name tap affordance */
+.ex-name-btn{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.2px;cursor:pointer;background:none;border:none;text-align:left;padding:0;display:flex;align-items:center;gap:6px;width:100%}
+.ex-name-btn:hover{color:var(--cyan)}
+.ex-name-btn:hover .ex-name-caret{opacity:1}
+.ex-name-caret{opacity:0;transition:opacity 0.15s;flex-shrink:0;color:var(--cyan)}
+.ex-name-caret svg{width:14px;height:14px;stroke-width:2.5}
+@media(max-width:768px){
+  .ex-sheet{left:0}
+}
+.ex-footer{display:flex;align-items:center;gap:0;padding:6px 10px 10px;border-top:1px solid var(--border);margin-top:4px}
+.ex-action{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:500;color:var(--cyan);background:none;border:none;cursor:pointer;transition:background 0.12s;white-space:nowrap}
+.ex-action:hover{background:var(--cyan-dim)}
+.ex-action svg{width:14px;height:14px;stroke-width:2.2;flex-shrink:0}
+.ex-action.secondary{color:var(--text-dim)}
+.ex-action.secondary:hover{background:var(--elevated)}
+.ex-action-divider{width:1px;height:18px;background:var(--border);margin:0 2px;flex-shrink:0}
+
+/* ─── ADD EXERCISE ─── */
+.add-ex-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:var(--card);border:1px dashed var(--border-strong);border-radius:12px;cursor:pointer;font-size:14px;font-weight:500;color:var(--cyan);transition:all 0.15s}
+.add-ex-btn:hover{border-color:var(--cyan);background:var(--cyan-dim)}
+.add-ex-btn svg{width:18px;height:18px;stroke-width:2}
+
+/* ─── FINISH BAR ─── */
+.finish-bar{position:fixed;bottom:0;left:220px;right:0;padding:12px 24px;background:rgba(9,9,14,0.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);z-index:30;display:flex;gap:16px;align-items:center}
+.finish-stats{flex:1;display:flex;gap:0}
+.finish-stat{flex:1;padding:0 8px;border-right:1px solid var(--border)}
+.finish-stat:first-child{padding-left:0}
+.finish-stat:last-child{border-right:none}
+.finish-stat-label{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.finish-stat-value{font-family:var(--font-m);font-size:14px;color:var(--text);font-weight:600;margin-top:3px}
+.finish-stat-value.highlight{color:var(--cyan)}
+.finish-medal-row{display:flex;align-items:center;gap:5px;margin-top:3px}
+.finish-medal-icon{width:12px;height:12px;flex-shrink:0}
+.finish-medals-text{font-family:var(--font-m);font-size:11px;color:var(--cyan);font-weight:600}
+.btn-finish{font:600 14px var(--font-b);color:var(--bg);background:var(--cyan);border:none;cursor:pointer;padding:12px 28px;border-radius:10px;transition:opacity 0.2s,transform 0.15s;white-space:nowrap;flex-shrink:0}
+.btn-finish:hover{opacity:0.92;transform:translateY(-1px)}
+
+/* ─── PR BANNER ─── */
+.pr-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%) scale(0.7);width:272px;background:linear-gradient(135deg,var(--cyan) 0%,#0891b2 100%);border-radius:14px;padding:14px 16px;color:#042a33;display:flex;align-items:center;gap:12px;box-shadow:0 16px 40px rgba(6,182,212,0.5),0 4px 12px rgba(0,0,0,0.3);z-index:200;opacity:0;pointer-events:none;transition:none;cursor:pointer}
+.pr-banner.show{animation:prPop 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards;pointer-events:auto}
+@keyframes prPop{
+  0%{transform:translateX(-50%) scale(0.7);opacity:0}
+  60%{transform:translateX(-50%) scale(1.04);opacity:1}
+  100%{transform:translateX(-50%) scale(1);opacity:1}
+}
+.pr-medal-svg{width:40px;height:40px;flex-shrink:0}
+.pr-text{flex:1}
+.pr-eyebrow{font-family:var(--font-m);font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;opacity:0.65;margin-bottom:2px}
+.pr-main{font-family:var(--font-d);font-size:15px;font-weight:800;line-height:1.15}
+.pr-prev{font-family:var(--font-m);font-size:10px;opacity:0.65;margin-top:3px}
+.pr-dismiss{font-family:var(--font-m);font-size:9px;opacity:0.5;margin-top:6px;display:block}
+
+/* ─── REST TIMER SHEET ─── */
+.rest-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.rest-overlay.show{opacity:1;pointer-events:auto}
+.rest-sheet{position:fixed;bottom:0;left:220px;right:0;background:var(--card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 28px 32px;z-index:101;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);display:flex;flex-direction:column;align-items:center;gap:0}
+.rest-sheet.show{transform:translateY(0)}
+.rest-handle{width:40px;height:4px;background:var(--border-strong);border-radius:4px;margin-bottom:20px}
+/* top row: label + exercise hint */
+.rest-top{width:100%;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.rest-label-col{}
+.rest-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.rest-next-set{font-size:12px;color:var(--text-dim);margin-top:2px}
+.rest-next-set strong{color:var(--text);font-weight:500}
+/* countdown */
+.rest-countdown-wrap{position:relative;margin-bottom:20px}
+.rest-countdown{font-family:var(--font-m);font-size:64px;font-weight:600;color:var(--text);line-height:1;text-align:center;transition:color 0.3s,transform 0.15s}
+.rest-countdown.urgent{color:var(--cyan)}
+.rest-countdown.pulse{animation:countdownPulse 1s infinite}
+@keyframes countdownPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.97)}}
+/* progress bar */
+.rest-progress-track{width:100%;height:3px;background:var(--border);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.rest-progress-fill{height:100%;background:var(--cyan);border-radius:2px;transition:width 1s linear;width:100%}
+/* buttons */
+.rest-buttons{display:flex;gap:10px;width:100%;justify-content:center;margin-bottom:14px}
+.rest-btn{font:500 13px var(--font-b);padding:10px 0;border-radius:9px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);background:var(--elevated);color:var(--text);flex:1;max-width:90px;text-align:center}
+.rest-btn:hover{border-color:var(--border-strong);background:var(--border)}
+.rest-btn.skip{background:var(--cyan);border-color:var(--cyan);color:var(--bg);font-weight:600;flex:1.4}
+.rest-btn.skip:hover{opacity:0.9}
+/* next set hint */
+.rest-hint-row{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 14px;width:100%}
+.rest-hint-arrow{color:var(--muted);flex-shrink:0}
+.rest-hint-arrow svg{width:14px;height:14px;stroke-width:2}
+.rest-hint-text{font-size:12px;color:var(--text-dim)}
+.rest-hint-val{font-family:var(--font-m);font-size:12px;color:var(--text);font-weight:500}
+
+/* ─── MOBILE TAB BAR ─── */
+.mobile-tab-bar{display:none}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .workout-header{padding:10px 16px}
+  .exercise-list{padding:12px 14px 160px}
+  .finish-bar{left:0;padding:10px 16px;gap:10px}
+  .finish-stats{gap:0}
+  .finish-stat{padding:0 8px}
+  .finish-stat:first-child{padding-left:0}
+  .rest-sheet{left:0;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+  .ex-progression{padding:8px 14px}
+
+  .mobile-tab-bar{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 16px max(8px,env(safe-area-inset-bottom));z-index:50;align-items:center;justify-content:space-around}
+  .tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;padding:4px 8px;transition:color 0.15s}
+  .tab-item.active{color:var(--cyan)}
+  .tab-item svg{width:22px;height:22px;stroke-width:1.8}
+  .tab-fab{width:52px;height:52px;border-radius:50%;background:var(--cyan);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(6,182,212,0.45);margin-top:-18px;transition:transform 0.15s;flex-shrink:0}
+  .tab-fab:hover,.tab-fab:active{transform:scale(1.07)}
+  .tab-fab svg{width:24px;height:24px;stroke:var(--bg);stroke-width:2.5}
+  .finish-bar{bottom:72px}
+  .pr-banner{top:70px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR (desktop) -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-bolt"></div>Volt</div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Dashboard
+    </a>
+    <a class="sidebar-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+      Workouts
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Activities
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Progress
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Exercises
+    </a>
+    <a class="sidebar-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-avatar">MK</div>
+    <span class="sidebar-user">Marcus K.</span>
+    <button class="sidebar-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STICKY HEADER -->
+  <header class="workout-header">
+    <button class="btn-icon" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <input class="workout-title-input" type="text" value="Push Day A" spellcheck="false">
+    <div class="elapsed-timer" id="elapsed">00:00</div>
+    <div class="header-right">
+      <button class="btn-icon" id="kebabBtn" title="Options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>
+      </button>
+      <div class="kebab-menu" id="kebabMenu">
+        <button class="kebab-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Rename workout
+        </button>
+        <button class="kebab-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Save as template
+        </button>
+        <button class="kebab-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Reorder exercises
+        </button>
+        <button class="kebab-item danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Discard workout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- EXERCISE LIST -->
+  <div class="exercise-list">
+
+    <!-- ══ EXERCISE 1: BENCH PRESS ══ -->
+    <div class="ex-card" id="card-bench">
+      <div class="ex-header">
+        <div class="ex-header-left">
+          <!-- Fix 4: button with visible caret signals tappable exercise name -->
+          <button class="ex-name-btn" onclick="openExSheet('Bench Press (Barbell)')">
+            Bench Press (Barbell)
+            <span class="ex-name-caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </button>
+          <div class="ex-meta">
+            <span class="ex-meta-tag">Chest</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Barbell</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Compound</span>
+          </div>
+        </div>
+        <button class="btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <div class="ex-context">
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Last session</div>
+          <div class="ex-ctx-val">100kg × 5</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Best set</div>
+          <div class="ex-ctx-val">105kg × 4</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">1RM est.</div>
+          <div class="ex-ctx-val pr">118 kg</div>
+        </div>
+      </div>
+
+      <!-- Fix 1: chips write directly into the active set input fields -->
+      <div class="ex-progression">
+        <span class="prog-label">Load next set:</span>
+        <button class="prog-chip repeat" onclick="applyProgToRow('bench-s4-weight','bench-s4-reps','100','5',this)">Repeat last</button>
+        <button class="prog-chip increase" onclick="applyProgToRow('bench-s4-weight','bench-s4-reps','102.5','5',this)">+2.5 kg</button>
+        <button class="prog-chip increase" onclick="applyProgToRow('bench-s4-weight','bench-s4-reps','105','5',this)">+5 kg</button>
+        <button class="prog-chip decrease" onclick="applyProgToRow('bench-s4-weight','bench-s4-reps','90','5',this)">Drop 10%</button>
+      </div>
+
+      <div class="set-table">
+        <div class="set-col-headers">
+          <span>Set</span><span>Type</span><span>Weight × Reps</span><span style="text-align:center">✓</span>
+        </div>
+
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">1</span>
+            <span class="stype stype-warmup">Warmup</span>
+            <div class="set-values-cell"><div class="set-entry"><span>60</span><span class="u">kg</span><span class="x">×</span><span>10</span></div></div>
+            <button class="set-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+          </div>
+        </div>
+
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">2</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell"><div class="set-entry"><span>100</span><span class="u">kg</span><span class="x">×</span><span>5</span></div></div>
+            <button class="set-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+          </div>
+        </div>
+
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">3</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-entry pr-val">
+                <span>105</span><span class="u" style="color:rgba(6,182,212,0.6)">kg</span><span class="x" style="color:rgba(6,182,212,0.5)">×</span><span>5</span>
+                <span class="pr-inline-badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor"><path d="M5 1l1 2.5 2.5.3-1.9 1.8.5 2.5L5 6.8 2.9 8.1l.5-2.5L1.5 3.8 4 3.5z"/></svg>PR</span>
+              </div>
+            </div>
+            <button class="set-check is-pr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Set 4: active — Fix 3: inline inputs. Fix 4: swipe + long-press affordances -->
+        <div class="set-row-wrap" id="bench-set4-wrap">
+          <div class="longpress-hint show">Hold to change type or delete</div>
+          <div class="set-swipe-hint">
+            <div class="set-swipe-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              ← swipe
+            </div>
+          </div>
+          <div class="set-row is-next editing" id="bench-set4">
+            <span class="set-num">4</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-inputs">
+                <input class="set-input" id="bench-s4-weight" type="number" value="100" min="0" step="2.5" title="Weight (kg)">
+                <span class="set-input-unit">kg</span>
+                <span class="set-input-x">×</span>
+                <input class="set-input" id="bench-s4-reps" type="number" value="5" min="1" step="1" title="Reps">
+              </div>
+              <div class="set-hint" id="bench-s4-hint">last: 100kg × 5</div>
+            </div>
+            <!-- Fix 1+2+3: reads live inputs; Fix 2: PR also fires rest timer -->
+            <button class="set-check next-pulse" id="bench-s4-check" onclick="checkSetFromInputs(this,'bench-s4-weight','bench-s4-reps','Bench Press','bench-set4-wrap')"></button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ex-footer">
+        <button class="ex-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add set</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>Notes</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="8" width="2" height="8" rx="1"/><rect x="20" y="8" width="2" height="8" rx="1"/><rect x="5" y="5" width="2" height="14" rx="1"/><rect x="17" y="5" width="2" height="14" rx="1"/><rect x="8" y="10" width="8" height="4" rx="1"/></svg>Plates</button>
+      </div>
+    </div>
+
+    <!-- ══ EXERCISE 2: OVERHEAD PRESS ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-header-left">
+          <button class="ex-name-btn" onclick="openExSheet('Overhead Press (Barbell)')">
+            Overhead Press (Barbell)
+            <span class="ex-name-caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </button>
+          <div class="ex-meta">
+            <span class="ex-meta-tag">Shoulders</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Barbell</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Compound</span>
+          </div>
+        </div>
+        <button class="btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <div class="ex-context">
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Last session</div>
+          <div class="ex-ctx-val">60kg × 6</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Best set</div>
+          <div class="ex-ctx-val">62.5kg × 5</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">1RM est.</div>
+          <div class="ex-ctx-val">72 kg</div>
+        </div>
+      </div>
+
+      <!-- Fix 3: chips target ohp-s3 inputs directly -->
+      <div class="ex-progression">
+        <span class="prog-label">Load next set:</span>
+        <button class="prog-chip repeat" onclick="applyProgToRow('ohp-s3-weight','ohp-s3-reps','60','6',this)">Repeat last</button>
+        <button class="prog-chip increase" onclick="applyProgToRow('ohp-s3-weight','ohp-s3-reps','62.5','6',this)">+2.5 kg</button>
+        <button class="prog-chip increase" onclick="applyProgToRow('ohp-s3-weight','ohp-s3-reps','65','5',this)">+5 kg</button>
+        <button class="prog-chip decrease" onclick="applyProgToRow('ohp-s3-weight','ohp-s3-reps','54','6',this)">Drop 10%</button>
+      </div>
+
+      <div class="set-table">
+        <div class="set-col-headers">
+          <span>Set</span><span>Type</span><span>Weight × Reps</span><span style="text-align:center">✓</span>
+        </div>
+
+        <!-- Set 1: warmup done -->
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">1</span>
+            <span class="stype stype-warmup">Warmup</span>
+            <div class="set-values-cell"><div class="set-entry"><span>40</span><span class="u">kg</span><span class="x">×</span><span>8</span></div></div>
+            <button class="set-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Set 2: done -->
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">2</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell"><div class="set-entry"><span>60</span><span class="u">kg</span><span class="x">×</span><span>6</span></div></div>
+            <button class="set-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Fix 1: Set 3 active — inline inputs matching Bench pattern -->
+        <div class="set-row-wrap" id="ohp-set3-wrap">
+          <div class="longpress-hint show">Hold to change type or delete</div>
+          <div class="set-swipe-hint">
+            <div class="set-swipe-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              ← swipe
+            </div>
+          </div>
+          <div class="set-row is-next editing" id="ohp-set3">
+            <span class="set-num">3</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-inputs">
+                <input class="set-input" id="ohp-s3-weight" type="number" value="60" min="0" step="2.5" title="Weight (kg)">
+                <span class="set-input-unit">kg</span>
+                <span class="set-input-x">×</span>
+                <input class="set-input" id="ohp-s3-reps" type="number" value="6" min="1" step="1" title="Reps">
+              </div>
+              <div class="set-hint" id="ohp-s3-hint">last: 60kg × 6</div>
+            </div>
+            <button class="set-check next-pulse" onclick="checkSetFromInputs(this,'ohp-s3-weight','ohp-s3-reps','Overhead Press','ohp-set3-wrap')"></button>
+          </div>
+        </div>
+
+        <!-- Set 4: pending — dashes (not yet active) -->
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">4</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-entry empty-dashes">— × —</div>
+              <div class="set-hint">last: 60kg × 6</div>
+            </div>
+            <button class="set-check" onclick="checkSet(this, 'Overhead Press', '60', '6')"></button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ex-footer">
+        <button class="ex-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add set</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>Notes</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="8" width="2" height="8" rx="1"/><rect x="20" y="8" width="2" height="8" rx="1"/><rect x="5" y="5" width="2" height="14" rx="1"/><rect x="17" y="5" width="2" height="14" rx="1"/><rect x="8" y="10" width="8" height="4" rx="1"/></svg>Plates</button>
+      </div>
+    </div>
+
+    <!-- ══ EXERCISE 3: INCLINE DB PRESS ══ -->
+    <div class="ex-card">
+      <div class="ex-header">
+        <div class="ex-header-left">
+          <button class="ex-name-btn" onclick="openExSheet('Incline Dumbbell Press')">
+            Incline Dumbbell Press
+            <span class="ex-name-caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></span>
+          </button>
+          <div class="ex-meta">
+            <span class="ex-meta-tag">Chest</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Dumbbell</span>
+            <div class="ex-meta-dot"></div>
+            <span class="ex-meta-tag">Isolation</span>
+          </div>
+        </div>
+        <button class="btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <div class="ex-context">
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Last session</div>
+          <div class="ex-ctx-val">36kg × 8</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Best set</div>
+          <div class="ex-ctx-val">38kg × 7</div>
+        </div>
+        <div class="ex-ctx-item">
+          <div class="ex-ctx-label">Sets done</div>
+          <div class="ex-ctx-val">0 / 3</div>
+        </div>
+      </div>
+
+      <!-- Fix 3: chips target incline-s1 inputs directly -->
+      <div class="ex-progression">
+        <span class="prog-label">Load next set:</span>
+        <button class="prog-chip repeat" onclick="applyProgToRow('inc-s1-weight','inc-s1-reps','36','8',this)">Repeat last</button>
+        <button class="prog-chip increase" onclick="applyProgToRow('inc-s1-weight','inc-s1-reps','38','8',this)">+2 kg</button>
+        <button class="prog-chip decrease" onclick="applyProgToRow('inc-s1-weight','inc-s1-reps','32','10',this)">Drop set</button>
+      </div>
+
+      <div class="set-table">
+        <div class="set-col-headers">
+          <span>Set</span><span>Type</span><span>Weight × Reps</span><span style="text-align:center">✓</span>
+        </div>
+
+        <!-- Fix 1: Set 1 active — inline inputs, all sets not started -->
+        <div class="set-row-wrap" id="inc-set1-wrap">
+          <div class="longpress-hint show">Hold to change type or delete</div>
+          <div class="set-swipe-hint">
+            <div class="set-swipe-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              ← swipe
+            </div>
+          </div>
+          <div class="set-row is-next editing" id="inc-set1">
+            <span class="set-num">1</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-inputs">
+                <input class="set-input" id="inc-s1-weight" type="number" value="36" min="0" step="2" title="Weight (kg)">
+                <span class="set-input-unit">kg</span>
+                <span class="set-input-x">×</span>
+                <input class="set-input" id="inc-s1-reps" type="number" value="8" min="1" step="1" title="Reps">
+              </div>
+              <div class="set-hint" id="inc-s1-hint">last: 36kg × 8</div>
+            </div>
+            <button class="set-check next-pulse" onclick="checkSetFromInputs(this,'inc-s1-weight','inc-s1-reps','Incline DB Press','inc-set1-wrap')"></button>
+          </div>
+        </div>
+
+        <!-- Set 2: pending -->
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">2</span>
+            <span class="stype stype-normal">Normal</span>
+            <div class="set-values-cell">
+              <div class="set-entry empty-dashes">— × —</div>
+              <div class="set-hint">last: 36kg × 8</div>
+            </div>
+            <button class="set-check" onclick="checkSet(this, 'Incline DB Press', '36', '8')"></button>
+          </div>
+        </div>
+
+        <!-- Set 3: drop — pending -->
+        <div class="set-row-wrap">
+          <div class="set-row">
+            <span class="set-num">3</span>
+            <span class="stype stype-drop">Drop</span>
+            <div class="set-values-cell">
+              <div class="set-entry empty-dashes">— × —</div>
+              <div class="set-hint">last: 28kg × 10</div>
+            </div>
+            <button class="set-check" onclick="checkSet(this, 'Incline DB Press', '28', '10')"></button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ex-footer">
+        <button class="ex-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add set</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>Notes</button>
+        <div class="ex-action-divider"></div>
+        <button class="ex-action secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="8" width="2" height="8" rx="1"/><rect x="20" y="8" width="2" height="8" rx="1"/><rect x="5" y="5" width="2" height="14" rx="1"/><rect x="17" y="5" width="2" height="14" rx="1"/><rect x="8" y="10" width="8" height="4" rx="1"/></svg>Plates</button>
+      </div>
+    </div>
+
+    <!-- ADD EXERCISE -->
+    <button class="add-ex-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add exercise
+    </button>
+
+  </div><!-- /exercise-list -->
+
+  <!-- FINISH BAR -->
+  <div class="finish-bar">
+    <div class="finish-stats">
+      <div class="finish-stat">
+        <div class="finish-stat-label">Duration</div>
+        <div class="finish-stat-value" id="finishDuration">00:00</div>
+      </div>
+      <div class="finish-stat">
+        <div class="finish-stat-label">Volume</div>
+        <div class="finish-stat-value">1,850 kg</div>
+      </div>
+      <div class="finish-stat">
+        <div class="finish-stat-label">Sets</div>
+        <div class="finish-stat-value">5 / 11</div>
+      </div>
+      <div class="finish-stat">
+        <div class="finish-stat-label">Medals</div>
+        <div class="finish-medal-row">
+          <svg class="finish-medal-icon" viewBox="0 0 12 12" fill="#06B6D4"><path d="M6 1l1 2.5 2.5.3-1.9 1.8.5 2.5L6 6.8 3.9 8.1l.5-2.5L2.5 3.8 5 3.5z"/></svg>
+          <span class="finish-medals-text" id="medalCount">1 this session</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-finish">Finish workout</button>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- EXERCISE BOTTOM SHEET (Fix 4) -->
+<div class="ex-sheet-overlay" id="exSheetOverlay" onclick="closeExSheet()"></div>
+<div class="ex-sheet" id="exSheet">
+  <div class="ex-sheet-handle-row"><div class="ex-sheet-handle"></div></div>
+  <div class="ex-sheet-title" id="exSheetTitle">Bench Press (Barbell)</div>
+  <button class="ex-sheet-option" onclick="closeExSheet()">
+    <div class="ex-sheet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    <div><div class="ex-sheet-label">View history</div><div class="ex-sheet-sub">Past sessions, volume trend, best sets</div></div>
+  </button>
+  <button class="ex-sheet-option" onclick="closeExSheet()">
+    <div class="ex-sheet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+    <div><div class="ex-sheet-label">Progression graph</div><div class="ex-sheet-sub">1RM and volume over time</div></div>
+  </button>
+  <button class="ex-sheet-option" onclick="closeExSheet()">
+    <div class="ex-sheet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+    <div><div class="ex-sheet-label">Muscle map</div><div class="ex-sheet-sub">Primary: Chest · Secondary: Triceps, Shoulders</div></div>
+  </button>
+  <button class="ex-sheet-option" onclick="closeExSheet()">
+    <div class="ex-sheet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+    <div><div class="ex-sheet-label">Replace exercise</div><div class="ex-sheet-sub">Swap with a different movement</div></div>
+  </button>
+</div>
+
+<!-- PR BANNER -->
+<div class="pr-banner" id="prBanner" onclick="dismissPR()">
+  <svg class="pr-medal-svg" viewBox="0 0 40 40" fill="none">
+    <!-- Ribbon straps -->
+    <path d="M12 24L9 38L15 34.5L17 30Z" fill="#042a33" opacity="0.8"/>
+    <path d="M28 24L31 38L25 34.5L23 30Z" fill="#042a33" opacity="0.8"/>
+    <!-- Medal circle shadow -->
+    <circle cx="20" cy="16" r="13" fill="rgba(4,42,51,0.4)" transform="translate(1,1)"/>
+    <!-- Medal body -->
+    <circle cx="20" cy="16" r="13" fill="#042a33"/>
+    <circle cx="20" cy="16" r="10.5" fill="#06B6D4"/>
+    <!-- Star burst -->
+    <path d="M20 9.5l1.2 3.6h3.8l-3.1 2.2 1.2 3.6-3.1-2.2-3.1 2.2 1.2-3.6-3.1-2.2h3.8z" fill="#042a33" opacity="0.9"/>
+  </svg>
+  <div class="pr-text">
+    <div class="pr-eyebrow" id="prEyebrow">New PR · Bench Press</div>
+    <div class="pr-main" id="prMain">105 kg × 5</div>
+    <div class="pr-prev" id="prPrev">prev: 100 kg × 5</div>
+    <span class="pr-dismiss">tap to dismiss</span>
+  </div>
+</div>
+
+<!-- REST TIMER -->
+<div class="rest-overlay" id="restOverlay" onclick="skipRest()"></div>
+<div class="rest-sheet" id="restSheet">
+  <div class="rest-handle"></div>
+  <div class="rest-top">
+    <div class="rest-label-col">
+      <div class="rest-label">Rest timer</div>
+      <div class="rest-next-set" id="restNextLabel">Next: <strong>Set 4 — Bench Press</strong></div>
+    </div>
+  </div>
+  <div class="rest-countdown" id="restCountdown">1:30</div>
+  <div class="rest-progress-track">
+    <div class="rest-progress-fill" id="restProgressFill"></div>
+  </div>
+  <div class="rest-buttons">
+    <button class="rest-btn" onclick="adjustRest(-30)">−30s</button>
+    <button class="rest-btn skip" onclick="skipRest()">Skip ↗</button>
+    <button class="rest-btn" onclick="adjustRest(30)">+30s</button>
+  </div>
+  <div class="rest-hint-row">
+    <div class="rest-hint-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg></div>
+    <div>
+      <div class="rest-hint-text" id="restNextHint">Next set target</div>
+      <div class="rest-hint-val" id="restNextVal">100 kg × 5</div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE TAB BAR -->
+<nav class="mobile-tab-bar">
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+    Workouts
+  </button>
+  <button class="tab-fab" aria-label="Log workout">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19" stroke="var(--bg)"/><line x1="5" y1="12" x2="19" y2="12" stroke="var(--bg)"/></svg>
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Activities
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</nav>
+
+<script>
+// ─── ELAPSED TIMER ───
+let totalSec = 0;
+const elapsedEl = document.getElementById('elapsed');
+const finishDurEl = document.getElementById('finishDuration');
+setInterval(() => {
+  totalSec++;
+  const m = String(Math.floor(totalSec / 60)).padStart(2,'0');
+  const s = String(totalSec % 60).padStart(2,'0');
+  const t = m + ':' + s;
+  elapsedEl.textContent = t;
+  finishDurEl.textContent = t;
+}, 1000);
+
+// ─── KEBAB MENU ───
+const kebabBtn = document.getElementById('kebabBtn');
+const kebabMenu = document.getElementById('kebabMenu');
+kebabBtn.addEventListener('click', e => { e.stopPropagation(); kebabMenu.classList.toggle('open'); });
+document.addEventListener('click', () => kebabMenu.classList.remove('open'));
+
+// ─── EXERCISE BOTTOM SHEET (Fix 4) ───
+function openExSheet(name) {
+  document.getElementById('exSheetTitle').textContent = name;
+  document.getElementById('exSheetOverlay').classList.add('show');
+  document.getElementById('exSheet').classList.add('show');
+}
+function closeExSheet() {
+  document.getElementById('exSheetOverlay').classList.remove('show');
+  document.getElementById('exSheet').classList.remove('show');
+}
+
+// ─── PR BANNER ───
+let prDismissTimer = null;
+let medalCount = 1;
+
+function showPR(exerciseName, val, prev) {
+  const banner = document.getElementById('prBanner');
+  document.getElementById('prEyebrow').textContent = 'New PR · ' + exerciseName;
+  document.getElementById('prMain').textContent = val;
+  document.getElementById('prPrev').textContent = 'prev: ' + prev;
+  banner.style.transition = 'none';
+  banner.style.opacity = '';
+  banner.classList.add('show');
+  clearTimeout(prDismissTimer);
+  prDismissTimer = setTimeout(dismissPR, 3500);
+}
+
+function dismissPR() {
+  const banner = document.getElementById('prBanner');
+  banner.style.transition = 'opacity 0.4s ease';
+  banner.style.opacity = '0';
+  setTimeout(() => { banner.classList.remove('show'); banner.style.transition = ''; banner.style.opacity = ''; }, 420);
+}
+
+// ─── REST TIMER ───
+let restSec = 90;
+let restTotal = 90;
+let restInterval = null;
+const restOverlay = document.getElementById('restOverlay');
+const restSheet = document.getElementById('restSheet');
+const restCountdown = document.getElementById('restCountdown');
+const restFill = document.getElementById('restProgressFill');
+
+function showRestTimer(exerciseName, nextSetVal) {
+  restSec = 90;
+  restTotal = 90;
+  document.getElementById('restNextHint').textContent = exerciseName + ' — next set';
+  document.getElementById('restNextVal').textContent = nextSetVal;
+  updateRestDisplay();
+  restOverlay.classList.add('show');
+  restSheet.classList.add('show');
+  restCountdown.classList.remove('urgent','pulse');
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restSec--;
+    updateRestDisplay();
+    if (restSec <= 10 && restSec > 0) restCountdown.classList.add('urgent','pulse');
+    if (restSec <= 0) { clearInterval(restInterval); skipRest(); }
+  }, 1000);
+}
+
+function updateRestDisplay() {
+  const m = Math.floor(restSec / 60);
+  const s = String(restSec % 60).padStart(2,'0');
+  restCountdown.textContent = m + ':' + s;
+  const pct = Math.max(0, (restSec / restTotal) * 100);
+  restFill.style.width = pct + '%';
+  restFill.style.background = restSec <= 10 ? 'var(--red)' : restSec <= 30 ? 'var(--yellow)' : 'var(--cyan)';
+}
+
+function adjustRest(delta) {
+  restSec = Math.max(5, restSec + delta);
+  if (delta > 0 && restSec > restTotal) restTotal = restSec;
+  updateRestDisplay();
+  restCountdown.classList.remove('urgent','pulse');
+}
+
+function skipRest() {
+  clearInterval(restInterval);
+  restOverlay.classList.remove('show');
+  restSheet.classList.remove('show');
+  restCountdown.classList.remove('urgent','pulse');
+}
+restOverlay.addEventListener('click', skipRest);
+
+// ─── CHECK SET (legacy — for OHP and Incline which still use old pattern) ───
+function checkSet(btn, exerciseName, weight, reps) {
+  const row = btn.closest('.set-row');
+  const wrap = btn.closest('.set-row-wrap') || row;
+  const valCell = row.querySelector('.set-values-cell');
+  const isPR = false; // legacy sets are not PR in this demo
+
+  valCell.innerHTML = '<div class="set-entry"><span>' + weight + '</span><span class="u">kg</span><span class="x">×</span><span>' + reps + '</span></div>';
+  btn.classList.add('done');
+  btn.classList.remove('next-pulse');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>';
+  btn.onclick = null;
+  row.classList.remove('is-next');
+  // Fix 2: always fire rest timer (even on PR)
+  showRestTimer(exerciseName, weight + 'kg × ' + reps);
+  advanceNextPulse(row);
+}
+
+// ─── CHECK SET FROM INPUTS (Fix 1+2+3: reads live input values, PR also fires rest timer) ───
+function checkSetFromInputs(btn, weightId, repsId, exerciseName, wrapId) {
+  const weightInput = document.getElementById(weightId);
+  const repsInput = document.getElementById(repsId);
+  const weight = parseFloat(weightInput.value) || 0;
+  const reps = parseInt(repsInput.value) || 0;
+  if (weight <= 0 || reps <= 0) {
+    weightInput.focus();
+    weightInput.style.borderColor = 'var(--red)';
+    setTimeout(() => { weightInput.style.borderColor = ''; }, 1000);
+    return;
+  }
+
+  const row = btn.closest('.set-row');
+  const valCell = row.querySelector('.set-values-cell');
+
+  // PR detection: bench press > 100kg × 5 is a PR in this demo
+  const isPR = (exerciseName === 'Bench Press' && weight >= 105 && reps >= 5);
+  const prevStr = '100 kg × 5';
+
+  // Replace inputs with logged values
+  valCell.innerHTML = '<div class="set-entry' + (isPR ? ' pr-val' : '') + '">' +
+    '<span>' + weight + '</span>' +
+    '<span class="u"' + (isPR ? ' style="color:rgba(6,182,212,0.6)"' : '') + '>kg</span>' +
+    '<span class="x"' + (isPR ? ' style="color:rgba(6,182,212,0.5)"' : '') + '>×</span>' +
+    '<span>' + reps + '</span>' +
+    (isPR ? '<span class="pr-inline-badge"><svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor"><path d="M5 1l1 2.5 2.5.3-1.9 1.8.5 2.5L5 6.8 2.9 8.1l.5-2.5L1.5 3.8 4 3.5z"/></svg>PR</span>' : '') +
+    '</div>';
+
+  if (isPR) {
+    btn.classList.add('is-pr');
+    showPR(exerciseName, weight + ' kg × ' + reps, prevStr);
+    medalCount++;
+    const mc = document.getElementById('medalCount');
+    if (mc) mc.textContent = medalCount + ' this session';
+  } else {
+    btn.classList.add('done');
+  }
+
+  btn.classList.remove('next-pulse');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>';
+  btn.onclick = null;
+  row.classList.remove('is-next', 'editing');
+  row.style.outline = '';
+  row.style.borderRadius = '';
+
+  // Fix 2: PR also fires rest timer — always show rest after any completed set
+  showRestTimer(exerciseName, weight + 'kg × ' + reps);
+  advanceNextPulse(row);
+}
+
+// Advance next-pulse to the following unchecked set
+function advanceNextPulse(currentRow) {
+  const table = currentRow.closest('.set-table');
+  if (!table) return;
+  const allRows = table.querySelectorAll('.set-row');
+  let found = false;
+  allRows.forEach(r => {
+    if (r === currentRow) { found = true; return; }
+    if (found) {
+      const chk = r.querySelector('.set-check:not(.done):not(.is-pr)');
+      if (chk && !r.classList.contains('is-next')) {
+        r.classList.add('is-next');
+        chk.classList.add('next-pulse');
+        found = false;
+      }
+    }
+  });
+}
+
+// ─── FIX 1: PROGRESSION CHIPS → write directly into active set inputs ───
+function applyProgToRow(weightId, repsId, weight, reps, chip) {
+  const wInput = document.getElementById(weightId);
+  const rInput = document.getElementById(repsId);
+  if (wInput && rInput) {
+    wInput.value = weight;
+    rInput.value = reps;
+    // Highlight inputs briefly so user sees the update
+    wInput.style.borderColor = 'var(--cyan)';
+    rInput.style.borderColor = 'var(--cyan)';
+    wInput.style.background = 'rgba(6,182,212,0.08)';
+    rInput.style.background = 'rgba(6,182,212,0.08)';
+    setTimeout(() => {
+      wInput.style.borderColor = '';
+      rInput.style.borderColor = '';
+      wInput.style.background = '';
+      rInput.style.background = '';
+    }, 900);
+    // Update hint text
+    const card = chip.closest('.ex-card');
+    if (card) {
+      const hint = card.querySelector('.set-hint');
+      if (hint) hint.textContent = 'target: ' + weight + 'kg × ' + reps;
+    }
+  }
+  // Mark chip as active, deactivate siblings
+  const siblings = chip.parentElement.querySelectorAll('.prog-chip');
+  siblings.forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  setTimeout(() => chip.classList.remove('active'), 1000);
+}
+
+// ─── AUTO-FIRE PR DEMO ───
+setTimeout(() => {
+  showPR('Bench Press', '105 kg × 5', '100 kg × 5');
+}, 2500);
+</script>
+</body>

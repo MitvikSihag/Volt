@@ -1,68 +1,35 @@
-# Volt — Mobile App
+# Volt — Mobile
 
-Mobile frontend for the Volt fitness platform. See the root `../CLAUDE.md` for the full product overview.
+The primary product surface (see root [PRODUCT.md](../PRODUCT.md): mobile-first, web is
+marketing + companion). Not yet scaffolded — this doc seeds the scaffold and grows with it.
 
-## Stack
-- **Framework:** React Native (Expo SDK 54) with Expo Router v6 (file-based routing)
-- **Language:** TypeScript (strict)
-- **State:** Zustand
-- **Storage:** @react-native-async-storage/async-storage (offline queue)
-- **Icons:** @expo/vector-icons (Ionicons)
-- **Navigation:** Expo Router — `app/` directory, file-based, same conventions as Next.js
+## Stack (decided)
+- **Expo + React Native + TypeScript** (Expo Router for navigation)
+- API: consumes the backend REST API; the contract at `backend/docs/api/openapi.yaml` is the
+  source of truth — generate the client/types from it, never hand-write shapes
+- State/server-cache and other library picks: decided at scaffold time, recorded here
 
-## Project Structure
-```
-mobile/volt-mobile/
-├── app/
-│   ├── _layout.tsx          — root stack
-│   ├── index.tsx            — auth redirect
-│   ├── (auth)/              — login, register
-│   ├── (tabs)/              — home, log, record, feed, profile
-│   ├── workout/active.tsx   — active workout modal
-│   └── workout/exercise-picker.tsx
-├── store/                   — Zustand stores (auth-store, workout-store)
-├── lib/                     — mock-data, format helpers
-├── components/theme.ts      — Colors, Typography, Spacing constants
-└── types/index.ts           — shared TypeScript types
-```
+## Product constraints that shape the code
+- **Offline-first logging is the wedge** (Hevy can't do it). The strength logger must work with
+  no connection: local queue → sync. Design data flow around this from day one.
+- Logging speed is sacred: ≤2 taps per set, previous-session prefill, one action in the thumb zone.
+- kg is the default unit everywhere; lb is a settings toggle.
+- Measurement type comes from the Exercise config (`REPS_WEIGHT` / `DISTANCE` / `DURATION` /
+  `REPS_ONLY`) — the set-entry UI renders from it.
+- GPS recording must survive backgrounding (Android reliability is a feature, not a bug class).
+- Live Activity / lock-screen (rest countdown + tick sets) is v1 scope, not polish.
 
-## Dev Setup
-```bash
-cd mobile/volt-mobile
-npx expo start        # opens Expo Go QR
-npx expo start --ios  # iOS simulator
-npx expo start --android
-```
+## Design source of truth
+The Claude Design project "Volt - App Screens" (dc.html file) owns the screens; its system:
+base `#121212` darkness ladder, ember `#FF5A1F` = strength, jade = endurance, gold = earned
+rewards only, yellow = gaps, mono numerals, grayscale chrome, tier chips on ratings,
+one-number-owns-each-screen. Muscle figure: `design-screens/body-map/volt-body-map.svg`
+(locked asset — recolor via CSS variables, never redraw). Do not invent screens; port them.
 
-## What This App Does
-Native mobile experience for fitness tracking:
-- Workout logging mid-gym (quick set entry, rest timer, plate calculator)
-- GPS activity recording in the background (run/ride/hike tracking)
-- Live map view during an activity
-- Offline workout logging (sync when back online)
-- Push notifications (rest timer, PR alerts, kudos from friends)
-- Apple Health / Google Fit integration
-- Camera for progress photos
+## IA (tabs)
+Today (goal-anchored) · Plan · Feed · Rivals · Profile (Vault, muscle map, ratings).
+Ad-hoc logging reachable from Today without a plan.
 
-## API Contract
-The backend auto-generates an OpenAPI spec. Use it as the source of truth for all endpoints, request/response shapes, and auth.
-
-- **Spec file:** `../backend/docs/api/openapi.yaml`
-- **Base URL (dev):** `http://localhost:8080`
-- **Auth:** `Authorization: Bearer <jwt>` header on all protected endpoints
-
-## Key API Areas
-| Area | Base path |
-|---|---|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login` |
-| Workouts | `/api/workouts` |
-| Exercises | `/api/exercises` |
-| Activities | `/api/activities` |
-| Users / Social | `/api/users`, `/api/feed` |
-
-## Mobile-Specific Considerations
-- Offline-first for workout logging — queue requests locally, sync on reconnect
-- Background GPS tracking requires foreground service (Android) / background location permission (iOS)
-- Minimize battery usage during activity recording (adaptive GPS polling)
-- Rest timer should work with screen locked
-
+## Release scope
+v0.9 alpha: auth, strength logger, GPS recording, history, Events/Today.
+See [PRODUCT.md §7](../PRODUCT.md) for the full ladder and gates.

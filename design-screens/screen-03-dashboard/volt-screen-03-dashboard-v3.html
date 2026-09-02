@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Volt — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090E;--card:#111118;--elevated:#1C1C28;
+  --border:#2A2A3C;--border-strong:#3A3A50;
+  --cyan:#06B6D4;--cyan-dim:rgba(6,182,212,0.10);
+  --text:#F0F0F8;--text-dim:#A1A1B0;--muted:#6B7280;
+  --green:#22C55E;--blue:#3B82F6;--yellow:#EAB308;--red:#EF4444;--purple:#8B5CF6;
+  --font-d:'Syne',sans-serif;--font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:16px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button{font-family:var(--font-b);cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* ─── APP SHELL ─── */
+.app{display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:24px 16px;z-index:50}
+.sidebar-logo{font-family:var(--font-d);font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;padding:0 8px;margin-bottom:32px;color:var(--text)}
+.logo-bolt{width:20px;height:20px;background:var(--cyan);clip-path:polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%);flex-shrink:0}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--text-dim);cursor:pointer;transition:all 0.15s;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.sidebar-item:hover{background:var(--elevated);color:var(--text)}
+.sidebar-item.active{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(6,182,212,0.25)}
+.sidebar-item svg{width:18px;height:18px;stroke-width:1.8;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 8px}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:var(--elevated);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--cyan);flex-shrink:0}
+.sidebar-user{font-size:13px;color:var(--text-dim);flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sidebar-settings{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;transition:color 0.15s}
+.sidebar-settings:hover{color:var(--text)}
+.sidebar-settings svg{width:18px;height:18px;stroke-width:1.8}
+
+/* ─── MAIN ─── */
+.main{flex:1;margin-left:220px;display:flex;flex-direction:column;min-height:100vh;max-width:calc(100vw - 220px)}
+
+/* ─── PAGE HEADER ─── */
+.page-header{padding:20px 28px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.page-header-left{}
+.page-greeting{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:0.04em;margin-bottom:2px}
+.page-title{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.page-header-right{display:flex;align-items:center;gap:8px;padding-top:4px}
+.streak-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:100px;font-size:12px;font-weight:500;color:var(--text-dim)}
+.streak-val{font-family:var(--font-m);color:var(--cyan);font-weight:600}
+.btn-notif{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:8px;transition:all 0.15s;position:relative}
+.btn-notif:hover{background:var(--elevated);color:var(--text)}
+.btn-notif svg{width:20px;height:20px;stroke-width:1.8}
+
+/* ─── CONTENT AREA ─── */
+.content{padding:18px 28px 40px;display:flex;flex-direction:column;gap:18px}
+
+/* ─── TODAY MODULE ─── */
+.today-module{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.today-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.today-label{font-family:var(--font-m);font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em}
+.today-date{font-size:12px;color:var(--muted)}
+.today-body{padding:16px 18px;display:flex;align-items:stretch;gap:14px}
+/* Primary action */
+.today-action{flex:1;min-width:0}
+.today-action-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:6px}
+.today-action-name{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text);letter-spacing:-0.4px;line-height:1.1;margin-bottom:4px}
+.today-action-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.today-meta-pill{font-family:var(--font-m);font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500}
+.pill-lift{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(6,182,212,0.25)}
+.pill-cardio{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.25)}
+.pill-rest{background:var(--elevated);color:var(--text-dim);border:1px solid var(--border)}
+.pill-warn{background:rgba(234,179,8,0.12);color:var(--yellow);border:1px solid rgba(234,179,8,0.25)}
+/* Today divider */
+.today-divider{width:1px;background:var(--border);flex-shrink:0}
+/* Readiness column */
+.today-readiness{display:flex;flex-direction:column;gap:8px;width:152px;flex-shrink:0}
+.readiness-label{font-family:var(--font-m);font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px}
+.readiness-item{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.readiness-zone{font-size:12px;color:var(--text-dim);font-weight:500}
+.readiness-signal{font-family:var(--font-m);font-size:11px;font-weight:600}
+.sig-ready{color:var(--green)}
+.sig-caution{color:var(--yellow)}
+.sig-load{color:var(--text-dim)}
+.sig-blue{color:var(--blue)}
+/* Start button */
+.today-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.btn-start-workout{font:600 13px var(--font-b);color:var(--bg);background:var(--cyan);border:none;padding:9px 20px;border-radius:8px;transition:opacity 0.2s,transform 0.15s;flex-shrink:0}
+.btn-start-workout:hover{opacity:0.9;transform:translateY(-1px)}
+.today-note{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* ─── HYBRID INSIGHT ─── */
+.insight-card{background:var(--card);border:1px solid rgba(6,182,212,0.3);border-radius:14px;overflow:hidden;position:relative}
+.insight-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan) 0%,var(--blue) 100%)}
+.insight-header{padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.insight-icon{width:28px;height:28px;background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.3);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.insight-icon svg{width:14px;height:14px;stroke:var(--cyan);stroke-width:2}
+.insight-eyebrow{font-family:var(--font-m);font-size:9px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:0.14em}
+.insight-body{padding:14px 18px}
+.insight-finding{font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.2px;line-height:1.25;margin-bottom:8px}
+.insight-detail{font-size:12.5px;color:var(--text-dim);line-height:1.55}
+.insight-detail strong{color:var(--text);font-weight:500}
+/* Mini correlation chart */
+.insight-chart-wrap{margin-top:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.insight-chart-legend{display:flex;gap:14px;margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+.correlation-chart{height:56px;display:flex;align-items:flex-end;gap:3px;position:relative}
+.corr-bar-group{display:flex;align-items:flex-end;gap:2px;flex:1}
+.corr-bar{border-radius:2px 2px 0 0;flex:1;min-width:0}
+.corr-bar.lift{background:var(--cyan);opacity:0.85}
+.corr-bar.run{background:var(--blue);opacity:0.75}
+.corr-bar.lift.dip{background:var(--cyan);opacity:0.35}
+.corr-annotation{position:absolute;top:-4px;right:0;font-family:var(--font-m);font-size:9px;color:var(--yellow);background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.25);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.insight-chart-label{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:8px}
+/* Insight tabs */
+.insight-tabs{display:flex;gap:2px;padding:0 18px 14px}
+.itab{font-size:11.5px;font-weight:500;color:var(--muted);background:none;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all 0.15s}
+.itab:hover{background:var(--elevated);color:var(--text-dim)}
+.itab.active{background:var(--elevated);color:var(--text)}
+
+/* ─── STATS ROW ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.stat-card-label{font-family:var(--font-m);font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+.stat-card-value{font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.5px}
+.stat-card-value small{font-family:var(--font-b);font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
+.stat-card-delta{font-size:11px;margin-top:4px;font-weight:500}
+.delta-up{color:var(--green)}
+.delta-down{color:var(--red)}
+.delta-neut{color:var(--muted)}
+
+/* ─── WEEK STRIP ─── */
+.section-label{font-family:var(--font-m);font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px}
+.week-strip-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.week-strip-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.week-strip-title{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.2px}
+.week-summary{font-size:12px;color:var(--muted)}
+.week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day-cell{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:all 0.15s;padding:6px 4px;border-radius:8px;position:relative}
+.day-cell:hover{background:var(--elevated)}
+.day-cell.today-cell{background:var(--elevated);outline:1px solid rgba(6,182,212,0.35)}
+.day-name{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em}
+.day-cell.today-cell .day-name{color:var(--cyan)}
+.day-num{font-family:var(--font-m);font-size:13px;font-weight:600;color:var(--text-dim)}
+.day-cell.today-cell .day-num{color:var(--cyan)}
+.day-badge{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.badge-lift{background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.3)}
+.badge-run{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25)}
+.badge-both{background:linear-gradient(135deg,var(--cyan-dim),rgba(59,130,246,0.1));border:1px solid rgba(6,182,212,0.25)}
+.badge-rest{background:var(--elevated);border:1px solid var(--border)}
+.badge-planned{background:var(--elevated);border:1px dashed var(--border-strong)}
+.badge-empty{width:26px;height:26px}
+/* Week legend */
+.week-legend{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.legend-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.lp-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ─── UNIFIED CHART ─── */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.chart-card-title{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.2px;margin-bottom:2px}
+.chart-period-tabs{display:flex;gap:2px}
+.period-tab{font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;padding:4px 8px;border-radius:5px;cursor:pointer;transition:all 0.12s}
+.period-tab:hover{background:var(--elevated);color:var(--text-dim)}
+.period-tab.active{background:var(--elevated);color:var(--text)}
+/* Chart legend */
+.chart-legend{display:flex;gap:14px;margin-bottom:12px}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)}
+.cl-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+/* Chart area */
+.chart-area{position:relative;height:130px}
+.chart-svg{width:100%;height:100%;overflow:visible}
+/* Annotations */
+.chart-annotations{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
+.chart-ann-marker{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transform:translateX(-50%)}
+.ann-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--bg)}
+.ann-label{font-family:var(--font-m);font-size:8px;font-weight:600;padding:2px 5px;border-radius:3px;white-space:nowrap}
+.ann-pr{background:rgba(6,182,212,0.9);color:var(--bg)}
+.ann-hard{background:rgba(59,130,246,0.9);color:#fff}
+/* X-axis labels */
+.chart-x{display:flex;justify-content:space-between;margin-top:6px;padding:0 2px}
+.chart-x-label{font-family:var(--font-m);font-size:9px;color:var(--muted)}
+.chart-x-label.today{color:var(--cyan)}
+/* Interpretive caption */
+.chart-caption{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);line-height:1.5}
+.chart-caption strong{color:var(--text);font-weight:500}
+
+/* ─── SOCIAL SNIPPET ─── */
+.prs-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.prs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.prs-title{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.2px}
+.prs-link{font-size:12px;color:var(--cyan);font-weight:500;background:none;border:none;cursor:pointer}
+.pr-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.pr-item:last-child{border-bottom:none}
+.pr-medal{width:28px;height:28px;border-radius:7px;background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pr-medal svg{width:13px;height:13px;fill:var(--cyan)}
+.pr-info{flex:1;min-width:0}
+.pr-exercise{font-size:13px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pr-type{font-size:11px;color:var(--muted)}
+.pr-val{text-align:right;flex-shrink:0}
+.pr-val-num{font-family:var(--font-m);font-size:13px;font-weight:600;color:var(--cyan);display:block}
+.pr-val-prev{font-family:var(--font-m);font-size:10px;color:var(--muted)}
+
+/* ─── SOCIAL SNIPPET ─── */
+.social-strip{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.social-avatars{display:flex}
+.social-av{width:26px;height:26px;border-radius:50%;border:2px solid var(--card);margin-right:-7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.social-av:last-child{margin-right:0}
+.social-text{flex:1;min-width:0;font-size:12.5px;color:var(--text-dim);line-height:1.4}
+.social-text strong{color:var(--text);font-weight:500}
+.btn-social-view{font:500 12px var(--font-b);color:var(--cyan);background:none;border:1px solid rgba(6,182,212,0.3);padding:6px 12px;border-radius:7px;white-space:nowrap;transition:all 0.15s}
+.btn-social-view:hover{background:var(--cyan-dim)}
+
+/* ─── MOBILE TAB BAR ─── */
+.mobile-tab-bar{display:none}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0;max-width:100vw}
+  .page-header{padding:16px 16px 0}
+  .content{padding:14px 16px 100px;gap:14px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:10px}
+  .today-body{flex-direction:column;gap:12px}
+  .today-divider{width:100%;height:1px}
+  .today-readiness{width:100%}
+  .mobile-tab-bar{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--card);border-top:1px solid var(--border);
+    padding:8px 16px max(8px,env(safe-area-inset-bottom));
+    z-index:50;align-items:center;justify-content:space-around;
+  }
+  .tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;padding:4px 8px;transition:color 0.15s}
+  .tab-item.active{color:var(--cyan)}
+  .tab-item svg{width:22px;height:22px;stroke-width:1.8}
+  .tab-fab{width:52px;height:52px;border-radius:50%;background:var(--cyan);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(6,182,212,0.45);margin-top:-18px;transition:transform 0.15s;flex-shrink:0}
+  .tab-fab:active{transform:scale(0.96)}
+  .tab-fab svg{width:24px;height:24px;stroke:var(--bg);stroke-width:2.5}
+  .insight-tabs{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-bolt"></div>Volt</div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+      Workouts
+    </a>
+    <a class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Activities
+    </a>
+    <a class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Progress
+    </a>
+    <a class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Exercises
+    </a>
+    <a class="sidebar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-avatar">MK</div>
+    <span class="sidebar-user">Marcus K.</span>
+    <button class="sidebar-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-greeting">Wednesday, 15 Jan</div>
+      <div class="page-title">Dashboard</div>
+    </div>
+    <div class="page-header-right">
+      <div class="streak-chip">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="var(--cyan)"><path d="M6 1l1.2 3.6h3.8l-3.1 2.3 1.2 3.6L6 8.2 2.9 10.5l1.2-3.6L1 4.6h3.8z"/></svg>
+        <span class="streak-val">14</span>
+        <span style="font-size:11px;color:var(--muted)">day streak</span>
+      </div>
+      <button class="btn-notif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- 1. UNIFIED NOW SURFACE (Today + Routine merged) -->
+    <div class="today-module">
+
+      <!-- Header: routine context -->
+      <div class="today-header">
+        <span class="today-label">Now</span>
+        <span class="today-date">Push/Pull/Legs · Week 3 of 8 · Day 5 of 6</span>
+      </div>
+
+      <!-- Primary decision row: recommendation left, readiness right -->
+      <div class="today-body">
+        <div class="today-action">
+          <div class="today-action-label">Recommended session</div>
+          <div class="today-action-name">Push Day A</div>
+          <div class="today-action-meta">
+            <span class="today-meta-pill pill-lift">Upper · Strength</span>
+            <span class="today-meta-pill pill-warn">Lower fatigue elevated</span>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5">
+            Upper body is ready. Legs are still carrying load from Tuesday's tempo run — skip quad accessories today, schedule lower-body work Saturday when recovery is complete.
+          </div>
+        </div>
+        <div class="today-divider"></div>
+        <div class="today-readiness">
+          <div class="readiness-label">Readiness</div>
+          <div class="readiness-item">
+            <span class="readiness-zone">Upper body</span>
+            <span class="readiness-signal sig-ready">Ready ↑</span>
+          </div>
+          <div class="readiness-item">
+            <span class="readiness-zone">Lower body</span>
+            <span class="readiness-signal sig-caution">Elevated ⚠</span>
+          </div>
+          <div class="readiness-item">
+            <span class="readiness-zone">Cardio load</span>
+            <span class="readiness-signal sig-blue">Moderate</span>
+          </div>
+          <div class="readiness-item">
+            <span class="readiness-zone">Recovery</span>
+            <span class="readiness-signal sig-load">Stable →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Routine week progress strip (inline, unified) -->
+      <div style="padding:0 18px 14px;border-top:1px solid var(--border);padding-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-family:var(--font-m);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600">This week</span>
+          <span style="font-size:11px;color:var(--muted)">Mon–Wed done · Legs on Sat</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <!-- Mon done -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2)">
+            <span style="font-size:9px;font-weight:500;color:var(--green);text-transform:uppercase">Mon</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--green)">Push</span>
+          </div>
+          <!-- Tue done -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2)">
+            <span style="font-size:9px;font-weight:500;color:var(--green);text-transform:uppercase">Tue</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--green)">8.4km</span>
+          </div>
+          <!-- Wed TODAY -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:var(--cyan-dim);border:1px solid rgba(6,182,212,0.4)">
+            <span style="font-size:9px;font-weight:600;color:var(--cyan);text-transform:uppercase">Today</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--cyan)">Push</span>
+          </div>
+          <!-- Thu planned -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:var(--elevated);border:1px dashed var(--border-strong);opacity:0.7">
+            <span style="font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase">Thu</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--muted)">Zone 2</span>
+          </div>
+          <!-- Fri rest -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:var(--elevated);border:1px solid var(--border);opacity:0.55">
+            <span style="font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase">Fri</span>
+            <div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:5px;border-radius:50%;background:var(--border-strong)"></div></div>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--muted)">Rest</span>
+          </div>
+          <!-- Sat planned -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:var(--elevated);border:1px dashed var(--border-strong);opacity:0.7">
+            <span style="font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase">Sat</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--muted)">Legs</span>
+          </div>
+          <!-- Sun rest -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:7px;background:var(--elevated);border:1px solid var(--border);opacity:0.55">
+            <span style="font-size:9px;font-weight:500;color:var(--muted);text-transform:uppercase">Sun</span>
+            <div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:5px;border-radius:50%;background:var(--border-strong)"></div></div>
+            <span style="font-family:var(--font-m);font-size:9px;color:var(--muted)">Rest</span>
+          </div>
+        </div>
+
+        <!-- Exercise preview (collapsed, 3 items) -->
+        <div style="margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--text-dim)">Bench Press</span>
+            <span style="font-family:var(--font-m);font-size:11px;color:var(--muted)">last: 100kg × 5</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--text-dim)">Overhead Press</span>
+            <span style="font-family:var(--font-m);font-size:11px;color:var(--muted)">last: 60kg × 6</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--muted)">+6 more exercises</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer: CTA + context anchor -->
+      <div class="today-footer">
+        <button class="btn-start-workout">Start Push Day A</button>
+        <div class="today-note">Last Push: <span style="font-family:var(--font-m);color:var(--text-dim)">Mon · 18,240kg · 72 min</span> — strength up 12% this week.</div>
+      </div>
+    </div>
+
+    <!-- 2. HYBRID INSIGHT -->
+    <div class="insight-card">
+      <div class="insight-header">
+        <div class="insight-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 2l20 20"/><path d="M9 4H5a2 2 0 00-2 2v4"/><path d="M15 4h4a2 2 0 012 2v4"/><path d="M5 20h4"/><path d="M15 20h4a2 2 0 002-2v-4"/></svg>
+        </div>
+        <div>
+          <div class="insight-eyebrow">Hybrid Insight · last 4 weeks</div>
+        </div>
+      </div>
+      <div class="insight-tabs">
+        <button class="itab active" onclick="switchInsight(0,this)">Run→Squat</button>
+        <button class="itab" onclick="switchInsight(1,this)">Cardio load</button>
+        <button class="itab" onclick="switchInsight(2,this)">Consistency</button>
+      </div>
+      <div class="insight-body" id="insight-body">
+        <div class="insight-finding" id="insight-finding">Hard run days reduce next-day squat output by ~12%.</div>
+        <div class="insight-detail" id="insight-detail">On the 6 days following a run with pace under <strong>5:00/km</strong>, your squat working weight dropped an average of <strong>7.5kg</strong> vs the prior session. Scheduling upper-body work the day after a hard run preserves both output streams.</div>
+        <!-- Action directive -->
+        <div id="insight-action" style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 12px;background:var(--elevated);border-radius:8px;border-left:2px solid var(--cyan)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.5" style="flex-shrink:0;margin-top:1px"><polyline points="9 18 15 12 9 6"/></svg>
+          <span id="insight-action-text" style="font-size:12px;color:var(--text-dim);line-height:1.45"><strong style="color:var(--text);font-weight:500">Today:</strong> Upper-body session. Move Legs to Saturday — by then lower-body load from Tuesday will have cleared.</span>
+        </div>
+        <div class="insight-chart-wrap">
+          <div class="insight-chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>Squat vol (kg)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Run dist (km)</div>
+          </div>
+          <div class="correlation-chart" id="corr-chart">
+            <!-- 8 day groups -->
+            <div class="corr-bar-group"><div class="corr-bar lift" style="height:68%"></div><div class="corr-bar run" style="height:12%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift dip" style="height:30%"></div><div class="corr-bar run" style="height:75%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift" style="height:74%"></div><div class="corr-bar run" style="height:5%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift" style="height:80%"></div><div class="corr-bar run" style="height:20%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift dip" style="height:32%"></div><div class="corr-bar run" style="height:90%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift" style="height:85%"></div><div class="corr-bar run" style="height:8%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift" style="height:76%"></div><div class="corr-bar run" style="height:30%"></div></div>
+            <div class="corr-bar-group"><div class="corr-bar lift dip" style="height:35%"></div><div class="corr-bar run" style="height:82%"></div></div>
+            <div class="corr-annotation">High run → squat dip</div>
+          </div>
+          <div class="insight-chart-label" id="corr-label">Cyan dips following blue spikes confirm the pattern across 3 of 4 weeks.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. STATS ROW -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-card-label">Volume / week</div>
+        <div class="stat-card-value">18,240<small>kg</small></div>
+        <div class="stat-card-delta delta-up">↑ 12% vs last week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Distance / week</div>
+        <div class="stat-card-value">34.2<small>km</small></div>
+        <div class="stat-card-delta delta-down" style="color:var(--blue)">↓ 8% — intentional taper</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Workouts done</div>
+        <div class="stat-card-value">4<small style="font-size:14px">/5</small></div>
+        <div class="stat-card-delta delta-neut">1 remaining this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Training balance</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;margin-bottom:4px">
+          <!-- Inline mini donut: ~60% lift / 40% cardio -->
+          <svg width="32" height="32" viewBox="0 0 32 32" style="flex-shrink:0">
+            <circle cx="16" cy="16" r="12" fill="none" stroke="#1C1C28" stroke-width="6"/>
+            <circle cx="16" cy="16" r="12" fill="none" stroke="#06B6D4" stroke-width="6"
+              stroke-dasharray="45 30" stroke-dashoffset="-8" stroke-linecap="round"/>
+            <circle cx="16" cy="16" r="12" fill="none" stroke="#3B82F6" stroke-width="6"
+              stroke-dasharray="30 45" stroke-dashoffset="37" stroke-linecap="round"/>
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)">
+              <div style="width:7px;height:7px;border-radius:2px;background:var(--cyan);flex-shrink:0"></div>
+              <span style="font-family:var(--font-m)">Lift 60%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)">
+              <div style="width:7px;height:7px;border-radius:2px;background:var(--blue);flex-shrink:0"></div>
+              <span style="font-family:var(--font-m)">Cardio 40%</span>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card-delta delta-up">↑ Strength bias · on target</div>
+      </div>
+    </div>
+
+    <!-- 4. UNIFIED CHART -->
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title">Training load · last 14 days</div>
+          <div style="font-size:11px;color:var(--muted)">Strength volume + cardio distance combined</div>
+        </div>
+        <div class="chart-period-tabs">
+          <button class="period-tab active">14d</button>
+          <button class="period-tab">30d</button>
+          <button class="period-tab">90d</button>
+        </div>
+      </div>
+      <div class="chart-legend">
+        <div class="cl-item"><div class="cl-swatch" style="background:var(--cyan)"></div>Lift vol</div>
+        <div class="cl-item"><div class="cl-swatch" style="background:var(--blue)"></div>Run dist</div>
+        <div class="cl-item">
+          <div class="cl-swatch" style="background:linear-gradient(135deg,var(--cyan) 50%,var(--blue) 50%)"></div>Both
+        </div>
+      </div>
+      <!-- SVG chart -->
+      <div class="chart-area">
+        <svg class="chart-svg" viewBox="0 0 580 130" preserveAspectRatio="none">
+          <!-- Grid lines -->
+          <line x1="0" y1="32" x2="580" y2="32" stroke="#2A2A3C" stroke-width="1"/>
+          <line x1="0" y1="65" x2="580" y2="65" stroke="#2A2A3C" stroke-width="1"/>
+          <line x1="0" y1="98" x2="580" y2="98" stroke="#2A2A3C" stroke-width="1"/>
+
+          <!-- Lift volume area (cyan) -->
+          <path d="M0 98 C20 85 30 75 60 68 C90 60 100 95 130 92 C160 88 175 55 210 48 C240 42 255 90 280 88 C310 85 320 48 350 38 C380 28 390 72 420 65 C450 58 465 35 500 28 C530 22 555 50 580 45 L580 130 L0 130 Z" fill="rgba(6,182,212,0.12)"/>
+          <path d="M0 98 C20 85 30 75 60 68 C90 60 100 95 130 92 C160 88 175 55 210 48 C240 42 255 90 280 88 C310 85 320 48 350 38 C380 28 390 72 420 65 C450 58 465 35 500 28 C530 22 555 50 580 45" stroke="#06B6D4" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+          <!-- Run distance area (blue) -->
+          <path d="M0 118 C20 116 40 115 60 112 C80 108 90 85 120 70 C145 58 155 112 180 115 C205 118 220 80 250 60 C270 46 280 115 310 118 C335 120 345 72 375 55 C400 42 410 115 440 118 C460 120 475 100 510 88 C540 78 560 115 580 118 L580 130 L0 130 Z" fill="rgba(59,130,246,0.1)"/>
+          <path d="M0 118 C20 116 40 115 60 112 C80 108 90 85 120 70 C145 58 155 112 180 115 C205 118 220 80 250 60 C270 46 280 115 310 118 C335 120 345 72 375 55 C400 42 410 115 440 118 C460 120 475 100 510 88 C540 78 560 115 580 118" stroke="#3B82F6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="none"/>
+
+          <!-- PR marker (day 8, squat PR) -->
+          <circle cx="350" cy="38" r="5" fill="#06B6D4" stroke="#09090E" stroke-width="2"/>
+          <rect x="320" y="6" width="60" height="18" rx="4" fill="rgba(6,182,212,0.9)"/>
+          <text x="350" y="18" font-family="JetBrains Mono" font-size="8" fill="#042a33" text-anchor="middle" font-weight="600">★ PR day</text>
+
+          <!-- Hard run marker (day 5) -->
+          <circle cx="210" cy="60" r="4" fill="#3B82F6" stroke="#09090E" stroke-width="2"/>
+          <rect x="178" y="64" width="64" height="17" rx="3" fill="rgba(59,130,246,0.85)"/>
+          <text x="210" y="75.5" font-family="JetBrains Mono" font-size="8" fill="#fff" text-anchor="middle" font-weight="500">Hard run</text>
+
+          <!-- Today marker -->
+          <line x1="500" y1="0" x2="500" y2="130" stroke="rgba(6,182,212,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+          <circle cx="500" cy="28" r="4" fill="#06B6D4" stroke="#09090E" stroke-width="2"/>
+          <text x="500" y="12" font-family="JetBrains Mono" font-size="8" fill="#06B6D4" text-anchor="middle">today</text>
+
+          <!-- Y-axis labels -->
+          <text x="4" y="30" font-family="JetBrains Mono" font-size="8" fill="#6B7280">high</text>
+          <text x="4" y="63" font-family="JetBrains Mono" font-size="8" fill="#6B7280">mid</text>
+          <text x="4" y="96" font-family="JetBrains Mono" font-size="8" fill="#6B7280">low</text>
+        </svg>
+        <!-- X axis -->
+      </div>
+      <div class="chart-x">
+        <span class="chart-x-label">Jan 2</span>
+        <span class="chart-x-label">Jan 5</span>
+        <span class="chart-x-label">Jan 8</span>
+        <span class="chart-x-label">Jan 11</span>
+        <span class="chart-x-label today">Jan 15</span>
+      </div>
+      <!-- Interpretive caption bridging chart to recommendation -->
+      <div class="chart-caption">
+        Lift volume peaked Jan 8 (squat PR). Tuesday's hard run produced the blue spike visible at Jan 14 — and predicts the lower-body fatigue signal in today's recommendation above. <strong>Upper-body work today is the right call.</strong> Run load is moderating; strength trend is up.
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID: PRs (full width) -->
+    <div class="prs-card">
+      <div class="prs-header">
+        <div class="prs-title">Recent PRs</div>
+        <button class="prs-link">All PRs →</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div class="pr-item" style="padding-right:16px;border-right:1px solid var(--border)">
+          <div class="pr-medal"><svg viewBox="0 0 14 14"><path d="M7 1l1.2 3.4H12l-2.9 2.1 1.1 3.4L7 7.7 3.8 9.9l1.1-3.4L2 4.4h3.8z"/></svg></div>
+          <div class="pr-info"><div class="pr-exercise">Back Squat</div><div class="pr-type">Heaviest set · Jan 12</div></div>
+          <div class="pr-val"><span class="pr-val-num">145 kg</span><span class="pr-val-prev">prev 140 kg</span></div>
+        </div>
+        <div class="pr-item" style="padding-left:16px">
+          <div class="pr-medal"><svg viewBox="0 0 14 14"><path d="M7 1l1.2 3.4H12l-2.9 2.1 1.1 3.4L7 7.7 3.8 9.9l1.1-3.4L2 4.4h3.8z"/></svg></div>
+          <div class="pr-info"><div class="pr-exercise">Bench Press</div><div class="pr-type">Best set vol · Jan 11</div></div>
+          <div class="pr-val"><span class="pr-val-num">105 × 5</span><span class="pr-val-prev">prev 100 × 5</span></div>
+        </div>
+        <div class="pr-item" style="padding-right:16px;border-right:1px solid var(--border);border-bottom:none">
+          <div class="pr-medal"><svg viewBox="0 0 14 14"><path d="M7 1l1.2 3.4H12l-2.9 2.1 1.1 3.4L7 7.7 3.8 9.9l1.1-3.4L2 4.4h3.8z"/></svg></div>
+          <div class="pr-info"><div class="pr-exercise">Deadlift</div><div class="pr-type">1RM est. · Jan 8</div></div>
+          <div class="pr-val"><span class="pr-val-num">198 kg</span><span class="pr-val-prev">prev 192 kg</span></div>
+        </div>
+        <div class="pr-item" style="padding-left:16px;border-bottom:none">
+          <div class="pr-medal"><svg viewBox="0 0 14 14"><path d="M7 1l1.2 3.4H12l-2.9 2.1 1.1 3.4L7 7.7 3.8 9.9l1.1-3.4L2 4.4h3.8z"/></svg></div>
+          <div class="pr-info"><div class="pr-exercise">10K run</div><div class="pr-type">Best effort · Jan 5</div></div>
+          <div class="pr-val"><span class="pr-val-num">42:18</span><span class="pr-val-prev">prev 43:51</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOCIAL STRIP (compact, lower priority) -->
+    <div class="social-strip">
+      <div class="social-avatars">
+        <div class="social-av" style="background:var(--purple)">SP</div>
+        <div class="social-av" style="background:#14b8a6">JR</div>
+        <div class="social-av" style="background:var(--cyan);color:var(--bg)">TL</div>
+      </div>
+      <div class="social-text"><strong>Sarah P.</strong> hit a 10K PR and <strong>Jamie R.</strong> logged a 200kg deadlift today.</div>
+      <button class="btn-social-view">View feed</button>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBILE TAB BAR -->
+<nav class="mobile-tab-bar">
+  <button class="tab-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Home
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 5v14"/><path d="M18 5v14"/><path d="M6 12h12"/></svg>
+    Workouts
+  </button>
+  <button class="tab-fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19" stroke="var(--bg)"/><line x1="5" y1="12" x2="19" y2="12" stroke="var(--bg)"/></svg>
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Activities
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</nav>
+
+<script>
+// ─── HYBRID INSIGHT TABS ───
+const insights = [
+  {
+    finding: 'Hard run days reduce next-day squat output by ~12%.',
+    detail: 'On the 6 days following a run with pace under <strong>5:00/km</strong>, your squat working weight dropped an average of <strong>7.5kg</strong> vs the prior session. Scheduling upper-body work the day after a hard run preserves both output streams.',
+    action: '<strong style="color:var(--text);font-weight:500">Today:</strong> Upper-body session. Move Legs to Saturday — by then lower-body load from Tuesday will have cleared.',
+    label: 'Cyan dips following blue spikes confirm the pattern across 3 of 4 weeks.',
+    chart: [
+      [{h:'68%',c:'lift'},{h:'12%',c:'run'}],
+      [{h:'30%',c:'lift dip'},{h:'75%',c:'run'}],
+      [{h:'74%',c:'lift'},{h:'5%',c:'run'}],
+      [{h:'80%',c:'lift'},{h:'20%',c:'run'}],
+      [{h:'32%',c:'lift dip'},{h:'90%',c:'run'}],
+      [{h:'85%',c:'lift'},{h:'8%',c:'run'}],
+      [{h:'76%',c:'lift'},{h:'30%',c:'run'}],
+      [{h:'35%',c:'lift dip'},{h:'82%',c:'run'}],
+    ],
+    ann: 'High run → squat dip'
+  },
+  {
+    finding: 'Weekly running over 35km suppresses lower-body output the following week.',
+    detail: 'Weeks where you ran over <strong>35km</strong> led to a <strong>9% average drop</strong> in squat and leg-press volume the next 7 days. Weeks with 20–28km showed no measurable impact. Your current run load (<strong>34km this week</strong>) is at the threshold.',
+    action: '<strong style="color:var(--text);font-weight:500">This week:</strong> Keep Thursday\'s run to Zone 2 (under 28km total) to preserve Saturday\'s Legs session.',
+    label: 'Running volume (blue) vs lower-body lift volume (cyan) over 8-week view.',
+    chart: [
+      [{h:'72%',c:'lift'},{h:'40%',c:'run'}],
+      [{h:'78%',c:'lift'},{h:'55%',c:'run'}],
+      [{h:'65%',c:'lift dip'},{h:'88%',c:'run'}],
+      [{h:'60%',c:'lift dip'},{h:'82%',c:'run'}],
+      [{h:'80%',c:'lift'},{h:'30%',c:'run'}],
+      [{h:'85%',c:'lift'},{h:'25%',c:'run'}],
+      [{h:'72%',c:'lift'},{h:'70%',c:'run'}],
+      [{h:'55%',c:'lift dip'},{h:'85%',c:'run'}],
+    ],
+    ann: 'High km → output drop'
+  },
+  {
+    finding: 'A Zone 2 run after upper-body days raises weekly session completion by 18%.',
+    detail: 'On the 8 weeks where you followed a Push or Pull session with a Zone 2 run (&lt; <strong>5:30/km</strong>), you completed <strong>94% of planned sessions</strong>. Weeks without that pattern: <strong>76% completion</strong>.',
+    action: '<strong style="color:var(--text);font-weight:500">Tomorrow:</strong> 30–40 min easy run (Zone 2, &lt;5:30/km). Accelerates upper-body recovery and sets up a stronger Legs day Saturday.',
+    label: 'Session completion rate (bars) vs presence of Zone 2 run after upper-body days.',
+    chart: [
+      [{h:'90%',c:'lift'},{h:'30%',c:'run'}],
+      [{h:'95%',c:'lift'},{h:'45%',c:'run'}],
+      [{h:'70%',c:'lift dip'},{h:'5%',c:'run'}],
+      [{h:'92%',c:'lift'},{h:'40%',c:'run'}],
+      [{h:'65%',c:'lift dip'},{h:'0%',c:'run'}],
+      [{h:'94%',c:'lift'},{h:'38%',c:'run'}],
+      [{h:'88%',c:'lift'},{h:'42%',c:'run'}],
+      [{h:'60%',c:'lift dip'},{h:'6%',c:'run'}],
+    ],
+    ann: 'No Zone 2 → dip'
+  }
+];
+
+function switchInsight(idx, btn) {
+  document.querySelectorAll('.itab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const ins = insights[idx];
+  document.getElementById('insight-finding').textContent = ins.finding;
+  document.getElementById('insight-detail').innerHTML = ins.detail;
+  document.getElementById('insight-action-text').innerHTML = ins.action;
+  document.getElementById('corr-label').textContent = ins.label;
+  const chart = document.getElementById('corr-chart');
+  chart.querySelector('.corr-annotation').textContent = ins.ann;
+  chart.querySelectorAll('.corr-bar-group').forEach((g, i) => {
+    const bars = g.querySelectorAll('.corr-bar');
+    bars[0].style.height = ins.chart[i][0].h;
+    bars[0].className = 'corr-bar ' + ins.chart[i][0].c;
+    bars[1].style.height = ins.chart[i][1].h;
+  });
+}
+
+// ─── WEEK DAY DETAILS ───
+const dayDetails = [
+  'Monday · Jan 13 — Push Day A. 72 min · 18,240kg volume · PR on bench (105kg × 5). Upper-body fatigue: moderate.',
+  'Tuesday · Jan 14 — Tempo run. 8.4km · 4:32/km avg · +124m elevation. Hard effort. Lower-body load: elevated (affects next 24–36h).',
+  'Wednesday · Jan 15 — Today. Push Day A scheduled. Upper body ready. Avoid lower-body accessories.',
+  'Thursday · Jan 16 — Zone 2 run planned. 6–8km target · easy pace. Following upper-body day: good timing.',
+  'Friday · Jan 17 — Rest day. Recovery window.',
+  'Saturday · Jan 18 — Legs day planned. By Sat, lower-body should be recovered from Tue run.',
+  'Sunday · Jan 19 — Rest. End of week.',
+];
+
+function selectDay(idx) {
+  const detail = document.getElementById('day-detail');
+  if (detail.style.display === 'block' && detail.dataset.idx === String(idx)) {
+    detail.style.display = 'none';
+    return;
+  }
+  detail.textContent = dayDetails[idx];
+  detail.style.display = 'block';
+  detail.dataset.idx = idx;
+}
+
+// ─── PERIOD TABS ───
+document.querySelectorAll('.period-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

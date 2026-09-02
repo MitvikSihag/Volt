@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Volt — Tempelhof Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #09090E;
+  --card:          #111118;
+  --elevated:      #1C1C28;
+  --border:        #2A2A3C;
+  --border-strong: #3A3A50;
+  --text:          #F0F0F8;
+  --text-dim:      #A1A1B0;
+  --muted:         #6B7280;
+  --cyan:          #06B6D4;
+  --cyan-dim:      rgba(6,182,212,0.10);
+  --cyan-border:   rgba(6,182,212,0.30);
+  --green:         #22C55E;
+  --green-dim:     rgba(34,197,94,0.12);
+  --green-border:  rgba(34,197,94,0.28);
+  --blue:          #3B82F6;
+  --blue-dim:      rgba(59,130,246,0.12);
+  --blue-border:   rgba(59,130,246,0.30);
+  --yellow:        #EAB308;
+  --yellow-dim:    rgba(234,179,8,0.12);
+  --red:           #EF4444;
+  --purple:        #8B5CF6;
+  --f-display: 'Syne', sans-serif;
+  --f-sans:    'Inter', sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+  --sidebar-w: 220px;
+  --tabbar-h:  64px;
+  --header-h:  56px;
+}
+
+/* ─── RESET ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: var(--f-sans); min-height: 100dvh; overflow-x: hidden; }
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+svg { display: block; flex-shrink: 0; }
+
+/* ─── SHARED ATOMS ────────────────────────────────────────────────────────── */
+.btn-primary   { display:inline-flex; align-items:center; gap:6px; padding:10px 16px; background:var(--blue); color:#fff; font-size:13px; font-weight:600; border-radius:8px; transition:opacity 0.15s; white-space:nowrap; }
+.btn-primary:hover { opacity:.88; }
+.btn-secondary { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; background:var(--elevated); border:1px solid var(--border); font-size:13px; font-weight:500; color:var(--text-dim); border-radius:8px; transition:border-color 0.15s, color 0.15s; white-space:nowrap; }
+.btn-secondary:hover { border-color:var(--border-strong); color:var(--text); }
+
+.eyebrow { font-family:var(--f-mono); font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); }
+
+.intel-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:100px; font-family:var(--f-mono); font-size:10px; font-weight:500; white-space:nowrap; }
+.intel-badge.blue   { background:var(--blue-dim);   border:1px solid var(--blue-border);            color:var(--blue); }
+.intel-badge.green  { background:var(--green-dim);  border:1px solid var(--green-border);           color:var(--green); }
+.intel-badge.cyan   { background:var(--cyan-dim);   border:1px solid var(--cyan-border);            color:var(--cyan); }
+.intel-badge.yellow { background:var(--yellow-dim); border:1px solid rgba(234,179,8,0.28);          color:var(--yellow); }
+.intel-badge.purple { background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.28);    color:var(--purple); }
+.intel-badge.muted  { background:var(--elevated);   border:1px solid var(--border);                color:var(--muted); }
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.d-sidebar { background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; height:100vh; position:sticky; top:0; }
+.sidebar-logo { display:flex; align-items:center; gap:10px; padding:20px 18px 24px; border-bottom:1px solid var(--border); }
+.logo-bolt { width:22px; height:22px; background:var(--cyan); clip-path:polygon(60% 0%,100% 0%,40% 50%,80% 50%,0% 100%,20% 55%,-10% 55%); flex-shrink:0; }
+.logo-name { font-family:var(--f-display); font-weight:800; font-size:17px; color:var(--text); letter-spacing:-0.01em; }
+.sidebar-nav { flex:1; padding:12px 10px; display:flex; flex-direction:column; gap:2px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; font-size:13.5px; font-weight:500; color:var(--text-dim); transition:background 0.15s, color 0.15s; }
+.nav-item:hover { background:var(--elevated); color:var(--text); }
+.nav-item.active { background:var(--blue-dim); color:var(--blue); border:1px solid var(--blue-border); }
+.nav-item svg { opacity:.7; } .nav-item.active svg { opacity:1; }
+.sidebar-footer { padding:14px 16px; border-top:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--cyan)); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+.sidebar-footer-name { font-size:13px; font-weight:500; }
+.sidebar-footer-sub  { font-size:11px; color:var(--muted); }
+
+/* ─── MOBILE SHELL ────────────────────────────────────────────────────────── */
+.tabbar { position:fixed; bottom:0; left:0; right:0; height:var(--tabbar-h); background:var(--card); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-around; z-index:50; padding:0 4px; }
+.tab-item { display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 12px; color:var(--muted); font-size:10px; font-weight:500; border-radius:8px; transition:color 0.15s; flex:1; }
+.tab-item.active { color:var(--blue); }
+.tab-fab { width:52px; height:52px; border-radius:50%; background:var(--cyan); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 4px var(--bg), 0 4px 16px rgba(6,182,212,0.4); flex-shrink:0; margin-bottom:8px; transition:transform 0.15s; }
+.tab-fab:hover { transform:scale(1.05); }
+
+.app-shell { min-height:100dvh; padding-bottom:var(--tabbar-h); }
+
+/* ─── MOBILE HEADER ───────────────────────────────────────────────────────── */
+.m-header { position:sticky; top:0; z-index:40; height:var(--header-h); background:var(--bg); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; padding:0 16px; }
+.m-back { width:34px; height:34px; border-radius:8px; background:var(--elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-dim); flex-shrink:0; }
+.m-back:hover { border-color:var(--border-strong); color:var(--text); }
+.m-header-title { font-family:var(--f-display); font-weight:700; font-size:17px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.m-icon-btn { width:34px; height:34px; border-radius:8px; background:var(--elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-dim); }
+.m-icon-btn:hover { border-color:var(--border-strong); color:var(--text); }
+
+.sdiv { height:1px; background:var(--border); margin:18px 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUMMARY HERO
+═══════════════════════════════════════════════════════════════════════════ */
+.summary-hero { padding:16px; background:var(--card); border-bottom:1px solid var(--border); }
+
+.summary-context { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.summary-date { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
+.activity-type-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; background:var(--blue-dim); border:1px solid var(--blue-border); border-radius:100px; font-family:var(--f-mono); font-size:10px; font-weight:500; color:var(--blue); }
+.done-badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; background:var(--green-dim); border:1px solid var(--green-border); border-radius:100px; font-family:var(--f-mono); font-size:11px; font-weight:500; color:var(--green); }
+
+.summary-title { font-family:var(--f-display); font-weight:800; font-size:clamp(22px,5vw,28px); color:var(--text); line-height:1.05; margin-bottom:4px; }
+.summary-location { font-size:13px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:5px; }
+
+/* Stat grid — 3 across on mobile, 5 on desktop */
+.stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-radius:10px; overflow:hidden; margin-bottom:12px; }
+.stat-cell { background:var(--elevated); padding:10px 12px; }
+.stat-val { font-family:var(--f-mono); font-size:18px; font-weight:600; color:var(--text); line-height:1; margin-bottom:4px; }
+.stat-val.blue { color:var(--blue); }
+.stat-val.sm   { font-size:14px; }
+.stat-lbl { font-family:var(--f-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); }
+
+/* Comparison strip */
+.compare-strip { display:flex; gap:14px; padding:8px 10px; background:var(--elevated); border:1px solid var(--border); border-radius:8px; flex-wrap:wrap; }
+.compare-item { font-family:var(--f-mono); font-size:10.5px; color:var(--text-dim); display:flex; align-items:center; gap:5px; }
+.compare-item .up   { color:var(--green); }
+.compare-item .down { color:var(--red); }
+.compare-item .eq   { color:var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SESSION HIGHLIGHTS / WINS
+═══════════════════════════════════════════════════════════════════════════ */
+.wins-section { padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border); }
+.wins-scroll { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+.wins-scroll::-webkit-scrollbar { display:none; }
+
+.win-card { flex-shrink:0; min-width:150px; background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.win-card.pr   { border-color:var(--blue-border);          background:rgba(59,130,246,0.05); }
+.win-card.best { border-color:var(--green-border);         background:rgba(34,197,94,0.05); }
+.win-card.neg  { border-color:rgba(139,92,246,0.28);       background:rgba(139,92,246,0.05); }
+.win-card.load { border-color:var(--cyan-border);          background:rgba(6,182,212,0.05); }
+.win-icon { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; margin-bottom:7px; }
+.win-icon.blue   { background:var(--blue-dim);   border:1px solid var(--blue-border);   color:var(--blue); }
+.win-icon.green  { background:var(--green-dim);  border:1px solid var(--green-border);  color:var(--green); }
+.win-icon.purple { background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.28); color:var(--purple); }
+.win-icon.cyan   { background:var(--cyan-dim);   border:1px solid var(--cyan-border);   color:var(--cyan); }
+.win-headline { font-size:12.5px; font-weight:600; color:var(--text); line-height:1.25; margin-bottom:2px; }
+.win-sub { font-family:var(--f-mono); font-size:10px; color:var(--muted); line-height:1.4; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROUTE + ELEVATION CARD
+═══════════════════════════════════════════════════════════════════════════ */
+.route-section { padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border); }
+.route-card { background:var(--elevated); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+
+/* Schematic route map (SVG, not a real map) */
+.route-map-area { height:140px; background:#0D0D18; position:relative; overflow:hidden; }
+.route-map-area svg { width:100%; height:100%; }
+
+/* Elevation profile below the map */
+.elevation-area { padding:10px 14px 12px; border-top:1px solid var(--border); }
+.elevation-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.elevation-title { font-family:var(--f-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); }
+.elevation-stats { display:flex; gap:12px; }
+.elev-stat { font-family:var(--f-mono); font-size:10.5px; color:var(--text-dim); }
+.elev-stat span { color:var(--blue); font-weight:600; }
+.elevation-chart { height:44px; position:relative; }
+.elevation-chart svg { width:100%; height:100%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPLITS / ANALYSIS
+═══════════════════════════════════════════════════════════════════════════ */
+.analysis-section { padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border); }
+
+/* Pace chart */
+.pace-chart-wrap { background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+.pace-chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.pace-chart-title { font-size:13px; font-weight:600; color:var(--text); }
+.pace-chart-meta  { font-family:var(--f-mono); font-size:10.5px; color:var(--muted); }
+.pace-chart { display:flex; align-items:flex-end; gap:3px; height:48px; }
+/* Each bar represents 1 km — bar height inversely proportional to pace (taller = faster) */
+.pace-bar { flex:1; border-radius:2px 2px 0 0; min-height:4px; position:relative; }
+.pace-bar.normal   { background:rgba(59,130,246,0.4); }
+.pace-bar.fast     { background:var(--blue); opacity:.85; }
+.pace-bar.slowdown { background:rgba(59,130,246,0.22); }
+.pace-bar.pr       { background:var(--blue); }
+.pace-bar-label { position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); font-family:var(--f-mono); font-size:7.5px; color:var(--muted); white-space:nowrap; }
+
+/* Split table */
+.split-table { background:var(--elevated); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.split-head { display:grid; grid-template-columns:28px 1fr 72px 60px 48px; gap:8px; padding:7px 12px; border-bottom:1px solid var(--border); }
+.split-head span { font-family:var(--f-mono); font-size:9px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); }
+.split-row { display:grid; grid-template-columns:28px 1fr 72px 60px 48px; gap:8px; padding:8px 12px; border-bottom:1px solid var(--border); align-items:center; }
+.split-row:last-child { border-bottom:none; }
+.split-km { font-family:var(--f-mono); font-size:11px; font-weight:600; color:var(--muted); }
+.split-pace { font-family:var(--f-mono); font-size:12.5px; font-weight:600; color:var(--text); }
+.split-pace.fast { color:var(--blue); }
+.split-pace.slow { color:var(--text-dim); }
+.split-hr { font-family:var(--f-mono); font-size:12px; color:var(--text-dim); }
+.split-elev { font-family:var(--f-mono); font-size:11px; color:var(--muted); }
+/* Mini pace bar inside split row */
+.split-bar-wrap { display:flex; align-items:center; }
+.split-mini-bar { height:4px; background:var(--blue); border-radius:2px; }
+
+/* HR band breakdown */
+.hr-bands { background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-top:10px; }
+.hr-band-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.hr-band-row:last-child { margin-bottom:0; }
+.hr-zone-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.hr-zone-label { font-size:12px; color:var(--text-dim); width:64px; flex-shrink:0; }
+.hr-zone-bar-track { flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.hr-zone-bar-fill  { height:100%; border-radius:3px; }
+.hr-zone-pct { font-family:var(--f-mono); font-size:10.5px; color:var(--muted); width:28px; text-align:right; flex-shrink:0; }
+.hr-zone-time { font-family:var(--f-mono); font-size:10.5px; color:var(--text-dim); width:38px; text-align:right; flex-shrink:0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HYBRID INTELLIGENCE
+═══════════════════════════════════════════════════════════════════════════ */
+.intel-section { padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border); }
+.intel-card { background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:8px; }
+.intel-card:last-child { margin-bottom:0; }
+.intel-card-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:6px; }
+.intel-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.intel-icon.cyan   { background:var(--cyan-dim);   border:1px solid var(--cyan-border);   color:var(--cyan); }
+.intel-icon.blue   { background:var(--blue-dim);   border:1px solid var(--blue-border);   color:var(--blue); }
+.intel-icon.green  { background:var(--green-dim);  border:1px solid var(--green-border);  color:var(--green); }
+.intel-icon.yellow { background:var(--yellow-dim); border:1px solid rgba(234,179,8,0.28); color:var(--yellow); }
+.intel-card-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.intel-card-sub   { font-size:12px; color:var(--text-dim); line-height:1.45; }
+/* Week load bar inside intel card */
+.load-bar-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
+.load-bar-track { flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.load-bar-fill { height:100%; border-radius:3px; }
+.load-bar-label { font-family:var(--f-mono); font-size:10px; color:var(--muted); white-space:nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOLLOW-UP ACTIONS
+═══════════════════════════════════════════════════════════════════════════ */
+.actions-section { padding:14px 16px 24px; }
+.action-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.action-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 14px; background:var(--card); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color 0.15s; }
+.action-card:hover { border-color:var(--border-strong); }
+.action-card.primary { border-color:var(--blue-border); background:rgba(59,130,246,0.04); }
+.action-icon { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.action-icon.blue    { background:var(--blue-dim);   border:1px solid var(--blue-border);  color:var(--blue); }
+.action-icon.default { background:var(--elevated);   border:1px solid var(--border);        color:var(--text-dim); }
+.action-label { font-size:13px; font-weight:600; color:var(--text); }
+.action-sub   { font-size:11.5px; color:var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP
+═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  .tabbar { display:none; }
+  .app-shell { display:none; }
+
+  .d-root { display:grid; grid-template-columns:var(--sidebar-w) 1fr; min-height:100dvh; }
+  .d-main { overflow-y:auto; }
+
+  .d-header { position:sticky; top:0; z-index:30; background:var(--bg); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; padding:0 28px; height:56px; }
+  .d-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--text-dim); padding:6px 10px; background:var(--elevated); border:1px solid var(--border); border-radius:8px; transition:border-color 0.15s, color 0.15s; }
+  .d-back:hover { border-color:var(--border-strong); color:var(--text); }
+  .d-header-center { flex:1; }
+  .d-header-title  { font-family:var(--f-display); font-weight:700; font-size:18px; }
+  .d-header-sub    { font-family:var(--f-mono); font-size:11px; color:var(--muted); margin-top:1px; }
+  .d-header-actions { display:flex; gap:8px; }
+
+  /* two-column body */
+  .d-body { display:grid; grid-template-columns:minmax(0,1fr) 340px; min-height:calc(100vh - 56px); }
+  .d-left  { padding:22px 24px 48px; }
+  .d-right { padding:20px 20px 48px; background:var(--card); border-left:1px solid var(--border); }
+
+  /* desktop overrides — remove card bg / padding where section sits on page bg */
+  .summary-hero, .wins-section, .route-section, .analysis-section, .intel-section, .actions-section { padding:0 0 20px; background:transparent; border-bottom:none; }
+  .stat-grid { grid-template-columns:repeat(5,1fr); }
+  .route-map-area { height:200px; }
+  .elevation-area { padding:12px 16px 14px; }
+
+  /* right panel cards */
+  .d-panel-card { background:var(--elevated); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .d-panel-title { font-family:var(--f-display); font-weight:700; font-size:14px; color:var(--text); margin-bottom:10px; }
+}
+@media (max-width: 899px) { .d-root { display:none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE APP SHELL
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="app-shell">
+  <header class="m-header">
+    <button class="m-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="m-header-title">Tempelhof Loop</div>
+    <div style="display:flex;gap:6px">
+      <button class="m-icon-btn" title="Share">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="m-icon-btn" title="More">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Summary hero ─────────────────────────────────────────────── -->
+  <div class="summary-hero">
+    <div class="summary-context">
+      <div class="done-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Completed
+      </div>
+      <div class="activity-type-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>
+        Run
+      </div>
+      <span class="summary-date">Sat, May 10 · 06:42 – 08:01</span>
+    </div>
+    <div class="summary-title">Tempelhof Loop</div>
+    <div class="summary-location">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Tempelhof Field, Berlin · outdoor
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <div class="stat-val blue">14.2<span style="font-size:11px;color:var(--muted)">km</span></div>
+        <div class="stat-lbl">Distance</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">1:14<span style="font-size:11px;color:var(--muted)">:38</span></div>
+        <div class="stat-lbl">Duration</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">5:15<span style="font-size:11px;color:var(--muted)">/km</span></div>
+        <div class="stat-lbl">Avg pace</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">42<span style="font-size:11px;color:var(--muted)">m</span></div>
+        <div class="stat-lbl">Elev gain</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val">152<span style="font-size:11px;color:var(--muted)">bpm</span></div>
+        <div class="stat-lbl">Avg HR</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val sm">175<span style="font-size:11px;color:var(--muted)">spm</span></div>
+        <div class="stat-lbl">Cadence</div>
+      </div>
+    </div>
+
+    <div class="compare-strip">
+      <div class="compare-item"><span class="up">↑ +1.2km</span> vs last session</div>
+      <div class="compare-item"><span class="up">↑ −0:08/km</span> faster avg</div>
+      <div class="compare-item"><span class="eq">= 152bpm</span> HR matched</div>
+    </div>
+  </div>
+
+  <!-- ── Session highlights ────────────────────────────────────────── -->
+  <div class="wins-section">
+    <div class="eyebrow" style="margin-bottom:10px">Session Highlights</div>
+    <div class="wins-scroll">
+
+      <div class="win-card best">
+        <div class="win-icon green"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+        <div class="win-headline">Longest run in 6 wks</div>
+        <div class="win-sub">14.2km<br/>prev best: 13.0km</div>
+      </div>
+
+      <div class="win-card pr">
+        <div class="win-icon blue"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="win-headline">Negative split</div>
+        <div class="win-sub">2nd half faster<br/>5:22 → 5:08/km</div>
+      </div>
+
+      <div class="win-card neg">
+        <div class="win-icon purple"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="win-headline">Fastest 10k</div>
+        <div class="win-sub">52:10 this month<br/>prev: 53:28</div>
+      </div>
+
+      <div class="win-card load">
+        <div class="win-icon cyan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="win-headline">Training load</div>
+        <div class="win-sub">Moderate-high<br/>within weekly plan</div>
+      </div>
+
+      <div class="win-card best">
+        <div class="win-icon green"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+        <div class="win-headline">Pace didn't fade</div>
+        <div class="win-sub">Last 3km held<br/>under 5:10/km</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Route + elevation ─────────────────────────────────────────── -->
+  <div class="route-section">
+    <div class="eyebrow" style="margin-bottom:10px">Route</div>
+    <div class="route-card">
+      <div class="route-map-area">
+        <!-- Schematic route — abstract loop path, not a real map tile -->
+        <svg viewBox="0 0 358 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Dark field texture hint -->
+          <rect width="358" height="140" fill="#0D0D18"/>
+          <rect x="0" y="0" width="358" height="140" fill="url(#gridpat)" opacity="0.04"/>
+          <defs>
+            <pattern id="gridpat" width="18" height="18" patternUnits="userSpaceOnUse">
+              <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#ffffff" stroke-width="0.5"/>
+            </pattern>
+            <linearGradient id="routeGlow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.6"/>
+              <stop offset="50%" stop-color="#3B82F6" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.5"/>
+            </linearGradient>
+          </defs>
+          <!-- Route shadow/glow -->
+          <path d="M 60 110 C 30 95 20 70 30 45 C 42 18 75 12 110 16 C 160 22 200 28 240 22 C 278 16 305 28 318 55 C 330 80 320 108 295 118 C 260 130 200 125 155 118 C 120 112 85 118 60 110 Z"
+            stroke="rgba(59,130,246,0.18)" stroke-width="10" fill="none" stroke-linecap="round"/>
+          <!-- Main route -->
+          <path d="M 60 110 C 30 95 20 70 30 45 C 42 18 75 12 110 16 C 160 22 200 28 240 22 C 278 16 305 28 318 55 C 330 80 320 108 295 118 C 260 130 200 125 155 118 C 120 112 85 118 60 110 Z"
+            stroke="url(#routeGlow)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Start dot -->
+          <circle cx="60" cy="110" r="5" fill="#3B82F6"/>
+          <circle cx="60" cy="110" r="9" fill="rgba(59,130,246,0.2)"/>
+          <!-- Finish marker (slightly offset — loop, but not perfectly closed) -->
+          <circle cx="68" cy="110" r="3.5" fill="#22C55E"/>
+          <!-- Pace coloring overlay — darker band = slower section -->
+          <path d="M 30 45 C 42 18 75 12 110 16" stroke="rgba(59,130,246,0.4)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- km markers -->
+          <circle cx="110" cy="16" r="2" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="200" cy="28" r="2" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="318" cy="55" r="2" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="295" cy="118" r="2" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="155" cy="118" r="2" fill="rgba(255,255,255,0.3)"/>
+          <!-- Distance label -->
+          <text x="50%" y="135" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(59,130,246,0.6)">Tempelhof Field · 14.2 km loop</text>
+        </svg>
+      </div>
+
+      <!-- Elevation profile -->
+      <div class="elevation-area">
+        <div class="elevation-header">
+          <span class="elevation-title">Elevation profile</span>
+          <div class="elevation-stats">
+            <span class="elev-stat">↑ <span>42m</span></span>
+            <span class="elev-stat">↓ <span>39m</span></span>
+            <span class="elev-stat" style="color:var(--muted)">Max <span style="color:var(--text-dim)">58m</span></span>
+          </div>
+        </div>
+        <div class="elevation-chart">
+          <svg viewBox="0 0 330 44" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="elevFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(59,130,246,0.3)"/>
+                <stop offset="100%" stop-color="rgba(59,130,246,0.03)"/>
+              </linearGradient>
+            </defs>
+            <polyline points="0,36 22,30 44,22 66,16 88,12 110,16 132,22 154,28 176,22 198,16 220,12 242,18 264,26 286,32 308,36 330,34"
+              stroke="rgba(59,130,246,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <polygon points="0,36 22,30 44,22 66,16 88,12 110,16 132,22 154,28 176,22 198,16 220,12 242,18 264,26 286,32 308,36 330,34 330,44 0,44"
+              fill="url(#elevFill)"/>
+            <!-- Km tick lines -->
+            <line x1="44" y1="40" x2="44" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="88" y1="40" x2="88" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="132" y1="40" x2="132" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="176" y1="40" x2="176" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="220" y1="40" x2="220" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="264" y1="40" x2="264" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+            <line x1="308" y1="40" x2="308" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          </svg>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">0</span>
+          <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">3km</span>
+          <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">7km</span>
+          <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">10km</span>
+          <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">14.2km</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Analysis: pace chart + splits + HR ────────────────────────── -->
+  <div class="analysis-section">
+    <div class="eyebrow" style="margin-bottom:10px">Analysis</div>
+
+    <!-- Pace per km chart -->
+    <div class="pace-chart-wrap">
+      <div class="pace-chart-header">
+        <div class="pace-chart-title">Pace per km</div>
+        <div class="pace-chart-meta">Avg 5:15/km · best 4:58</div>
+      </div>
+      <!-- Bars: 14 bars, one per km. Heights inversely proportional to pace -->
+      <div class="pace-chart" style="margin-bottom:18px">
+        <div class="pace-bar slowdown" style="height:52%"></div><!-- 5:38 -->
+        <div class="pace-bar normal"   style="height:60%"></div><!-- 5:28 -->
+        <div class="pace-bar normal"   style="height:64%"></div><!-- 5:22 -->
+        <div class="pace-bar normal"   style="height:66%"></div><!-- 5:20 -->
+        <div class="pace-bar normal"   style="height:68%"></div><!-- 5:18 -->
+        <div class="pace-bar normal"   style="height:70%"></div><!-- 5:15 -->
+        <div class="pace-bar fast"     style="height:72%"></div><!-- 5:12 -->
+        <div class="pace-bar fast"     style="height:75%"></div><!-- 5:08 -->
+        <div class="pace-bar fast"     style="height:77%"></div><!-- 5:05 -->
+        <div class="pace-bar fast"     style="height:80%"></div><!-- 5:02 -->
+        <div class="pace-bar fast"     style="height:82%"></div><!-- 5:00 -->
+        <div class="pace-bar pr"       style="height:86%"></div><!-- 4:58 best -->
+        <div class="pace-bar fast"     style="height:81%"></div><!-- 5:01 -->
+        <div class="pace-bar fast"     style="height:78%"></div><!-- 5:04 -->
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:-14px">
+        <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 1</span>
+        <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 7</span>
+        <span style="font-family:var(--f-mono);font-size:8px;color:var(--blue);font-weight:600">↑ km 12</span>
+        <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 14</span>
+      </div>
+    </div>
+
+    <!-- Splits table -->
+    <div class="eyebrow" style="margin-bottom:8px;margin-top:12px">Splits</div>
+    <div class="split-table">
+      <div class="split-head">
+        <span>km</span><span></span><span>Pace</span><span>HR</span><span>Elev</span>
+      </div>
+      <div class="split-row">
+        <div class="split-km">1</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:52%"></div></div>
+        <div class="split-pace slow">5:38</div>
+        <div class="split-hr">144</div>
+        <div class="split-elev">+8m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">2</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:60%"></div></div>
+        <div class="split-pace slow">5:28</div>
+        <div class="split-hr">148</div>
+        <div class="split-elev">+6m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">3</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:64%"></div></div>
+        <div class="split-pace">5:22</div>
+        <div class="split-hr">151</div>
+        <div class="split-elev">+4m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">5</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:70%"></div></div>
+        <div class="split-pace">5:15</div>
+        <div class="split-hr">152</div>
+        <div class="split-elev">+3m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">7</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:75%"></div></div>
+        <div class="split-pace fast">5:08</div>
+        <div class="split-hr">154</div>
+        <div class="split-elev">+2m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">10</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:82%"></div></div>
+        <div class="split-pace fast">5:02</div>
+        <div class="split-hr">156</div>
+        <div class="split-elev">0m</div>
+      </div>
+      <div class="split-row" style="background:rgba(59,130,246,0.04)">
+        <div class="split-km" style="color:var(--blue)">12</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:86%;background:var(--blue)"></div></div>
+        <div class="split-pace fast" style="color:var(--blue);font-weight:700">4:58 ★</div>
+        <div class="split-hr">158</div>
+        <div class="split-elev">−3m</div>
+      </div>
+      <div class="split-row">
+        <div class="split-km">14</div>
+        <div class="split-bar-wrap"><div class="split-mini-bar" style="width:78%"></div></div>
+        <div class="split-pace fast">5:04</div>
+        <div class="split-hr">155</div>
+        <div class="split-elev">+5m</div>
+      </div>
+    </div>
+
+    <!-- HR zone breakdown -->
+    <div class="hr-bands" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="pace-chart-title" style="font-size:13px">Heart rate zones</div>
+        <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted)">Max 171 · Avg 152 bpm</div>
+      </div>
+      <div class="hr-band-row">
+        <div class="hr-zone-dot" style="background:#4ADE80"></div>
+        <div class="hr-zone-label">Zone 1</div>
+        <div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:4%;background:#4ADE80"></div></div>
+        <div class="hr-zone-pct">4%</div>
+        <div class="hr-zone-time">3:00</div>
+      </div>
+      <div class="hr-band-row">
+        <div class="hr-zone-dot" style="background:#86EFAC"></div>
+        <div class="hr-zone-label">Zone 2</div>
+        <div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:18%;background:#86EFAC"></div></div>
+        <div class="hr-zone-pct">18%</div>
+        <div class="hr-zone-time">13:24</div>
+      </div>
+      <div class="hr-band-row">
+        <div class="hr-zone-dot" style="background:#3B82F6"></div>
+        <div class="hr-zone-label">Zone 3</div>
+        <div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:52%;background:#3B82F6"></div></div>
+        <div class="hr-zone-pct">52%</div>
+        <div class="hr-zone-time">38:52</div>
+      </div>
+      <div class="hr-band-row">
+        <div class="hr-zone-dot" style="background:#818CF8"></div>
+        <div class="hr-zone-label">Zone 4</div>
+        <div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:22%;background:#818CF8"></div></div>
+        <div class="hr-zone-pct">22%</div>
+        <div class="hr-zone-time">16:22</div>
+      </div>
+      <div class="hr-band-row">
+        <div class="hr-zone-dot" style="background:#C084FC"></div>
+        <div class="hr-zone-label">Zone 5</div>
+        <div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:4%;background:#C084FC"></div></div>
+        <div class="hr-zone-pct">4%</div>
+        <div class="hr-zone-time">3:00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Hybrid intelligence ──────────────────────────────────────── -->
+  <div class="intel-section">
+    <div class="eyebrow" style="margin-bottom:10px">Training Context</div>
+
+    <div class="intel-card">
+      <div class="intel-card-header">
+        <div class="intel-icon cyan"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div>
+          <div class="intel-card-title">Morning after Lower B</div>
+          <div class="intel-card-sub">HR baseline slightly elevated (+4 bpm vs avg). Performance still strong — longest run in 6 weeks suggests good recovery from the prior session.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--border);margin-top:4px">
+        <div style="flex:1;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px">
+          <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:2px">Prior session</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Lower Body B</div>
+          <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted)">Fri · 9,120kg vol</div>
+        </div>
+        <div style="flex:1;padding:6px 8px;background:var(--bg);border:1px solid var(--cyan-border);border-radius:6px">
+          <div style="font-family:var(--f-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--cyan);margin-bottom:2px">This run</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">Tempelhof Loop</div>
+          <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted)">Sat · 14.2km · 1:14</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="intel-card-header">
+        <div class="intel-icon green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div>
+          <div class="intel-card-title">Aerobic load stayed manageable</div>
+          <div class="intel-card-sub">52% Zone 3, 18% Zone 2 — predominantly aerobic, no sustained Zone 4+ effort. Within acceptable cardio load for a strength-training week. No HR spikes into Zone 5 until final km.</div>
+        </div>
+      </div>
+      <div class="load-bar-row">
+        <div class="load-bar-track">
+          <div class="load-bar-fill" style="width:68%;background:var(--blue)"></div>
+        </div>
+        <span class="load-bar-label">Cardio load: moderate-high</span>
+      </div>
+    </div>
+
+    <div class="intel-card">
+      <div class="intel-card-header">
+        <div class="intel-icon yellow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div>
+          <div class="intel-card-title">Strength impact note</div>
+          <div class="intel-card-sub">Long runs over 12km have historically preceded a 2–4% dip in squat volume the following session. Next Lower B is Mon — track performance to validate.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Follow-up actions ────────────────────────────────────────── -->
+  <div class="actions-section">
+    <div class="eyebrow" style="margin-bottom:10px">What's next</div>
+    <div class="action-grid">
+      <button class="action-card primary">
+        <div class="action-icon blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg></div>
+        <div class="action-label">Repeat route</div>
+        <div class="action-sub">Same Tempelhof loop</div>
+      </button>
+      <button class="action-card">
+        <div class="action-icon default"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg></div>
+        <div class="action-label">Compare pace</div>
+        <div class="action-sub">vs last 3 runs here</div>
+      </button>
+      <button class="action-card">
+        <div class="action-icon default"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+        <div class="action-label">Share activity</div>
+        <div class="action-sub">Post to feed</div>
+      </button>
+      <button class="action-card">
+        <div class="action-icon default"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div class="action-label">View trend</div>
+        <div class="action-sub">Run pace history</div>
+      </button>
+    </div>
+    <button class="btn-secondary" style="width:100%;justify-content:center;font-size:12.5px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Edit activity
+    </button>
+  </div>
+
+</div><!-- /app-shell -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     MOBILE TAB BAR
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="tabbar">
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Home</button>
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+  <button class="tab-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#08080D" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="tab-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+  <button class="tab-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DESKTOP LAYOUT
+═══════════════════════════════════════════════════════════════════════════ -->
+<div class="d-root">
+  <!-- Sidebar -->
+  <nav class="d-sidebar">
+    <div class="sidebar-logo"><div class="logo-bolt"></div><span class="logo-name">Volt</span></div>
+    <div class="sidebar-nav">
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>Workouts</button>
+      <button class="nav-item active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activities</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Progress</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Exercises</button>
+      <button class="nav-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar">MK</div>
+      <div><div class="sidebar-footer-name">Marcus K.</div><div class="sidebar-footer-sub">@marcusk</div></div>
+    </div>
+  </nav>
+
+  <div class="d-main">
+    <!-- Desktop header -->
+    <div class="d-header">
+      <button class="d-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Activities
+      </button>
+      <div class="d-header-center">
+        <div class="d-header-title">Tempelhof Loop</div>
+        <div class="d-header-sub">Sat, May 10 · 06:42–08:01 · Run · Tempelhof Field, Berlin</div>
+      </div>
+      <div class="d-header-actions">
+        <button class="btn-secondary" style="font-size:12px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Edit
+        </button>
+        <button class="btn-secondary" style="font-size:12px;padding:7px 12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+        <button class="btn-primary" style="font-size:12.5px;padding:8px 14px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg>
+          Repeat route
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop two-column body -->
+    <div class="d-body">
+      <!-- LEFT: primary content -->
+      <div class="d-left">
+
+        <!-- Summary hero -->
+        <div class="summary-hero" style="padding:0 0 20px">
+          <div class="summary-context" style="margin-bottom:10px">
+            <div class="done-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Completed</div>
+            <div class="activity-type-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/><path d="M7 17l1-4 2 2 2-5 2 4h3"/></svg>Run · Outdoor</div>
+            <span class="summary-date">Sat, May 10 · 06:42 – 08:01</span>
+          </div>
+          <div class="summary-title" style="font-size:30px;margin-bottom:4px">Tempelhof Loop</div>
+          <div class="summary-location"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Tempelhof Field, Berlin</div>
+
+          <div class="stat-grid" style="margin-bottom:12px">
+            <div class="stat-cell"><div class="stat-val blue">14.2<span style="font-size:10px;color:var(--muted)">km</span></div><div class="stat-lbl">Distance</div></div>
+            <div class="stat-cell"><div class="stat-val">1:14<span style="font-size:10px;color:var(--muted)">:38</span></div><div class="stat-lbl">Duration</div></div>
+            <div class="stat-cell"><div class="stat-val">5:15<span style="font-size:10px;color:var(--muted)">/km</span></div><div class="stat-lbl">Avg pace</div></div>
+            <div class="stat-cell"><div class="stat-val">42<span style="font-size:10px;color:var(--muted)">m</span></div><div class="stat-lbl">Elev gain</div></div>
+            <div class="stat-cell"><div class="stat-val">152<span style="font-size:10px;color:var(--muted)">bpm</span></div><div class="stat-lbl">Avg HR</div></div>
+          </div>
+          <div class="compare-strip">
+            <div class="compare-item"><span class="up">↑ +1.2km</span> vs last session</div>
+            <div class="compare-item"><span class="up">↑ −0:08/km</span> faster avg pace</div>
+            <div class="compare-item"><span class="eq">= 152bpm</span> HR matched</div>
+            <div class="compare-item"><span class="up">↑ negative split</span> 2nd half faster</div>
+          </div>
+        </div>
+
+        <!-- Highlights (desktop inline) -->
+        <div class="wins-section" style="padding:0 0 20px">
+          <div class="eyebrow" style="margin-bottom:10px">Session Highlights</div>
+          <div class="wins-scroll">
+            <div class="win-card best"><div class="win-icon green"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div><div class="win-headline">Longest run in 6 wks</div><div class="win-sub">14.2km · prev best 13.0km</div></div>
+            <div class="win-card pr"><div class="win-icon blue"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="win-headline">Negative split</div><div class="win-sub">2nd half faster<br/>5:22 → 5:08/km</div></div>
+            <div class="win-card neg"><div class="win-icon purple"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="win-headline">Fastest 10k</div><div class="win-sub">52:10 this month<br/>prev: 53:28</div></div>
+            <div class="win-card load"><div class="win-icon cyan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="win-headline">Training load</div><div class="win-sub">Moderate-high<br/>within weekly plan</div></div>
+            <div class="win-card best"><div class="win-icon green"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><div class="win-headline">Pace held to end</div><div class="win-sub">Last 3km under 5:10/km</div></div>
+          </div>
+        </div>
+
+        <!-- Route + elevation (desktop) -->
+        <div class="route-section" style="padding:0 0 20px">
+          <div class="eyebrow" style="margin-bottom:10px">Route</div>
+          <div class="route-card">
+            <div class="route-map-area">
+              <svg viewBox="0 0 680 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="680" height="200" fill="#0D0D18"/>
+                <rect x="0" y="0" width="680" height="200" fill="url(#gridpatD)" opacity="0.04"/>
+                <defs>
+                  <pattern id="gridpatD" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ffffff" stroke-width="0.5"/></pattern>
+                  <linearGradient id="routeGlowD" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#3B82F6" stop-opacity="0.5"/><stop offset="50%" stop-color="#3B82F6" stop-opacity="1"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0.5"/></linearGradient>
+                </defs>
+                <!-- Route glow shadow -->
+                <path d="M 100 162 C 50 140 32 105 42 68 C 56 28 110 16 175 20 C 250 26 350 38 450 30 C 536 24 596 42 618 80 C 640 118 622 158 584 172 C 530 188 420 182 320 172 C 230 164 160 172 100 162 Z"
+                  stroke="rgba(59,130,246,0.15)" stroke-width="14" fill="none"/>
+                <!-- Main route path -->
+                <path d="M 100 162 C 50 140 32 105 42 68 C 56 28 110 16 175 20 C 250 26 350 38 450 30 C 536 24 596 42 618 80 C 640 118 622 158 584 172 C 530 188 420 182 320 172 C 230 164 160 172 100 162 Z"
+                  stroke="url(#routeGlowD)" stroke-width="2.5" fill="none"/>
+                <!-- Start -->
+                <circle cx="100" cy="162" r="6" fill="#3B82F6"/>
+                <circle cx="100" cy="162" r="11" fill="rgba(59,130,246,0.2)"/>
+                <circle cx="114" cy="162" r="4" fill="#22C55E"/>
+                <!-- km markers -->
+                <circle cx="175" cy="20" r="2.5" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="350" cy="38" r="2.5" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="618" cy="80" r="2.5" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="584" cy="172" r="2.5" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="320" cy="172" r="2.5" fill="rgba(255,255,255,0.3)"/>
+                <!-- Km labels -->
+                <text x="175" y="14" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(255,255,255,0.35)">3km</text>
+                <text x="350" y="32" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(255,255,255,0.35)">7km</text>
+                <text x="618" y="74" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(255,255,255,0.35)">10km</text>
+                <!-- Fastest section highlight -->
+                <path d="M 450 30 C 536 24 596 42 618 80 C 640 118 622 158 584 172"
+                  stroke="rgba(59,130,246,0.9)" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <text x="600" y="120" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(59,130,246,0.8)">★ fastest</text>
+                <!-- Area label -->
+                <text x="340" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="rgba(59,130,246,0.5)">Tempelhof Field · 14.2 km loop</text>
+              </svg>
+            </div>
+            <div class="elevation-area">
+              <div class="elevation-header">
+                <span class="elevation-title">Elevation profile</span>
+                <div class="elevation-stats">
+                  <span class="elev-stat">↑ <span>42m</span></span>
+                  <span class="elev-stat">↓ <span>39m</span></span>
+                  <span class="elev-stat" style="color:var(--muted)">Max <span style="color:var(--text-dim)">58m</span></span>
+                </div>
+              </div>
+              <div class="elevation-chart">
+                <svg viewBox="0 0 630 44" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                  <defs><linearGradient id="elevFillD" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(59,130,246,0.3)"/><stop offset="100%" stop-color="rgba(59,130,246,0.03)"/></linearGradient></defs>
+                  <polyline points="0,36 42,30 84,22 126,16 168,12 210,16 252,22 294,28 336,22 378,16 420,12 462,18 504,26 546,32 588,36 630,34"
+                    stroke="rgba(59,130,246,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <polygon points="0,36 42,30 84,22 126,16 168,12 210,16 252,22 294,28 336,22 378,16 420,12 462,18 504,26 546,32 588,36 630,34 630,44 0,44"
+                    fill="url(#elevFillD)"/>
+                </svg>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:3px">
+                <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">0</span>
+                <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">3km</span>
+                <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">7km</span>
+                <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">10km</span>
+                <span style="font-family:var(--f-mono);font-size:8.5px;color:var(--muted)">14.2km</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis: pace + splits -->
+        <div class="analysis-section" style="padding:0 0 20px">
+          <div class="eyebrow" style="margin-bottom:10px">Analysis</div>
+
+          <!-- Pace chart -->
+          <div class="pace-chart-wrap">
+            <div class="pace-chart-header">
+              <div class="pace-chart-title">Pace per km</div>
+              <div class="pace-chart-meta">Avg 5:15/km · best 4:58 @ km 12</div>
+            </div>
+            <div class="pace-chart" style="margin-bottom:18px">
+              <div class="pace-bar slowdown" style="height:52%"></div>
+              <div class="pace-bar normal"   style="height:60%"></div>
+              <div class="pace-bar normal"   style="height:64%"></div>
+              <div class="pace-bar normal"   style="height:66%"></div>
+              <div class="pace-bar normal"   style="height:68%"></div>
+              <div class="pace-bar normal"   style="height:70%"></div>
+              <div class="pace-bar fast"     style="height:72%"></div>
+              <div class="pace-bar fast"     style="height:75%"></div>
+              <div class="pace-bar fast"     style="height:77%"></div>
+              <div class="pace-bar fast"     style="height:80%"></div>
+              <div class="pace-bar fast"     style="height:82%"></div>
+              <div class="pace-bar pr"       style="height:86%"></div>
+              <div class="pace-bar fast"     style="height:81%"></div>
+              <div class="pace-bar fast"     style="height:78%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:-14px">
+              <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 1</span>
+              <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 7</span>
+              <span style="font-family:var(--f-mono);font-size:8px;color:var(--blue);font-weight:600">↑ km 12</span>
+              <span style="font-family:var(--f-mono);font-size:8px;color:var(--muted)">km 14</span>
+            </div>
+          </div>
+
+          <!-- Splits table (desktop — show all) -->
+          <div class="eyebrow" style="margin-bottom:8px;margin-top:14px">Splits</div>
+          <div class="split-table">
+            <div class="split-head"><span>km</span><span></span><span>Pace</span><span>HR</span><span>Elev</span></div>
+            <div class="split-row"><div class="split-km">1</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:52%"></div></div><div class="split-pace slow">5:38</div><div class="split-hr">144</div><div class="split-elev">+8m</div></div>
+            <div class="split-row"><div class="split-km">2</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:60%"></div></div><div class="split-pace slow">5:28</div><div class="split-hr">148</div><div class="split-elev">+6m</div></div>
+            <div class="split-row"><div class="split-km">3</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:64%"></div></div><div class="split-pace">5:22</div><div class="split-hr">151</div><div class="split-elev">+4m</div></div>
+            <div class="split-row"><div class="split-km">4</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:66%"></div></div><div class="split-pace">5:20</div><div class="split-hr">152</div><div class="split-elev">+3m</div></div>
+            <div class="split-row"><div class="split-km">5</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:68%"></div></div><div class="split-pace">5:18</div><div class="split-hr">152</div><div class="split-elev">+2m</div></div>
+            <div class="split-row"><div class="split-km">6</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:70%"></div></div><div class="split-pace">5:15</div><div class="split-hr">153</div><div class="split-elev">0m</div></div>
+            <div class="split-row"><div class="split-km">7</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:72%"></div></div><div class="split-pace fast">5:12</div><div class="split-hr">154</div><div class="split-elev">+2m</div></div>
+            <div class="split-row"><div class="split-km">8</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:75%"></div></div><div class="split-pace fast">5:08</div><div class="split-hr">154</div><div class="split-elev">0m</div></div>
+            <div class="split-row"><div class="split-km">9</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:77%"></div></div><div class="split-pace fast">5:05</div><div class="split-hr">155</div><div class="split-elev">−2m</div></div>
+            <div class="split-row"><div class="split-km">10</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:80%"></div></div><div class="split-pace fast">5:02</div><div class="split-hr">156</div><div class="split-elev">0m</div></div>
+            <div class="split-row"><div class="split-km">11</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:82%"></div></div><div class="split-pace fast">5:00</div><div class="split-hr">157</div><div class="split-elev">−2m</div></div>
+            <div class="split-row" style="background:rgba(59,130,246,0.04)"><div class="split-km" style="color:var(--blue)">12</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:86%;background:var(--blue)"></div></div><div class="split-pace fast" style="color:var(--blue);font-weight:700">4:58 ★</div><div class="split-hr">158</div><div class="split-elev">−3m</div></div>
+            <div class="split-row"><div class="split-km">13</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:81%"></div></div><div class="split-pace fast">5:01</div><div class="split-hr">156</div><div class="split-elev">+2m</div></div>
+            <div class="split-row"><div class="split-km">14</div><div class="split-bar-wrap"><div class="split-mini-bar" style="width:78%"></div></div><div class="split-pace fast">5:04</div><div class="split-hr">155</div><div class="split-elev">+5m</div></div>
+          </div>
+        </div>
+
+        <!-- Actions at bottom of left -->
+        <div class="actions-section" style="padding:0">
+          <div class="eyebrow" style="margin-bottom:10px">What's next</div>
+          <div class="action-grid">
+            <button class="action-card primary"><div class="action-icon blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.54"/></svg></div><div class="action-label">Repeat route</div><div class="action-sub">Same Tempelhof loop</div></button>
+            <button class="action-card"><div class="action-icon default"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg></div><div class="action-label">Compare pace</div><div class="action-sub">vs last 3 runs here</div></button>
+          </div>
+        </div>
+
+      </div><!-- /d-left -->
+
+      <!-- RIGHT: stats panel -->
+      <div class="d-right">
+
+        <!-- Quick stats -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Session stats</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Distance</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--blue)">14.2 km</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Duration</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">1:14:38</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Avg pace</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">5:15/km</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Best pace</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--blue)">4:58/km</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Avg HR</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">152 bpm</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Max HR</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">171 bpm</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Cadence</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">175 spm</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-dim)">Elev gain</span><span style="font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--text)">42m</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span style="font-size:12.5px;color:var(--text-dim)">vs last session</span><span style="font-family:var(--f-mono);font-size:12px;color:var(--green)">↑ +1.2km, −0:08/km</span></div>
+          </div>
+        </div>
+
+        <!-- HR zone breakdown -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Heart rate zones</div>
+          <div style="font-family:var(--f-mono);font-size:10.5px;color:var(--muted);margin-bottom:10px">Max 171 · Avg 152 bpm</div>
+          <div class="hr-band-row"><div class="hr-zone-dot" style="background:#4ADE80"></div><div class="hr-zone-label">Zone 1</div><div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:4%;background:#4ADE80"></div></div><div class="hr-zone-pct">4%</div><div class="hr-zone-time">3:00</div></div>
+          <div class="hr-band-row"><div class="hr-zone-dot" style="background:#86EFAC"></div><div class="hr-zone-label">Zone 2</div><div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:18%;background:#86EFAC"></div></div><div class="hr-zone-pct">18%</div><div class="hr-zone-time">13:24</div></div>
+          <div class="hr-band-row"><div class="hr-zone-dot" style="background:#3B82F6"></div><div class="hr-zone-label">Zone 3</div><div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:52%;background:#3B82F6"></div></div><div class="hr-zone-pct">52%</div><div class="hr-zone-time">38:52</div></div>
+          <div class="hr-band-row"><div class="hr-zone-dot" style="background:#818CF8"></div><div class="hr-zone-label">Zone 4</div><div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:22%;background:#818CF8"></div></div><div class="hr-zone-pct">22%</div><div class="hr-zone-time">16:22</div></div>
+          <div class="hr-band-row"><div class="hr-zone-dot" style="background:#C084FC"></div><div class="hr-zone-label">Zone 5</div><div class="hr-zone-bar-track"><div class="hr-zone-bar-fill" style="width:4%;background:#C084FC"></div></div><div class="hr-zone-pct">4%</div><div class="hr-zone-time">3:00</div></div>
+        </div>
+
+        <!-- Hybrid intelligence (compact in right panel) -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Training context</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+
+            <div style="padding:9px 10px;background:var(--bg);border:1px solid var(--cyan-border);border-radius:8px">
+              <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">Day after Lower B</div>
+              <div style="font-size:12px;color:var(--text-dim);line-height:1.45">HR baseline elevated +4 bpm vs avg — still delivered longest run in 6 wks. Good recovery indication.</div>
+            </div>
+
+            <div style="padding:9px 10px;background:var(--bg);border:1px solid var(--green-border);border-radius:8px">
+              <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px">Aerobic load stayed manageable</div>
+              <div style="font-size:12px;color:var(--text-dim);line-height:1.45">52% Zone 3, 18% Zone 2 — predominantly aerobic, within acceptable hybrid-athlete load for a strength week.</div>
+              <div style="height:5px;background:var(--elevated);border-radius:3px;overflow:hidden;margin-top:7px"><div style="height:100%;width:68%;background:var(--blue);border-radius:3px"></div></div>
+              <div style="font-family:var(--f-mono);font-size:9.5px;color:var(--muted);margin-top:3px">Cardio load: moderate-high</div>
+            </div>
+
+            <div style="padding:9px 10px;background:var(--bg);border:1px solid rgba(234,179,8,0.28);border-radius:8px">
+              <div style="font-size:12px;font-weight:600;color:var(--yellow);margin-bottom:4px">Strength impact note</div>
+              <div style="font-size:12px;color:var(--text-dim);line-height:1.45">Long runs ≥12km historically precede 2–4% squat dip. Track Lower B on Mon.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Additional actions -->
+        <div class="d-panel-card">
+          <div class="d-panel-title">Actions</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn-secondary" style="width:100%;justify-content:flex-start;font-size:12.5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h4l2 9 2.25-6.5h3.5L17 12l2-9h4"/></svg>Compare to last 3 sessions</button>
+            <button class="btn-secondary" style="width:100%;justify-content:flex-start;font-size:12.5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share activity</button>
+            <button class="btn-secondary" style="width:100%;justify-content:flex-start;font-size:12.5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>View run pace trend</button>
+            <button class="btn-secondary" style="width:100%;justify-content:flex-start;font-size:12.5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Edit activity</button>
+          </div>
+        </div>
+
+      </div><!-- /d-right -->
+    </div><!-- /d-body -->
+  </div><!-- /d-main -->
+</div><!-- /d-root -->
+
+</body>
+</html>

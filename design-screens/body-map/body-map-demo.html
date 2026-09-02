@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Volt body map — demo</title>
+<style>
+  body { margin: 0; background: #0E0F12; color: #F2F3F5; font-family: system-ui, sans-serif;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .wrap { display: flex; gap: 48px; align-items: center; padding: 40px; }
+  .panel { width: 460px; }
+  h1 { font-size: 15px; font-weight: 500; margin: 0 0 4px 0; }
+  .sub { font-size: 12px; color: #9EA1A8; margin-bottom: 20px; }
+  table { border-collapse: collapse; font-size: 13px; width: 260px; }
+  td { padding: 5px 8px 5px 0; color: #9EA1A8; }
+  td.v { text-align: right; color: #F2F3F5; font-variant-numeric: tabular-nums; }
+  td .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; }
+  .legend { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #6A6D74;
+            letter-spacing: 0.15em; margin-top: 18px; }
+  .legend span.c { width: 14px; height: 7px; border-radius: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel" id="svg-host">
+<svg viewBox="0 0 460 452" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family="sans-serif">
+  <!-- Volt body map v6. LOCKED ASSET: do not redraw; recolor regions only, by CSS variable.
+       The figure is tiled from its muscle regions, subdivided into visible sub-muscles (all
+       sub-shapes share the region's color). Left/right halves are REAL duplicated elements
+       (mirrors deliberately unrolled - <use> clones break under scoped stylesheets), so any
+       geometry edit must be applied to BOTH halves of BOTH views. Regions (10): delts, chest,
+       biceps, triceps, forearms, core, lats-traps, glutes-hams, quads, calves. API: set the CSS
+       custom property "vol-<region>" (double-dash prefixed, as in the style block below) on the
+       svg or any ancestor; unset regions fall back to "vol-none". Neutral zones (head, hands,
+       pelvis, knees, feet): "body". -->
+  <style>
+    .body { fill: var(--body, #1B1D22); }
+    .r { stroke: var(--gap, #0E0F12); stroke-width: 1.2; stroke-linejoin: round; }
+    .delts       { fill: var(--vol-delts,       var(--vol-none, #23252B)); }
+    .chest       { fill: var(--vol-chest,       var(--vol-none, #23252B)); }
+    .biceps      { fill: var(--vol-biceps,      var(--vol-none, #23252B)); }
+    .triceps     { fill: var(--vol-triceps,     var(--vol-none, #23252B)); }
+    .forearms    { fill: var(--vol-forearms,    var(--vol-none, #23252B)); }
+    .core        { fill: var(--vol-core,        var(--vol-none, #23252B)); }
+    .lats-traps  { fill: var(--vol-lats-traps,  var(--vol-none, #23252B)); }
+    .glutes-hams { fill: var(--vol-glutes-hams, var(--vol-none, #23252B)); }
+    .quads       { fill: var(--vol-quads,       var(--vol-none, #23252B)); }
+    .calves      { fill: var(--vol-calves,      var(--vol-none, #23252B)); }
+    .lbl { fill: var(--label, #6A6D74); font-size: 10px; letter-spacing: 0.2em; }
+  </style>
+
+  <!-- ============ FRONT ============ -->
+  <g id="front" transform="translate(15,6)">
+    <ellipse class="body" cx="100" cy="26" rx="16" ry="18"></ellipse>
+    <rect class="body" x="88" y="44" width="24" height="16" rx="5"></rect>
+
+    <!-- abs: segment rows + lower band (center, both sides drawn explicitly) -->
+    <rect class="r core" x="87.5" y="113" width="11.5" height="15" rx="4"></rect>
+    <rect class="r core" x="101" y="113" width="11.5" height="15" rx="4"></rect>
+    <rect class="r core" x="88" y="130" width="11" height="15" rx="4"></rect>
+    <rect class="r core" x="101" y="130" width="11" height="15" rx="4"></rect>
+    <rect class="r core" x="88.5" y="147" width="10.5" height="16" rx="4"></rect>
+    <rect class="r core" x="101" y="147" width="10.5" height="16" rx="4"></rect>
+    <path class="r core" d="M89,165 L111,165 C110,172 104,176 100,176 C96,176 90,172 89,165 Z"></path>
+    <path class="body" d="M78,172 L122,172 L112,192 C104,197 96,197 88,192 Z"></path>
+
+    <g id="front-half-l">
+      <path class="r lats-traps" d="M88,53 C77,55 66,59 60,67 L64,70 C72,64 80,61 88,60 Z"></path>
+      <path class="r delts" d="M61,66 C51,69 45,79 46,92 L58,95 C56,84 57,73 64,68 Z"></path>
+      <path class="r chest" d="M97,67 C90,65 77,65 68,69 C66,73 65,78 65,83 L97,80 Z"></path>
+      <path class="r chest" d="M97,82 L65,84 C64,90 64,94 66,99 C73,110 87,114 97,110 Z"></path>
+      <path class="r biceps" d="M52,92 C46,99 44,112 47,127 L58,130 C60,116 61,102 60,93 C57,90 54,90 52,92 Z"></path>
+      <path class="r forearms" d="M45,133 C41,144 40,160 43,177 L48.5,179 C49,162 49.5,146 49.5,134 C48,132 46,132 45,133 Z"></path>
+      <path class="r forearms" d="M51,135 C51.5,147 52,163 51,178 L55,179.5 C56.5,164 57,147 56.5,137 C54.5,134 52,134 51,135 Z"></path>
+      <ellipse class="body" cx="46" cy="191" rx="6" ry="9" transform="rotate(8 46 191)"></ellipse>
+      <path class="r core" d="M83,113 C75,118 71,132 73,150 C75,161 79,167 85,170 L85,113 Z"></path>
+      <path class="r quads" d="M68,184 C62,208 62,244 68,274 L73,288 C75,289 78,289 79,286 C78,258 77,220 78,194 C75,185 71,182 68,184 Z"></path>
+      <path class="r quads" d="M81,190 C78,214 78,250 80,280 L84,291 C89,293 94,290 96,284 C98,254 98,214 95,192 C89,183 83,184 81,190 Z"></path>
+      <ellipse class="body" cx="82" cy="298" rx="10" ry="7"></ellipse>
+      <path class="r calves" d="M76,308 C72,322 72,348 76,370 L80,396 L84,395 C84,368 83,336 82,314 C80,306 77,304 76,308 Z"></path>
+      <path class="r calves" d="M86,310 C90,318 91,338 89,360 C88,368 86,368 85,362 C84,340 84,322 84,312 C84,308 85,307 86,310 Z"></path>
+      <ellipse class="body" cx="83" cy="409" rx="11" ry="6"></ellipse>
+    </g>
+    <g transform="translate(200,0) scale(-1,1)">
+      <path class="r lats-traps" d="M88,53 C77,55 66,59 60,67 L64,70 C72,64 80,61 88,60 Z"></path>
+      <path class="r delts" d="M61,66 C51,69 45,79 46,92 L58,95 C56,84 57,73 64,68 Z"></path>
+      <path class="r chest" d="M97,67 C90,65 77,65 68,69 C66,73 65,78 65,83 L97,80 Z"></path>
+      <path class="r chest" d="M97,82 L65,84 C64,90 64,94 66,99 C73,110 87,114 97,110 Z"></path>
+      <path class="r biceps" d="M52,92 C46,99 44,112 47,127 L58,130 C60,116 61,102 60,93 C57,90 54,90 52,92 Z"></path>
+      <path class="r forearms" d="M45,133 C41,144 40,160 43,177 L48.5,179 C49,162 49.5,146 49.5,134 C48,132 46,132 45,133 Z"></path>
+      <path class="r forearms" d="M51,135 C51.5,147 52,163 51,178 L55,179.5 C56.5,164 57,147 56.5,137 C54.5,134 52,134 51,135 Z"></path>
+      <ellipse class="body" cx="46" cy="191" rx="6" ry="9" transform="rotate(8 46 191)"></ellipse>
+      <path class="r core" d="M83,113 C75,118 71,132 73,150 C75,161 79,167 85,170 L85,113 Z"></path>
+      <path class="r quads" d="M68,184 C62,208 62,244 68,274 L73,288 C75,289 78,289 79,286 C78,258 77,220 78,194 C75,185 71,182 68,184 Z"></path>
+      <path class="r quads" d="M81,190 C78,214 78,250 80,280 L84,291 C89,293 94,290 96,284 C98,254 98,214 95,192 C89,183 83,184 81,190 Z"></path>
+      <ellipse class="body" cx="82" cy="298" rx="10" ry="7"></ellipse>
+      <path class="r calves" d="M76,308 C72,322 72,348 76,370 L80,396 L84,395 C84,368 83,336 82,314 C80,306 77,304 76,308 Z"></path>
+      <path class="r calves" d="M86,310 C90,318 91,338 89,360 C88,368 86,368 85,362 C84,340 84,322 84,312 C84,308 85,307 86,310 Z"></path>
+      <ellipse class="body" cx="83" cy="409" rx="11" ry="6"></ellipse>
+    </g>
+
+    <text class="lbl" x="100" y="434" text-anchor="middle">FRONT</text>
+  </g>
+
+  <!-- ============ BACK ============ -->
+  <g id="back" transform="translate(245,6)">
+    <ellipse class="body" cx="100" cy="26" rx="16" ry="18"></ellipse>
+    <rect class="body" x="88" y="44" width="24" height="16" rx="5"></rect>
+    <path class="r lats-traps" d="M100,44 C96,50 88,57 58,66 C78,71 90,82 96,106 L100,120 L104,106 C110,82 122,71 142,66 C112,57 104,50 100,44 Z"></path>
+    <rect class="r core" x="92.5" y="118" width="6.5" height="48" rx="3"></rect>
+    <rect class="r core" x="101" y="118" width="6.5" height="48" rx="3"></rect>
+
+    <g id="back-half-l">
+      <path class="r delts" d="M61,66 C51,69 45,79 46,92 L58,95 C56,84 57,73 64,68 Z"></path>
+      <ellipse class="r lats-traps" cx="74" cy="97" rx="8" ry="6" transform="rotate(-15 74 97)"></ellipse>
+      <path class="r lats-traps" d="M66,104 C63,116 67,134 77,148 L91,154 C93,140 93,126 91,113 C83,105 71,101 66,104 Z"></path>
+      <path class="r triceps" d="M52,92 C46,99 44,112 47,127 L58,130 C60,116 61,102 60,93 C57,90 54,90 52,92 Z"></path>
+      <path class="r forearms" d="M45,133 C41,144 40,160 43,177 L48.5,179 C49,162 49.5,146 49.5,134 C48,132 46,132 45,133 Z"></path>
+      <path class="r forearms" d="M51,135 C51.5,147 52,163 51,178 L55,179.5 C56.5,164 57,147 56.5,137 C54.5,134 52,134 51,135 Z"></path>
+      <ellipse class="body" cx="46" cy="191" rx="6" ry="9" transform="rotate(8 46 191)"></ellipse>
+      <path class="r glutes-hams" d="M76,170 C70,173 67,179 67,185 C72,181 80,178 88,177 L88,171 C84,169 79,169 76,170 Z"></path>
+      <path class="r glutes-hams" d="M68,188 C66,196 68,202 75,206 C84,210 94,206 97,196 L97,174 C88,176 76,180 68,188 Z"></path>
+      <path class="r glutes-hams" d="M70,210 C66,230 66,256 71,280 L75,290 C77,291 78,290 79,288 C77,262 77,228 78,213 C75,207 72,206 70,210 Z"></path>
+      <path class="r glutes-hams" d="M80,214 C78,234 78,260 81,283 L84,291 C88,293 92,290 95,285 C97,260 97,230 95,213 C90,207 83,208 80,214 Z"></path>
+      <ellipse class="body" cx="82" cy="298" rx="10" ry="7"></ellipse>
+      <path class="r calves" d="M72,306 C68,318 68,338 71,354 C72,359 75,359 76,353 C77,336 77,318 77,310 C76,304 73,303 72,306 Z"></path>
+      <path class="r calves" d="M84,306 C88,314 90,332 88,352 C87,358 84,358 83,352 C82,334 82,318 82,310 C82,305 83,304 84,306 Z"></path>
+      <path class="r calves" d="M75,358 C74,372 76,386 80,398 L86,396 C88,384 88,370 87,358 C83,363 78,363 75,358 Z"></path>
+      <ellipse class="body" cx="83" cy="409" rx="11" ry="6"></ellipse>
+    </g>
+    <g transform="translate(200,0) scale(-1,1)">
+      <path class="r delts" d="M61,66 C51,69 45,79 46,92 L58,95 C56,84 57,73 64,68 Z"></path>
+      <ellipse class="r lats-traps" cx="74" cy="97" rx="8" ry="6" transform="rotate(-15 74 97)"></ellipse>
+      <path class="r lats-traps" d="M66,104 C63,116 67,134 77,148 L91,154 C93,140 93,126 91,113 C83,105 71,101 66,104 Z"></path>
+      <path class="r triceps" d="M52,92 C46,99 44,112 47,127 L58,130 C60,116 61,102 60,93 C57,90 54,90 52,92 Z"></path>
+      <path class="r forearms" d="M45,133 C41,144 40,160 43,177 L48.5,179 C49,162 49.5,146 49.5,134 C48,132 46,132 45,133 Z"></path>
+      <path class="r forearms" d="M51,135 C51.5,147 52,163 51,178 L55,179.5 C56.5,164 57,147 56.5,137 C54.5,134 52,134 51,135 Z"></path>
+      <ellipse class="body" cx="46" cy="191" rx="6" ry="9" transform="rotate(8 46 191)"></ellipse>
+      <path class="r glutes-hams" d="M76,170 C70,173 67,179 67,185 C72,181 80,178 88,177 L88,171 C84,169 79,169 76,170 Z"></path>
+      <path class="r glutes-hams" d="M68,188 C66,196 68,202 75,206 C84,210 94,206 97,196 L97,174 C88,176 76,180 68,188 Z"></path>
+      <path class="r glutes-hams" d="M70,210 C66,230 66,256 71,280 L75,290 C77,291 78,290 79,288 C77,262 77,228 78,213 C75,207 72,206 70,210 Z"></path>
+      <path class="r glutes-hams" d="M80,214 C78,234 78,260 81,283 L84,291 C88,293 92,290 95,285 C97,260 97,230 95,213 C90,207 83,208 80,214 Z"></path>
+      <ellipse class="body" cx="82" cy="298" rx="10" ry="7"></ellipse>
+      <path class="r calves" d="M72,306 C68,318 68,338 71,354 C72,359 75,359 76,353 C77,336 77,318 77,310 C76,304 73,303 72,306 Z"></path>
+      <path class="r calves" d="M84,306 C88,314 90,332 88,352 C87,358 84,358 83,352 C82,334 82,318 82,310 C82,305 83,304 84,306 Z"></path>
+      <path class="r calves" d="M75,358 C74,372 76,386 80,398 L86,396 C88,384 88,370 87,358 C83,363 78,363 75,358 Z"></path>
+      <ellipse class="body" cx="83" cy="409" rx="11" ry="6"></ellipse>
+    </g>
+
+    <text class="lbl" x="100" y="434" text-anchor="middle">BACK</text>
+  </g>
+</svg>
+
+  </div>
+  <div>
+    <h1>Volume by region, 30 days</h1>
+    <div class="sub">Sample data from the Hybrid app mockups — asset recolors via CSS variables only</div>
+    <table id="tbl"></table>
+    <div class="legend">NONE
+      <span class="c" style="background:#23252B"></span>
+      <span class="c" style="background:#3B2E26"></span>
+      <span class="c" style="background:#6E3E20"></span>
+      <span class="c" style="background:#A84E1D"></span>
+      <span class="c" style="background:#E05E1F"></span>
+    HEAVY</div>
+  </div>
+</div>
+<script>
+const VOLS = { 'glutes-hams': 64, 'lats-traps': 58, 'quads': 51, 'forearms': 44,
+               'core': 31, 'calves': 27, 'biceps': 22, 'chest': 14, 'delts': 11, 'triceps': 9 };
+const RAMP = [[0,'#23252B'],[1,'#3B2E26'],[20,'#6E3E20'],[40,'#A84E1D'],[60,'#E05E1F']];
+const color = v => RAMP.reduce((c,[t,h]) => v >= t ? h : c, RAMP[0][1]);
+const svg = document.querySelector('#svg-host svg');
+for (const [k, v] of Object.entries(VOLS)) svg.style.setProperty('--vol-' + k, color(v));
+document.getElementById('tbl').innerHTML = Object.entries(VOLS).map(([k, v]) =>
+  '<tr><td><span class="sw" style="background:' + color(v) + '"></span>' +
+  k.replace('-', ' \u00b7 ') + '</td><td class="v">' + v + '</td></tr>').join('');
+</script>
+</body>
+</html>
