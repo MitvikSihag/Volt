@@ -20,8 +20,8 @@ Volt/
 │                      Shipped: Postgres+Flyway persistence, Docker, CI (required check on main)
 ├── web/             — Next.js 16. PAUSED — resumes post-launch as landing + companion
 │                      (see web/CLAUDE.md). Do not build app features here.
-├── mobile/          — Expo + React Native. THE primary product surface; not yet scaffolded
-│                      (see mobile/CLAUDE.md — the seed doc)
+├── mobile/          — Expo + React Native. THE primary product surface. Scaffolded Sep 2026;
+│                      slice 1 (auth + Log loop) shipped (see mobile/CLAUDE.md)
 └── design-screens/
     └── body-map/    — locked muscle-figure SVG asset (recolor only, never redraw)
 ```
