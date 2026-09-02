@@ -95,7 +95,9 @@ Active population = `RD ≤ 180` and activity in 90 days. Over that population:
 Div 1 = top 10%, Div 2 = next 25%, Div 3 = next 35%, Div 4 = rest.
 Titles = finer percentile bands (top 1 / 5 / 15 / 35 / 65 / 100) — names TBD with branding.
 Cutoffs recomputed at period close with ±1% hysteresis (no flapping). Benchmark variants are
-per-division (scaled loads/duration) — legal because Glicko compares within-field only.
+per-division **and per-sex** (scaled loads/duration, Hyrox-style — e.g. Hyrox sleds run 152kg
+men / 102kg women) — legal because Glicko compares within-field only. Divisions themselves are
+mixed: the ladder ranks normalized standing, not raw output.
 
 ### 2.6 Verification gates (from PRODUCT.md — enforcement points)
 - Rating-affecting cardio requires GPS + HR-pace-cadence plausibility.
@@ -133,7 +135,32 @@ tables per lift (v1 hand-tuned, source TBD — the one open item) · endurance A
 all §2 constants. Every change bumps a config version stored with each rating update (full
 auditability — required for the in-app "how your rating moved" transparency page).
 
-## 6. Calibration plan & tunables
+## 6. Sex & gender
+
+The rating needs a **physiological reference population, not a gender identity** — and the
+product treats them as different things.
+
+- **Ability layer — already fair by construction.** DOTS has separate male/female polynomials,
+  WMA tables are per-sex, and percentile tables are per-exercise *per-sex* (§1.1). A woman at
+  the 74th percentile of trained women scores identically to a man at the 74th percentile of
+  trained men: the score measures standing, not kilograms. Therefore **one ladder, no separate
+  ELO** — mixed divisions are fair because every input is normalized standing.
+- **Benchmark contests** are the one place raw output is compared, so variants are
+  division × sex scaled (§2.5) — the Hyrox convention our audience already speaks.
+- **Rivals need no adjustment**: duel scoring (consistency + relative improvement) is
+  sex-neutral by construction. Mixed-sex rivalries are fair out of the box.
+- **The Vault**: absolute kg Clubs stay absolute (that's the culture, like a sub-3 marathon);
+  add **bodyweight-relative clubs** (1×BW bench, 1.5×BW squat, 2×BW deadlift) which are
+  near-sex-neutral; percentile medals are already normalized.
+- **The setting is named for what it is**: a *strength-standards reference* ("compare my lifts
+  against men's / women's standards") — a scoring choice, separate from profile gender,
+  changeable at any time; for nonbinary or undisclosed users it is simply their pick. With
+  **no reference selected**: load, PRs, streaks, and ghost-rivals all work fully; only
+  percentile scores and benchmark *ranking* wait for a population to rank within. Nobody is
+  locked out of the app — only population-comparison features need a population.
+- Cohort display strings follow the reference ("top 12% · 30–34 · women's standards").
+
+## 7. Calibration plan & tunables
 Before launch: simulate the period-close on synthetic athletes (spread of H, random benchmark
 noise) and verify: (a) provisional convergence ≤ 2 benchmarks, (b) no runaway inflation over 12
 simulated months, (c) solo-game cap binds. Tunables to revisit with real data: 160 (probit
