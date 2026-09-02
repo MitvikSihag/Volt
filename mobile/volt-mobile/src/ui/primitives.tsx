@@ -53,5 +53,5 @@ export const TierChip = ({ label, tone = 'ember' }: { label: string; tone?: Tone
 );
 
 export const HeaderWash = ({ tone = 'ember', height = 280 }: { tone?: 'ember' | 'jade'; height?: number }) => (
-  <LinearGradient pointerEvents="none" colors={[color[tone] + '2E', color[tone] + '00']} style={{ position: 'absolute', top: 0, left: 0, right: 0, height }} />
+  <LinearGradient colors={[color[tone] + "2E", color[tone] + "00"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height, pointerEvents: "none" }} />
 );
