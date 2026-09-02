@@ -32,10 +32,13 @@ public class ExerciseController {
 
     private final ExerciseService exerciseService;
     private final WorkoutService workoutService;
+    private final PersonalRecordService prService;
 
-    public ExerciseController(ExerciseService exerciseService, WorkoutService workoutService) {
+    public ExerciseController(ExerciseService exerciseService, WorkoutService workoutService,
+                              PersonalRecordService prService) {
         this.exerciseService = exerciseService;
         this.workoutService = workoutService;
+        this.prService = prService;
     }
 
     @GetMapping
@@ -85,12 +88,12 @@ public class ExerciseController {
     @GetMapping("/{id}/records")
     public List<PersonalRecordResponse> records(@AuthenticationPrincipal UserDetails principal,
                                                 @PathVariable UUID id) {
-        return workoutService.getPersonalRecords(principal.getUsername(), id);
+        return prService.getPersonalRecords(principal.getUsername(), id);
     }
 
     @GetMapping("/{id}/progression")
     public List<ProgressionPointResponse> progression(@AuthenticationPrincipal UserDetails principal,
                                                        @PathVariable UUID id) {
-        return workoutService.getProgression(principal.getUsername(), id);
+        return prService.getProgression(principal.getUsername(), id);
     }
 }
