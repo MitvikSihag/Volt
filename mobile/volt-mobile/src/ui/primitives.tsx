@@ -7,7 +7,7 @@ type T = TextProps & { tone?: Tone; size?: number };
 export const Numeral = ({ tone = 't1', size = 96, style, ...p }: T) => (
   <Text {...p} style={[{ fontFamily: font.monoBold, fontSize: size, lineHeight: size * 1.05, color: color[tone], letterSpacing: -size * 0.04 }, style]} />
 );
-export const Meta = ({ tone = 't3', style, ...p }: T) => (
+export const Meta = ({ tone = 't2', style, ...p }: T) => (
   <Text {...p} style={[{ fontFamily: font.mono, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: color[tone] }, style]} />
 );
 export const Mono = ({ tone = 't1', size = 15, style, ...p }: T) => (

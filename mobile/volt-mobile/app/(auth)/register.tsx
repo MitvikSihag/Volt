@@ -4,7 +4,8 @@ import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/store';
 import { field } from '@/ui/field';
-import { Body, Button, Heading, Meta, Zone } from '@/ui/primitives';
+import { Bolt } from '@/ui/Bolt';
+import { Body, Button, Heading, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 
 export default function Register() {
@@ -20,7 +21,7 @@ export default function Register() {
     <Zone style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 12 }}>
-          <Meta tone="ember" style={{ marginBottom: 8 }}>⚡ Volt</Meta>
+          <View style={{ marginBottom: 16 }}><Bolt size={40} /></View>
           <Heading style={{ marginBottom: 24 }}>Create your account.</Heading>
           <TextInput style={field} placeholder="Username" placeholderTextColor={color.t3} autoCapitalize="none" autoCorrect={false} value={username} onChangeText={setUsername} />
           <TextInput style={field} placeholder="Email" placeholderTextColor={color.t3} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} value={email} onChangeText={setEmail} />

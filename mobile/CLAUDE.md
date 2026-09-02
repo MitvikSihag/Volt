@@ -16,7 +16,7 @@ in. Spec: [docs/superpowers/specs/2026-09-02-mobile-log-loop-design.md](../docs/
   one refresh-and-retry on 401 inside the fetch wrapper.
 - **Design system:** `src/ui/tokens.ts` mirrors VOLT_DESIGN_SYSTEM.md §2; primitives in
   `src/ui/primitives.tsx` (Numeral, Meta, Mono, Body, Heading, Zone, Hairline, Button,
-  Stepper, TierChip, HeaderWash). Fonts: JetBrains Mono (numerals/meta) + Inter (headings/body).
+  Stepper, TierChip, HeaderWash) and `Bolt.tsx`. Fonts: JetBrains Mono (numerals/meta) + Inter (headings/body).
 - **Tests:** plain `babel-jest` on pure modules only (`src/**/*.test.ts`). Screens are verified
   visually.
 
@@ -62,7 +62,9 @@ shows a retry row. A session is never lost.
 - Live Activity / lock-screen (rest countdown + tick sets) is v1 scope, not polish.
 
 ## Design source of truth
-Claude Design project "Volt - App Screens" (23 artboards) — do not invent screens; port them.
+Claude Design project "Volt - App Screens" (26 artboards) — do not invent screens; port them.
+The mark is `src/ui/Bolt.tsx` (white split-V polygon, never ember); no wordmark inside the app.
+`Meta` defaults to the mid gray `t2` — meaningful metadata never sits at `t3`/`t4` (contrast floor).
 Grammar: `#121212` darkness ladder, ember `#FF5A1F` = strength, jade `#31A98D` = endurance,
 gold = earned only, mono numerals, grayscale chrome, one number owns each screen.
 Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via CSS vars).

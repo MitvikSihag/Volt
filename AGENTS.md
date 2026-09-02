@@ -32,7 +32,7 @@ that part of the codebase.
 - Backend exposes a REST API (JSON, JWT). The checked-in contract at
   `backend/docs/api/openapi.yaml` is the source of truth for all frontends — verification
   compares, never overwrites.
-- Design pixels live in the Claude Design project "Volt - App Screens" (23 artboards);
+- Design pixels live in the Claude Design project "Volt - App Screens" (26 artboards);
   VOLT_DESIGN_SYSTEM.md is the written contract the code implements.
 - `main` is protected: changes land via PR only; the `backend` CI check is required.
 - Commit identity for this repo: `MitvikSihag <mitvik.sihag2003@gmail.com>` (personal, never the

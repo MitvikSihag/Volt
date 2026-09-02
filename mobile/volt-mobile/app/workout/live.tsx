@@ -47,7 +47,7 @@ export default function Live() {
   return (
     <Zone style={{ flex: 1 }}><SafeAreaView style={{ flex: 1 }}>
       <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Mono tone="ember" size={13}>● {formatElapsed(now - Date.parse(session.startedAt))}</Mono>
+        <Mono tone="t2" size={13}>● {formatElapsed(now - Date.parse(session.startedAt))}</Mono>
         <Pressable onPress={onClose} hitSlop={12}><Mono tone="t2" size={18}>×</Mono></Pressable>
       </View>
       <View style={{ paddingHorizontal: 24, paddingTop: 12, gap: 4 }}>
@@ -101,8 +101,8 @@ export default function Live() {
             <View style={{ height: 12 }} /><Hairline />
             {ex.planned.slice(ex.logged.length).map((p, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12 }}>
-                <Mono tone={i === 0 ? 't1' : 't3'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg ?? (ex.bodyweight ? 'BW' : '—')} × {p.reps ?? '—'}</Mono>
-                <Meta tone={i === 0 ? 'ember' : 't3'}>{i === 0 ? 'Now' : '—'}</Meta>
+                <Mono tone={i === 0 ? 't1' : 't4'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg ?? (ex.bodyweight ? 'BW' : '—')} × {p.reps ?? '—'}</Mono>
+                <Meta tone={i === 0 ? 'ember' : 't4'}>{i === 0 ? 'Now' : '—'}</Meta>
               </View>
             ))}
             <Pressable onPress={() => (nextEx ? dispatch((s) => goToExercise(s, s.currentExercise + 1)) : router.push('/workout/picker'))} style={{ marginTop: 16, borderLeftWidth: 2, borderLeftColor: color.jade, paddingLeft: 12 }}>
@@ -120,7 +120,7 @@ export default function Live() {
         </View>
         {ex && <Button label="Log set" onPress={onLog} disabled={!canLog} />}
         <Pressable onPress={() => router.push('/workout/finish')} style={{ alignSelf: 'center', paddingVertical: 8 }}><Meta tone="t2">Finish session</Meta></Pressable>
-        <Meta style={{ textAlign: 'center' }}>Swipe down to minimise</Meta>
+        <Meta tone="t3" style={{ textAlign: 'center' }}>Swipe down to minimise</Meta>
       </View>
     </SafeAreaView></Zone>
   );

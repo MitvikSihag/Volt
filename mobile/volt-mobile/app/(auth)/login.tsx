@@ -4,7 +4,8 @@ import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/store';
 import { field } from '@/ui/field';
-import { Body, Button, Heading, Meta, Zone } from '@/ui/primitives';
+import { Bolt } from '@/ui/Bolt';
+import { Body, Button, Heading, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 
 export default function Login() {
@@ -19,7 +20,7 @@ export default function Login() {
     <Zone style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 12 }}>
-          <Meta tone="ember" style={{ marginBottom: 8 }}>⚡ Volt</Meta>
+          <View style={{ marginBottom: 16 }}><Bolt size={40} /></View>
           <Heading style={{ marginBottom: 24 }}>Sign in.</Heading>
           <TextInput style={field} placeholder="Username or email" placeholderTextColor={color.t3} autoCapitalize="none" autoCorrect={false} value={id} onChangeText={setId} />
           <TextInput style={field} placeholder="Password" placeholderTextColor={color.t3} secureTextEntry value={pw} onChangeText={setPw} onSubmitEditing={submit} />

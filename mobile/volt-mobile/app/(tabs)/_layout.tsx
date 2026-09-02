@@ -8,7 +8,7 @@ export default function TabsLayout() {
         headerShown: false, tabBarShowLabel: true, tabBarIconStyle: { display: 'none' },
         tabBarStyle: { backgroundColor: color.sunken, borderTopWidth: 0, height: 84, paddingTop: 12 },
         tabBarLabelStyle: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase' },
-        tabBarActiveTintColor: color.t1, tabBarInactiveTintColor: color.t3, sceneStyle: { backgroundColor: color.base },
+        tabBarActiveTintColor: color.t1, tabBarInactiveTintColor: color.t4, sceneStyle: { backgroundColor: color.base },
       }}>
         <Tabs.Screen name="index" options={{ title: 'Today' }} />
         <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
