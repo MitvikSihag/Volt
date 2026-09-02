@@ -3,6 +3,7 @@ package com.volt.workout;
 import com.volt.activity.Activity;
 import com.volt.activity.ActivityRepository;
 import com.volt.common.exception.ResourceNotFoundException;
+import com.volt.load.TrainingMath;
 import com.volt.user.User;
 import com.volt.user.UserRepository;
 import com.volt.workout.dto.DashboardResponse;
@@ -56,8 +57,7 @@ public class DashboardService {
                 .findByUserAndStartedAtAfterAndDeletedAtIsNull(user, weekStartInstant);
         double weekVolume = weekWorkouts.stream()
                 .flatMap(w -> w.getAllSets().stream())
-                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg()))
                 .sum();
         double weekDistanceKm = activityRepository
                 .sumDistanceByUserAndStartedAtAfter(user, weekStartInstant) / 1000.0;
@@ -71,8 +71,7 @@ public class DashboardService {
                 .collect(Collectors.groupingBy(
                         w -> w.getStartedAt().atZone(ZoneOffset.UTC).toLocalDate(),
                         Collectors.summingDouble(w -> w.getAllSets().stream()
-                                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                                .mapToDouble(s -> s.getReps() * s.getWeightKg()).sum())));
+                                .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg())).sum())));
 
         Map<LocalDate, Double> distanceByDay = recentActivities.stream()
                 .filter(a -> a.getDistanceMeters() != null)

@@ -2,6 +2,7 @@ package com.volt.workout;
 
 import com.volt.common.dto.PageResponse;
 import com.volt.common.exception.ApiException;
+import com.volt.load.TrainingMath;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.user.User;
 import com.volt.user.UserRepository;
@@ -278,7 +279,7 @@ public class WorkoutService {
                     double estimatedOneRepMax = workoutSets.stream()
                             .filter(s -> s.getReps() != null && s.getReps() > 0
                                     && s.getWeightKg() != null && s.getWeightKg() > 0)
-                            .mapToDouble(s -> s.getWeightKg() * (1 + s.getReps() / 30.0))
+                            .mapToDouble(s -> TrainingMath.epleyOneRepMax(s.getWeightKg(), s.getReps()))
                             .max().orElse(0.0);
 
                     Double bestWeightKg = workoutSets.stream()
@@ -288,8 +289,7 @@ public class WorkoutService {
                             .orElse(null);
 
                     double volumeKg = workoutSets.stream()
-                            .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                            .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                            .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg()))
                             .sum();
 
                     return new ProgressionPointResponse(
@@ -353,9 +353,9 @@ public class WorkoutService {
                         .filter(s -> s.getReps() != null && s.getReps() > 0
                                 && s.getWeightKg() != null && s.getWeightKg() > 0)
                         .max(Comparator.comparingDouble(
-                                s -> s.getWeightKg() * (1 + s.getReps() / 30.0)))
+                                s -> TrainingMath.epleyOneRepMax(s.getWeightKg(), s.getReps())))
                         .map(set -> new PrComputation(
-                                set.getWeightKg() * (1 + set.getReps() / 30.0),
+                                TrainingMath.epleyOneRepMax(set.getWeightKg(), set.getReps()),
                                 set.getWorkout().getStartedAt(),
                                 set)));
 
@@ -365,8 +365,7 @@ public class WorkoutService {
                 setsByWorkout.entrySet().stream()
                         .map(entry -> {
                             double volume = entry.getValue().stream()
-                                    .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                                    .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                                    .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg()))
                                     .sum();
                             WorkoutSet representativeSet = entry.getValue().stream()
                                     .max(Comparator.comparingInt(WorkoutSet::getSetNumber))
