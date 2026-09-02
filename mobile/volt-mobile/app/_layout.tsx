@@ -4,10 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useAuth } from '@/auth/store';
 import { color } from '@/ui/tokens';
 
 const queryClient = new QueryClient({
@@ -18,13 +20,28 @@ const queryClient = new QueryClient({
 });
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
+function AuthGate() {
+  const token = useAuth((s) => s.accessToken);
+  const segments = useSegments();
+  const router = useRouter();
+  useEffect(() => {
+    const inAuth = segments[0] === '(auth)';
+    if (!token && !inAuth) router.replace('/(auth)/login');
+    if (token && inAuth) router.replace('/(tabs)');
+  }, [token, segments]);
+  return null;
+}
+
 export default function RootLayout() {
+  const hydrated = useAuth((s) => s.hydrated);
+  useEffect(() => { void useAuth.getState().hydrate(); }, []);
   const [fontsReady] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, JetBrainsMono_400Regular, JetBrainsMono_500Medium, JetBrainsMono_700Bold });
-  if (!fontsReady) return <View style={{ flex: 1, backgroundColor: color.base }} />;
+  if (!fontsReady || !hydrated) return <View style={{ flex: 1, backgroundColor: color.base }} />;
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: color.base }}>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
         <StatusBar style="light" />
+        <AuthGate />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.base }, animation: 'fade', animationDuration: 200 }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
