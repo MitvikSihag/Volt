@@ -2,7 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLastSets, useRecords } from '@/api/queries';
 import { formatElapsed } from '@/session/fromRoutine';
 import { isPr, prLabel } from '@/session/pr';
@@ -13,7 +13,7 @@ import { color } from '@/ui/tokens';
 import { useNow } from '@/ui/useNow';
 
 export default function Live() {
-  const router = useRouter(); const now = useNow();
+  const router = useRouter(); const now = useNow(); const insets = useSafeAreaInsets();
   const session = useSession((s) => s.session); const dispatch = useSession((s) => s.dispatch); const discard = useSession((s) => s.discard);
   const [expanded, setExpanded] = useState(false);
   const ex = session?.exercises[session.currentExercise];
@@ -48,7 +48,7 @@ export default function Live() {
   ]);
 
   return (
-    <Zone style={{ flex: 1 }}><SafeAreaView style={{ flex: 1 }}>
+    <Zone style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}><View style={{ flex: 1 }}>
       <GestureDetector gesture={swipeDown}><View>
       <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
         <Mono tone="t2" size={13}>● {formatElapsed(now - Date.parse(session.startedAt))}</Mono>
@@ -126,6 +126,6 @@ export default function Live() {
         {ex && <Button label="Log set" onPress={onLog} disabled={!canLog} />}
         <Meta tone="t3" style={{ textAlign: 'center' }}>Swipe down to minimise</Meta>
       </View>
-    </SafeAreaView></Zone>
+    </View></Zone>
   );
 }
