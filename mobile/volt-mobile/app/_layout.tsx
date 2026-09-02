@@ -47,8 +47,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="workout/live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="workout/picker" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="workout/finish" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="workout/summary" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="workout/finish" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+          <Stack.Screen name="workout/summary" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="profile" />
         </Stack>
       </PersistQueryClientProvider>

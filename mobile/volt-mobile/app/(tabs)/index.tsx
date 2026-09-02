@@ -78,7 +78,12 @@ export default function Today() {
                 <Mono tone="t2" size={13}>{setLine(e)}</Mono>
               </View>
             ))}
-            {(routine?.exercises?.length ?? 0) > 3 && <Body tone="t2" size={13} style={{ paddingTop: 4 }}>+ {routine!.exercises!.length - 3} more · tap for detail  ›</Body>}
+            {(routine?.exercises?.length ?? 0) > 3 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
+                <Body tone="t2" size={13}>+ {routine!.exercises!.length - 3} more · tap for detail</Body>
+                <Mono tone="t3" size={13}>›</Mono>
+              </View>
+            )}
             {!routine && <Body tone="t2" size={13}>No routines yet. Start logs an empty session; long-press always does.</Body>}
             {session?.status === 'unsaved' && (
               <Pressable onPress={() => router.push('/workout/finish')} style={{ marginTop: 8, borderLeftWidth: 2, borderLeftColor: color.ember, paddingLeft: 12 }}>

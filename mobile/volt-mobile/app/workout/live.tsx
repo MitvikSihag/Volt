@@ -49,17 +49,19 @@ export default function Live() {
 
   return (
     <Zone style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}><View style={{ flex: 1 }}>
-      <GestureDetector gesture={swipeDown}><View>
-      <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
+      <GestureDetector gesture={swipeDown}><Zone level="raised" style={{ marginTop: -insets.top, paddingTop: insets.top }}>
+      <View style={{ paddingHorizontal: 24, paddingTop: 8 }}>
         <Mono tone="t2" size={13}>● {formatElapsed(now - Date.parse(session.startedAt))}</Mono>
+      </View>
+      <View style={{ paddingHorizontal: 24, paddingTop: 14, flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Body tone="t2">{session.title}</Body>
+          <Meta>Exercise {session.currentExercise + 1} / {session.exercises.length || 1}</Meta>
+        </View>
         <Pressable onPress={onClose} hitSlop={12}><Mono tone="t2" size={18}>×</Mono></Pressable>
       </View>
-      <View style={{ paddingHorizontal: 24, paddingTop: 12, gap: 4 }}>
-        <Body tone="t2">{session.title}</Body>
-        <Meta>Exercise {session.currentExercise + 1} / {session.exercises.length || 1}</Meta>
-      </View>
       <View style={{ height: 2, backgroundColor: color.ember, marginTop: 16 }} />
-      </View></GestureDetector>
+      </Zone></GestureDetector>
 
       {!ex ? (
         <View style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 16 }}>
@@ -68,7 +70,7 @@ export default function Live() {
           <Button label="Add exercise" onPress={() => router.push('/workout/picker')} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={{ paddingHorizontal: 24, paddingTop: 24, gap: 6 }}>
             <Heading size={26}>{ex.name}</Heading>
             <Meta>Set {ex.logged.length + 1} of {Math.max(ex.planned.length, ex.logged.length + 1)}{label ? ` · ${label}` : ''}</Meta>
@@ -78,12 +80,12 @@ export default function Live() {
               <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
                 <Numeral size={88}>{weight == null ? '—' : String(Math.floor(weight))}</Numeral>
                 {half && <Numeral size={40} tone="t2" style={{ marginBottom: 8 }}>.5</Numeral>}
-                <Meta tone="t2" style={{ marginBottom: 14, marginLeft: 6 }}>kg</Meta>
+                <Mono tone="t2" size={13} style={{ marginBottom: 16, marginLeft: 6 }}>kg</Mono>
               </View>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: 'auto' }}>
               <Numeral size={44}>{session.current.reps ?? '—'}</Numeral>
-              <Meta tone="t2" style={{ marginBottom: 10, marginLeft: 6 }}>reps</Meta>
+              <Mono tone="t2" size={13} style={{ marginBottom: 8, marginLeft: 6 }}>reps</Mono>
             </View>
           </View>
           {willPr && <Meta tone="gold" style={{ paddingHorizontal: 24, paddingTop: 8 }}>New record if you log this</Meta>}
@@ -92,10 +94,10 @@ export default function Live() {
             <Stepper label="rep" onMinus={() => dispatch((s) => step(s, 'reps', -1))} onPlus={() => dispatch((s) => step(s, 'reps', 1))} />
           </View>
 
-          <Zone level="raised" style={{ marginTop: 24, paddingHorizontal: 24, paddingVertical: 16 }}>
+          <Zone level="raised" style={{ flex: 1, marginTop: 24, paddingHorizontal: 24, paddingVertical: 16 }}>
             <Pressable onPress={() => setExpanded((v) => !v)} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Body tone="t2" size={13}>{ex.logged.length} set{ex.logged.length === 1 ? '' : 's'} logged</Body>
-              <Meta>{expanded ? 'Hide' : 'Show'}</Meta>
+              <Mono tone="t3" size={13}>{expanded ? '⌃' : '⌄'}</Mono>
             </Pressable>
             {expanded && ex.logged.map((l, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
