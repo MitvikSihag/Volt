@@ -56,10 +56,10 @@ export default function Today() {
           <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{dateLine}</Meta>
 
           <View style={{ paddingHorizontal: 24, paddingTop: 36, flexDirection: 'row', alignItems: 'flex-end' }}>
-            <Numeral>{volume == null ? '—' : Math.round(volume).toLocaleString()}</Numeral>
+            <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(volume).toLocaleString()}</Numeral></View>
             {delta != null && <Mono tone="t1" size={15} style={{ marginLeft: 10, marginBottom: 14 }}>{delta >= 0 ? '▲' : '▼'} {Math.abs(delta)}%</Mono>}
             <View style={{ flex: 1 }} />
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 16, flexShrink: 0, marginLeft: 12 }}>
               {week.map((d, i) => (
                 <View key={i} style={{ width: 6, height: 4 + Math.round(28 * ((d.volumeKg ?? 0) / max)), backgroundColor: i === week.length - 1 ? color.t1 : color.t4, borderRadius: 1 }} />
               ))}
