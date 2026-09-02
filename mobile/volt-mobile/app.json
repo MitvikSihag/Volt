@@ -1,36 +1,36 @@
 {
   "expo": {
-    "name": "volt-mobile",
-    "slug": "volt-mobile",
-    "version": "1.0.0",
+    "name": "Volt",
+    "slug": "volt",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "volt",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#121212",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#121212"
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "app.volt.mobile",
+      "supportsTablet": false
     },
     "android": {
+      "package": "app.volt.mobile",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#121212",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "scheme": "volt",
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      "expo-status-bar"
     ]
   }
 }

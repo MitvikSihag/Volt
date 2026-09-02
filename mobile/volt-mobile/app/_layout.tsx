@@ -1,17 +1,40 @@
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
+import { JetBrainsMono_400Regular, JetBrainsMono_500Medium, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { color } from '@/ui/tokens';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { gcTime: 24 * 60 * 60 * 1000, staleTime: 60 * 1000, networkMode: 'offlineFirst', retry: 1 },
+    mutations: { retry: 2 },
+  },
+});
+const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
 export default function RootLayout() {
+  const [fontsReady] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, JetBrainsMono_400Regular, JetBrainsMono_500Medium, JetBrainsMono_700Bold });
+  if (!fontsReady) return <View style={{ flex: 1, backgroundColor: color.base }} />;
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="workout/active" options={{ presentation: 'modal', gestureEnabled: false }} />
-        <Stack.Screen name="workout/exercise-picker" options={{ presentation: 'modal' }} />
-      </Stack>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: color.base }}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.base }, animation: 'fade', animationDuration: 200 }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="workout/live" options={{ presentation: 'modal', gestureEnabled: true }} />
+          <Stack.Screen name="workout/picker" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="workout/finish" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="workout/summary" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="profile" />
+        </Stack>
+      </PersistQueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
