@@ -5,7 +5,7 @@ import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
 import com.volt.user.dto.UserStatsResponse;
-import com.volt.workout.WorkoutService;
+import com.volt.workout.PersonalRecordService;
 import com.volt.workout.dto.ExerciseRecordsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,11 +35,11 @@ public class UserController {
     private static final long MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
     private final UserService userService;
-    private final WorkoutService workoutService;
+    private final PersonalRecordService prService;
 
-    public UserController(UserService userService, WorkoutService workoutService) {
+    public UserController(UserService userService, PersonalRecordService prService) {
         this.userService = userService;
-        this.workoutService = workoutService;
+        this.prService = prService;
     }
 
     @GetMapping("/{username}")
@@ -85,6 +85,6 @@ public class UserController {
     @GetMapping("/me/records")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public List<ExerciseRecordsResponse> getRecords(@AuthenticationPrincipal UserDetails principal) {
-        return workoutService.getRecordsGrid(principal.getUsername());
+        return prService.getRecordsGrid(principal.getUsername());
     }
 }

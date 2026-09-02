@@ -1,11 +1,16 @@
-package com.volt.workout;
+package com.volt.analytics;
+
+import com.volt.analytics.dto.DashboardResponse;
+import com.volt.workout.PersonalRecordRepository;
+import com.volt.workout.Workout;
+import com.volt.workout.WorkoutRepository;
 
 import com.volt.activity.Activity;
 import com.volt.activity.ActivityRepository;
 import com.volt.common.exception.ResourceNotFoundException;
+import com.volt.load.TrainingMath;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
-import com.volt.workout.dto.DashboardResponse;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.PersonalRecordResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,18 +30,18 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
     private final WorkoutRepository workoutRepository;
     private final PersonalRecordRepository prRepository;
     private final ActivityRepository activityRepository;
     private final Clock clock;
 
-    public DashboardService(UserRepository userRepository,
+    public DashboardService(UserLookup userLookup,
                             WorkoutRepository workoutRepository,
                             PersonalRecordRepository prRepository,
                             ActivityRepository activityRepository,
                             Clock clock) {
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
         this.workoutRepository = workoutRepository;
         this.prRepository = prRepository;
         this.activityRepository = activityRepository;
@@ -44,8 +49,7 @@ public class DashboardService {
     }
 
     public DashboardResponse get(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userLookup.require(username);
 
         LocalDate today = LocalDate.now(clock);
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
@@ -56,8 +60,7 @@ public class DashboardService {
                 .findByUserAndStartedAtAfterAndDeletedAtIsNull(user, weekStartInstant);
         double weekVolume = weekWorkouts.stream()
                 .flatMap(w -> w.getAllSets().stream())
-                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg()))
                 .sum();
         double weekDistanceKm = activityRepository
                 .sumDistanceByUserAndStartedAtAfter(user, weekStartInstant) / 1000.0;
@@ -71,8 +74,7 @@ public class DashboardService {
                 .collect(Collectors.groupingBy(
                         w -> w.getStartedAt().atZone(ZoneOffset.UTC).toLocalDate(),
                         Collectors.summingDouble(w -> w.getAllSets().stream()
-                                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                                .mapToDouble(s -> s.getReps() * s.getWeightKg()).sum())));
+                                .mapToDouble(s -> TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg())).sum())));
 
         Map<LocalDate, Double> distanceByDay = recentActivities.stream()
                 .filter(a -> a.getDistanceMeters() != null)

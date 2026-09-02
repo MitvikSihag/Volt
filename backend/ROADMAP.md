@@ -190,7 +190,7 @@ migration; add Postgres-backed `SELECT … FOR UPDATE`/index tuning as data grow
 - **W3 — Data integrity & performance:** audit soft-delete filtering (D8), add `@EntityGraph`/fetch
   joins to kill N+1 on nested reads (D9), add DB constraints/indexes as schema grows.
 - **W4 — Observability:** structured logging, request tracing, metrics (Micrometer), error tracking.
-- **W6 — Structure prep for the new domains** (from the Sep 2026 SOLID audit; do BEFORE
+- **W6 — Structure prep for the new domains** ✅ DONE (Sep 2 2026, branch `feat/w6-structure-prep`) (from the Sep 2026 SOLID audit; done BEFORE
   `rating/` `load/` `event/` `benchmark/` `social/` land, each gets strictly harder after):
   1. Extract `load/` metric primitives first — a stateless Epley/volume utility; the math is
      currently duplicated (Epley ×3 in `WorkoutService`, volume ×6 across services/DTOs/JPQL)

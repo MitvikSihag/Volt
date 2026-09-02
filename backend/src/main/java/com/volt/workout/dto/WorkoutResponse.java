@@ -19,8 +19,7 @@ public record WorkoutResponse(
 ) {
     public static WorkoutResponse from(Workout w) {
         double totalVolumeKg = w.getAllSets().stream()
-                .filter(s -> s.getReps() != null && s.getWeightKg() != null)
-                .mapToDouble(s -> s.getReps() * s.getWeightKg())
+                .mapToDouble(s -> com.volt.load.TrainingMath.setVolumeKg(s.getReps(), s.getWeightKg()))
                 .sum();
         return new WorkoutResponse(
                 w.getId(),

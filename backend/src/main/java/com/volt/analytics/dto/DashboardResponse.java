@@ -1,4 +1,6 @@
-package com.volt.workout.dto;
+package com.volt.analytics.dto;
+
+import com.volt.workout.dto.PersonalRecordResponse;
 
 import java.time.LocalDate;
 import java.util.List;

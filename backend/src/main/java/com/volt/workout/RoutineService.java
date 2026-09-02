@@ -3,7 +3,7 @@ package com.volt.workout;
 import com.volt.common.exception.ApiException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.user.User;
-import com.volt.user.UserRepository;
+import com.volt.user.UserLookup;
 import com.volt.workout.dto.CreateRoutineExerciseRequest;
 import com.volt.workout.dto.CreateRoutineRequest;
 import com.volt.workout.dto.RoutineResponse;
@@ -23,24 +23,24 @@ public class RoutineService {
 
     private final RoutineRepository routineRepository;
     private final ExerciseRepository exerciseRepository;
-    private final UserRepository userRepository;
+    private final UserLookup userLookup;
     private final WorkoutRepository workoutRepository;
     private final Clock clock;
 
     public RoutineService(RoutineRepository routineRepository,
                           ExerciseRepository exerciseRepository,
-                          UserRepository userRepository,
+                          UserLookup userLookup,
                           WorkoutRepository workoutRepository,
                           Clock clock) {
         this.routineRepository = routineRepository;
         this.exerciseRepository = exerciseRepository;
-        this.userRepository = userRepository;
+        this.userLookup = userLookup;
         this.workoutRepository = workoutRepository;
         this.clock = clock;
     }
 
     public RoutineResponse create(String username, CreateRoutineRequest request) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
 
         Routine routine = new Routine();
         routine.setUser(user);
@@ -54,7 +54,7 @@ public class RoutineService {
 
     @Transactional(readOnly = true)
     public List<RoutineResponse> list(String username) {
-        User user = getUser(username);
+        User user = userLookup.require(username);
         return routineRepository.findByUserAndDeletedAtIsNullOrderByCreatedAtDesc(user)
                 .stream().map(RoutineResponse::from).toList();
     }
@@ -164,8 +164,4 @@ public class RoutineService {
         }
     }
 
-    private User getUser(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
-}

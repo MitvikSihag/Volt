@@ -16,6 +16,7 @@ public interface WorkoutRepository extends JpaRepository<Workout, UUID> {
     @Query("SELECT COUNT(w) FROM Workout w WHERE w.user = :user AND w.deletedAt IS NULL")
     long countByUser(User user);
 
+    // JPQL mirror of com.volt.load.TrainingMath.setVolumeKg — keep in sync (DB-side aggregate)
     @Query("SELECT COALESCE(SUM(s.reps * s.weightKg), 0) FROM WorkoutSet s WHERE s.workoutExercise.workout.user = :user AND s.reps IS NOT NULL AND s.weightKg IS NOT NULL AND s.workoutExercise.workout.deletedAt IS NULL")
     double sumVolumeByUser(User user);
 

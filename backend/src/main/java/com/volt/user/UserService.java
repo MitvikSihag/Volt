@@ -1,13 +1,13 @@
 package com.volt.user;
 
-import com.volt.activity.ActivityRepository;
+import com.volt.activity.ActivityService;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.common.storage.StorageService;
 import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
 import com.volt.user.dto.UserStatsResponse;
-import com.volt.workout.WorkoutRepository;
+import com.volt.workout.WorkoutService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,17 +18,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StorageService storageService;
-    private final WorkoutRepository workoutRepository;
-    private final ActivityRepository activityRepository;
+    private final WorkoutService workoutService;
+    private final ActivityService activityService;
 
     public UserService(UserRepository userRepository,
                        StorageService storageService,
-                       WorkoutRepository workoutRepository,
-                       ActivityRepository activityRepository) {
+                       WorkoutService workoutService,
+                       ActivityService activityService) {
         this.userRepository = userRepository;
         this.storageService = storageService;
-        this.workoutRepository = workoutRepository;
-        this.activityRepository = activityRepository;
+        this.workoutService = workoutService;
+        this.activityService = activityService;
     }
 
     @Transactional(readOnly = true)
@@ -72,10 +72,10 @@ public class UserService {
     public UserStatsResponse getStats(String username) {
         User user = findActiveUser(username);
         return new UserStatsResponse(
-                workoutRepository.countByUser(user),
-                activityRepository.countByUser(user),
-                activityRepository.sumDistanceByUser(user),
-                workoutRepository.sumVolumeByUser(user)
+                workoutService.countForUser(user),
+                activityService.countForUser(user),
+                activityService.totalDistanceMetersForUser(user),
+                workoutService.totalVolumeKgForUser(user)
         );
     }
 
