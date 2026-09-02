@@ -11,26 +11,30 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Regenerates the checked-in OpenAPI contract on every test run so it never drifts from the code.
- * The spec at docs/api/openapi.yaml is the source of truth consumed by the web and mobile frontends.
+ * Guards the checked-in OpenAPI contract consumed by the web and mobile frontends against drift
+ * from the runtime Springdoc contract.
  */
 class OpenApiSpecExportTest extends AbstractIntegrationTest {
 
     private static final Path SPEC_PATH = Path.of("docs", "api", "openapi.yaml");
 
     @Test
-    void exportsOpenApiSpecToDocs() throws Exception {
-        String yaml = mockMvc.perform(get("/v3/api-docs.yaml"))
+    void runtimeOpenApiSpecMatchesCheckedInContract() throws Exception {
+        String runtimeYaml = mockMvc.perform(get("/v3/api-docs.yaml"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(yaml).contains("openapi:");
+        assertThat(runtimeYaml).contains("openapi:");
+        assertThat(SPEC_PATH)
+                .as("The checked-in OpenAPI contract must exist at %s", SPEC_PATH)
+                .isRegularFile();
 
-        Files.createDirectories(SPEC_PATH.getParent());
-        Files.writeString(SPEC_PATH, yaml, StandardCharsets.UTF_8);
+        String checkedInYaml = Files.readString(SPEC_PATH, StandardCharsets.UTF_8);
 
-        assertThat(Files.exists(SPEC_PATH)).isTrue();
+        assertThat(runtimeYaml)
+                .as("Runtime Springdoc YAML differs from %s; update the contract intentionally and commit it", SPEC_PATH)
+                .isEqualTo(checkedInYaml);
     }
 }

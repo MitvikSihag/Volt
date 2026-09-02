@@ -4,6 +4,8 @@ import com.volt.user.RefreshTokenRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -63,6 +65,29 @@ class AuthControllerIntegrationTest extends AbstractIntegrationTest {
                         .content(json(java.util.Map.of("refreshToken", "missing-token"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Invalid refresh token"));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void reusingRotatedRefreshTokenRevokesItsTokenFamily() throws Exception {
+        AuthTokens tokens = register("refreshreuse");
+
+        var rotationResult = mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(java.util.Map.of("refreshToken", tokens.refreshToken()))))
+                .andExpect(status().isOk())
+                .andReturn();
+        String rotatedRefreshToken = readBody(rotationResult).get("refreshToken").asText();
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(java.util.Map.of("refreshToken", tokens.refreshToken()))))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(java.util.Map.of("refreshToken", rotatedRefreshToken))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
