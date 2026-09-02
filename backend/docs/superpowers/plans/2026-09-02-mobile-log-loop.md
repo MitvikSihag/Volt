@@ -92,8 +92,8 @@ import { color, font, Tone } from './tokens';
 
 type T = TextProps & { tone?: Tone; size?: number };
 
-export const Numeral = ({ size = 96, style, ...p }: T) => (
-  <Text {...p} style={[{ fontFamily: font.monoBold, fontSize: size, lineHeight: size * 1.05, color: color.t1, letterSpacing: -size * 0.04 }, style]} />
+export const Numeral = ({ tone = 't1', size = 96, style, ...p }: T) => (
+  <Text {...p} style={[{ fontFamily: font.monoBold, fontSize: size, lineHeight: size * 1.05, color: color[tone], letterSpacing: -size * 0.04 }, style]} />
 );
 export const Meta = ({ tone = 't3', style, ...p }: T) => (
   <Text {...p} style={[{ fontFamily: font.mono, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: color[tone] }, style]} />
