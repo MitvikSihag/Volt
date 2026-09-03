@@ -51,7 +51,7 @@ export default function RootLayout() {
           <Stack.Screen name="workout/summary" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="profile" />
           <Stack.Screen name="history" />
-          <Stack.Screen name="exercise/[id]" />
+          <Stack.Screen name="exercise/[id]" options={{ presentation: 'fullScreenModal' }} />
         </Stack>
       </PersistQueryClientProvider>
     </GestureHandlerRootView>
