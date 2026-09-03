@@ -46,3 +46,11 @@ export const useExerciseHistory = (id?: string) => useQuery({
   queryKey: ['exercise-history', id], enabled: !!id,
   queryFn: () => unwrap(api.GET('/api/exercises/{id}/history', { params: { path: { id: id! }, query: { page: 0, size: 50 } } })),
 });
+
+export function useSaveActivity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: S['CreateActivityRequest']) => unwrap(api.POST('/api/activities', { body })),
+    onSuccess: () => { for (const k of ['dashboard', 'activities', 'stats']) void qc.invalidateQueries({ queryKey: [k] }); },
+  });
+}

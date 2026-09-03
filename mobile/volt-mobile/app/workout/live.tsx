@@ -27,6 +27,7 @@ export default function Live() {
   }, [lastSets]);
 
   const live = session?.status === 'live';
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
   useFocusEffect(useCallback(() => { if (!live) leave(); }, [live]));
   if (!session || session.status !== 'live') return null;
 
@@ -39,7 +40,6 @@ export default function Live() {
   const half = weight != null && String(weight).endsWith('.5');
 
   const onLog = () => dispatch((s) => logSet(s, new Date().toISOString()));
-  const leave = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
   const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) leave(); });
   const onClose = () => Alert.alert('Session', 'Your sets stay saved on this phone.', [
     { text: 'Finish session', onPress: () => router.push('/workout/finish') },

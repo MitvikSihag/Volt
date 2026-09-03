@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboard, useExercises, useLastSets, useMe, useRoutines } from '@/api/queries';
 import { fromRoutine } from '@/session/fromRoutine';
+import { useRun } from '@/run/store';
 import { newId, useSession } from '@/session/store';
 import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
@@ -15,7 +16,7 @@ export default function Today() {
   const { data: me } = useMe(); const { data: dash } = useDashboard();
   const { data: routines } = useRoutines(); const { data: exercises } = useExercises();
   const session = useSession((s) => s.session); const start = useSession((s) => s.start); const discard = useSession((s) => s.discard);
-  const routine = routines?.[0];
+  const routine = routines?.[0]; const runStatus = useRun((r) => r.status);
   const routineIds = (routine?.exercises ?? []).map((e) => e.exerciseId ?? '').filter(Boolean);
   const { data: lastSets } = useLastSets(routineIds);
   const lastById = new Map((lastSets ?? []).map((l) => [l.exerciseId, l]));
@@ -85,6 +86,9 @@ export default function Today() {
               </View>
             )}
             {!routine && <Body tone="t2" size={13}>No routines yet. Start logs an empty session; long-press always does.</Body>}
+            <Pressable onPress={() => router.push('/run/live')} style={{ marginTop: 10, borderLeftWidth: 2, borderLeftColor: color.jade, paddingLeft: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Body tone="t2" size={13}>{runStatus === 'idle' ? 'Record a run' : 'Run in progress'}</Body><Mono tone="t3" size={13}>›</Mono>
+            </Pressable>
             {session?.status === 'unsaved' && (
               <Pressable onPress={() => router.push('/workout/finish')} style={{ marginTop: 8, borderLeftWidth: 2, borderLeftColor: color.ember, paddingLeft: 12 }}>
                 <Body tone="t2" size={13}>Unsaved session — tap to retry</Body>

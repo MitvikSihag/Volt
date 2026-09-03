@@ -17,7 +17,12 @@
     },
     "ios": {
       "bundleIdentifier": "app.volt.mobile",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location"
+        ]
+      }
     },
     "android": {
       "package": "app.volt.mobile",
@@ -31,7 +36,15 @@
       "expo-router",
       "expo-font",
       "expo-secure-store",
-      "expo-status-bar"
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Volt records your route while you run.",
+          "locationWhenInUsePermission": "Volt records your route while you run.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
     ],
     "web": {
       "bundler": "metro",
