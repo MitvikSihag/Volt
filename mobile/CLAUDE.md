@@ -39,13 +39,15 @@ volt-mobile/
 │   ├── _layout.tsx      fonts, QueryClient + persister, auth hydrate + gate, stack
 │   ├── (auth)/          login, register
 │   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
-│   ├── workout/         live (Live Lift), picker, finish, summary
-│   └── profile.tsx
+│   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
+│   ├── exercise/[id].tsx Exercise Detail — About · History · Charts · Records
+│   ├── history.tsx      History (lifts + cardio, week groups)
+│   └── profile.tsx      Profile — month calendar with dual dots, totals, link to History
 └── src/
     ├── api/             schema.d.ts (generated), client.ts, queries.ts
     ├── auth/store.ts
     ├── session/         reducer.ts (pure, tested), toRequest.ts, pr.ts, store.ts, fromRoutine.ts
-    └── ui/              tokens.ts, primitives.tsx, SessionPill.tsx, useNow.ts, field.ts
+    └── ui/              tokens.ts, primitives.tsx, Bolt.tsx, LineChart.tsx (svg), SessionPill.tsx, useNow.ts, field.ts
 ```
 
 ## Offline model (slice 1)
@@ -75,6 +77,17 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 3. Load and rating endpoints (Today's 842, Summary's load-earned and rating delta).
 4. Events entity (race countdown on Today).
 
+## Screens built (artboard numbers)
+01 Today · 02 Live Lift · 06 Profile · 08 History · 10 Finish · 11 Summary · 13/14 Exercise Detail.
+Plus login, register, exercise picker (no artboards); Plan/Feed/Rivals tabs are placeholders.
+
+## Navigation rules learned the hard way
+- Every screen reached from inside the workout modal stack must declare `presentation:
+  'fullScreenModal'` and apply `useSafeAreaInsets()` itself — screens pushed above a modal inherit
+  the sheet style and lose the safe-area inset. Never `router.replace('/(tabs)')` from inside
+  that stack; use `router.dismissAll()`, or Today re-presents as a sheet.
+- Surfaces paint edge to edge behind the status bar (the artboards' `9:41` row is the OS).
+
 ## Next slices
-History + Exercise Detail (existing endpoints) → Live Run + Save/Edit → Onboarding 18–20
-(deferred account) → Share cards. See [PRODUCT.md §7](../PRODUCT.md).
+Live Run (03) + Save/Edit (16) + Privacy (17) → Onboarding 18–20 (deferred account) → Share
+cards (12) → Today low states (23–25) when Plan exists. See [PRODUCT.md §7](../PRODUCT.md).
