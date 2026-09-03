@@ -83,7 +83,7 @@ export default function Live() {
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
             {!ex.bodyweight && (
               <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-                <Numeral size={88}>{weight == null ? '—' : String(Math.floor(weight))}</Numeral>
+                {weight == null ? <Numeral size={44} tone="t4" style={{ marginBottom: 12 }}>--</Numeral> : <Numeral size={88}>{String(Math.floor(weight))}</Numeral>}
                 {half && <Numeral size={40} tone="t2" style={{ marginBottom: 8 }}>.5</Numeral>}
                 <Mono tone="t2" size={13} style={{ marginBottom: 16, marginLeft: 6 }}>kg</Mono>
               </View>
