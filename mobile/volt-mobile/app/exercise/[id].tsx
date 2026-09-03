@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExercise, useExerciseHistory, useProgression, useRecords } from '@/api/queries';
 import { humanMuscle, toInput } from '@/session/fromRoutine';
 import { addExercise } from '@/session/reducer';
@@ -17,7 +17,7 @@ const REC_LABEL: Record<string, string> = { ONE_REP_MAX: 'e1RM', MAX_WEIGHT: 'He
 
 export default function ExerciseDetail() {
   const router = useRouter(); const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
-  const { width } = useWindowDimensions();
+  const { width } = useWindowDimensions(); const insets = useSafeAreaInsets();
   const { data: ex } = useExercise(id); const { data: records } = useRecords(id); const { data: prog } = useProgression(id); const { data: hist } = useExerciseHistory(id);
   const [active, setActive] = useState<(typeof TABS)[number]>((TABS as readonly string[]).includes(tab ?? '') ? (tab as (typeof TABS)[number]) : 'Charts');
   const [series, setSeries] = useState<(typeof SERIES)[number]['k']>('estimatedOneRepMax');
@@ -41,7 +41,7 @@ export default function ExerciseDetail() {
   };
 
   return (
-    <Zone style={{ flex: 1 }}><SafeAreaView style={{ flex: 1 }} edges={['top']}>
+    <Zone style={{ flex: 1, paddingTop: insets.top }}><View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
           <Pressable onPress={() => router.back()} hitSlop={12}><Mono tone="t2" size={18}>←</Mono></Pressable>
@@ -148,7 +148,7 @@ export default function ExerciseDetail() {
           </View>
         )}
       </ScrollView>
-      <View style={{ padding: 24, paddingTop: 0 }}><Button label="Add to today's session" onPress={addToSession} disabled={!ex} /></View>
-    </SafeAreaView></Zone>
+      <View style={{ padding: 24, paddingTop: 0, paddingBottom: insets.bottom + 8 }}><Button label="Add to today's session" onPress={addToSession} disabled={!ex} /></View>
+    </View></Zone>
   );
 }
