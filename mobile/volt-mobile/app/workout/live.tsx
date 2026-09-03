@@ -27,7 +27,7 @@ export default function Live() {
   }, [lastSets]);
 
   const live = session?.status === 'live';
-  useFocusEffect(useCallback(() => { if (!live) router.back(); }, [live]));
+  useFocusEffect(useCallback(() => { if (!live) leave(); }, [live]));
   if (!session || session.status !== 'live') return null;
 
   const restLeft = session.restUntil ? Date.parse(session.restUntil) - now : 0;
@@ -39,11 +39,12 @@ export default function Live() {
   const half = weight != null && String(weight).endsWith('.5');
 
   const onLog = () => dispatch((s) => logSet(s, new Date().toISOString()));
-  const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) router.back(); });
+  const leave = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)'));
+  const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) leave(); });
   const onClose = () => Alert.alert('Session', 'Your sets stay saved on this phone.', [
     { text: 'Finish session', onPress: () => router.push('/workout/finish') },
-    { text: 'Minimise', onPress: () => router.back() },
-    { text: 'Discard session', style: 'destructive', onPress: () => { discard(); router.back(); } },
+    { text: 'Minimise', onPress: leave },
+    { text: 'Discard session', style: 'destructive', onPress: () => { discard(); leave(); } },
     { text: 'Cancel', style: 'cancel' },
   ]);
 
@@ -72,7 +73,7 @@ export default function Live() {
       ) : (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={{ paddingHorizontal: 24, paddingTop: 24, gap: 6 }}>
-            <Heading size={26}>{ex.name}</Heading>
+            <Pressable onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: ex.exerciseId } })}><Heading size={26}>{ex.name}</Heading></Pressable>
             <Meta>Set {ex.logged.length + 1} of {Math.max(ex.planned.length, ex.logged.length + 1)}{label ? ` · ${label}` : ''}</Meta>
           </View>
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>

@@ -30,3 +30,19 @@ export function useSaveWorkout() {
     },
   });
 }
+
+export const useStats = () => useQuery({ queryKey: ['stats'], queryFn: () => unwrap(api.GET('/api/users/me/stats')) });
+export const useWorkouts = (size = 100) => useQuery({ queryKey: ['workouts', size], queryFn: () => unwrap(api.GET('/api/workouts', { params: { query: { page: 0, size } } })) });
+export const useActivities = (size = 100) => useQuery({ queryKey: ['activities', size], queryFn: () => unwrap(api.GET('/api/activities', { params: { query: { page: 0, size } } })) });
+export const useExercise = (id?: string) => useQuery({
+  queryKey: ['exercise', id], enabled: !!id,
+  queryFn: () => unwrap(api.GET('/api/exercises/{id}', { params: { path: { id: id! } } })),
+});
+export const useProgression = (id?: string) => useQuery({
+  queryKey: ['progression', id], enabled: !!id,
+  queryFn: () => unwrap(api.GET('/api/exercises/{id}/progression', { params: { path: { id: id! } } })),
+});
+export const useExerciseHistory = (id?: string) => useQuery({
+  queryKey: ['exercise-history', id], enabled: !!id,
+  queryFn: () => unwrap(api.GET('/api/exercises/{id}/history', { params: { path: { id: id! }, query: { page: 0, size: 50 } } })),
+});
