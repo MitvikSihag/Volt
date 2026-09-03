@@ -8,6 +8,8 @@ import { formatElapsed } from '@/session/fromRoutine';
 import { isPr, prLabel } from '@/session/pr';
 import { clearRest, goToExercise, logSet, prefill, removeLoggedSet, step } from '@/session/reducer';
 import { useSession } from '@/session/store';
+import { onboardingActive, useOnboarding } from '@/onboarding/store';
+import { isLocalId } from '@/onboarding/templates';
 import { Body, Button, Hairline, Heading, Meta, Mono, Numeral, Stepper, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 import { useNow } from '@/ui/useNow';
@@ -17,9 +19,11 @@ export default function Live() {
   const session = useSession((s) => s.session); const dispatch = useSession((s) => s.dispatch); const discard = useSession((s) => s.discard);
   const [expanded, setExpanded] = useState(false);
   const ex = session?.exercises[session.currentExercise];
-  const ids = session?.exercises.map((e) => e.exerciseId) ?? [];
+  const ids = (session?.exercises.map((e) => e.exerciseId) ?? []).filter((id) => !isLocalId(id));
   const { data: lastSets } = useLastSets(ids);
-  const { data: records } = useRecords(ex?.exerciseId);
+  const { data: records } = useRecords(ex && !isLocalId(ex.exerciseId) ? ex.exerciseId : undefined);
+  const ob = useOnboarding(); const onboarding = onboardingActive(ob);
+  const firstSetMs = ob.openedAt && ob.firstSetAt ? Date.parse(ob.firstSetAt) - Date.parse(ob.openedAt) : null;
 
   useEffect(() => {
     if (!lastSets) return;
@@ -39,7 +43,7 @@ export default function Live() {
   const weight = session.current.weightKg;
   const half = weight != null && String(weight).endsWith('.5');
 
-  const onLog = () => dispatch((s) => logSet(s, new Date().toISOString()));
+  const onLog = () => { dispatch((s) => logSet(s, new Date().toISOString())); if (onboarding) ob.markFirstSet(); };
   const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) leave(); });
   const onClose = () => Alert.alert('Session', 'Your sets stay saved on this phone.', [
     { text: 'Finish session', onPress: () => router.push('/workout/finish') },
@@ -74,7 +78,7 @@ export default function Live() {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={{ paddingHorizontal: 24, paddingTop: 24, gap: 6 }}>
             <Pressable onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: ex.exerciseId } })}><Heading size={26}>{ex.name}</Heading></Pressable>
-            <Meta>Set {ex.logged.length + 1} of {Math.max(ex.planned.length, ex.logged.length + 1)}{label ? ` · ${label}` : ''}</Meta>
+            <Meta>Set {ex.logged.length + 1} of {Math.max(ex.planned.length, ex.logged.length + 1)}{label ? ` · ${label}` : onboarding ? ' · No history yet' : ''}</Meta>
           </View>
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
             {!ex.bodyweight && (
@@ -96,6 +100,12 @@ export default function Live() {
           </View>
 
           <Zone level="raised" style={{ flex: 1, marginTop: 24, paddingHorizontal: 24, paddingVertical: 16 }}>
+            {onboarding && firstSetMs != null && (
+              <View style={{ borderWidth: 1, borderColor: color.ember + '99', borderRadius: 12, padding: 12, marginBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Mono size={15}>{formatElapsed(firstSetMs)}</Mono>
+                <View><Body size={13}>First set logged</Body><Meta tone="t3">From opening Volt</Meta></View>
+              </View>
+            )}
             <Pressable onPress={() => setExpanded((v) => !v)} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Body tone="t2" size={13}>{ex.logged.length} set{ex.logged.length === 1 ? '' : 's'} logged</Body>
               <Mono tone="t3" size={13}>{expanded ? '⌃' : '⌄'}</Mono>
@@ -114,7 +124,7 @@ export default function Live() {
               </View>
             ))}
             <Pressable onPress={() => (nextEx ? dispatch((s) => goToExercise(s, s.currentExercise + 1)) : router.push('/workout/picker'))} style={{ marginTop: 16, borderLeftWidth: 2, borderLeftColor: color.jade, paddingLeft: 12 }}>
-              <Body tone="t2" size={13}>{nextEx ? `Next up — ${nextEx.name}` : 'Add another exercise'}</Body>
+              <Body tone="t2" size={13}>{onboarding && ex.logged.length === 0 ? 'Volt learns your loads from here — no setup needed' : nextEx ? `Next up — ${nextEx.name}` : 'Add another exercise'}</Body>
             </Pressable>
             {session.currentExercise > 0 && <Pressable onPress={() => dispatch((s) => goToExercise(s, s.currentExercise - 1))} style={{ marginTop: 10 }}><Meta>← Previous exercise</Meta></Pressable>}
           </Zone>

@@ -13,7 +13,7 @@ const secure = Platform.OS === 'web'
 
 type Tokens = { accessToken: string; refreshToken: string };
 type AuthState = {
-  accessToken: string | null; refreshToken: string | null; hydrated: boolean;
+  accessToken: string | null; refreshToken: string | null; hydrated: boolean; next: string | null;
   hydrate: () => Promise<void>;
   login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
@@ -42,7 +42,7 @@ export const useAuth = create<AuthState>((set, get) => {
     set({ accessToken: t.accessToken, refreshToken: t.refreshToken });
   };
   return {
-    accessToken: null, refreshToken: null, hydrated: false,
+    accessToken: null, refreshToken: null, hydrated: false, next: null,
     hydrate: async () => {
       const [accessToken, refreshToken] = await Promise.all([secure.getItemAsync(KEY.access), secure.getItemAsync(KEY.refresh)]);
       set({ accessToken, refreshToken, hydrated: true });

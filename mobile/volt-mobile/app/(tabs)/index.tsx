@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboard, useExercises, useLastSets, useMe, useRoutines } from '@/api/queries';
 import { fromRoutine } from '@/session/fromRoutine';
+import { useOnboarding } from '@/onboarding/store';
 import { useRun } from '@/run/store';
 import { newId, useSession } from '@/session/store';
 import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
@@ -17,6 +18,8 @@ export default function Today() {
   const { data: routines } = useRoutines(); const { data: exercises } = useExercises();
   const session = useSession((s) => s.session); const start = useSession((s) => s.start); const discard = useSession((s) => s.discard);
   const routine = routines?.[0]; const runStatus = useRun((r) => r.status);
+  const ob = useOnboarding();
+  const raceLine = ob.eventName && ob.eventDate ? [ob.eventName, `${Math.max(0, Math.ceil((Date.parse(ob.eventDate) - Date.now()) / 864e5))} days`, ob.startedAt ? `WK ${Math.floor((Date.now() - Date.parse(ob.startedAt)) / (7 * 864e5)) + 1}` : null].filter(Boolean).join(' / ') : null;
   const routineIds = (routine?.exercises ?? []).map((e) => e.exerciseId ?? '').filter(Boolean);
   const { data: lastSets } = useLastSets(routineIds);
   const lastById = new Map((lastSets ?? []).map((l) => [l.exerciseId, l]));
@@ -54,7 +57,7 @@ export default function Today() {
             </View>
             <Pressable onPress={() => router.push('/profile')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color.raised, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}><Mono size={12}>{initials}</Mono></Pressable>
           </View>
-          <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{dateLine}</Meta>
+          <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{raceLine ?? dateLine}</Meta>
 
           <View style={{ paddingHorizontal: 24, paddingTop: 36, flexDirection: 'row', alignItems: 'flex-end' }}>
             <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(volume).toLocaleString()}</Numeral></View>

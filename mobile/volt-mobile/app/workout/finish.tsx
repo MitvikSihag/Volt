@@ -2,7 +2,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSaveWorkout } from '@/api/queries';
+import { useExercises, useSaveWorkout } from '@/api/queries';
+import { useAuth } from '@/auth/store';
+import { useOnboarding } from '@/onboarding/store';
+import { isLocalId, localName } from '@/onboarding/templates';
 import { formatElapsed } from '@/session/fromRoutine';
 import { finishSession, loggedCount, markSaved } from '@/session/reducer';
 import { useSession } from '@/session/store';
@@ -16,7 +19,8 @@ const RPE_WORDS: Record<number, string> = { 4: 'Easy — warm-up effort', 5: 'Co
 export default function Finish() {
   const router = useRouter(); const insets = useSafeAreaInsets();
   const session = useSession((s) => s.session); const dispatch = useSession((s) => s.dispatch); const discard = useSession((s) => s.discard);
-  const save = useSaveWorkout();
+  const save = useSaveWorkout(); const token = useAuth((s) => s.accessToken); const { data: exercises } = useExercises();
+  const ob = useOnboarding();
   const [rpe, setRpe] = useState(session?.finish?.rpe ?? 8); const [note, setNote] = useState(session?.finish?.note ?? '');
   const [stoppedAt] = useState(() => session?.finish?.completedAt ?? new Date().toISOString());
   const [err, setErr] = useState<string | null>(null);
@@ -27,8 +31,14 @@ export default function Finish() {
     setErr(null);
     const finished = finishSession(session, { rpe, note, now: stoppedAt });
     dispatch(() => finished);
+    if (!token) { useAuth.setState({ next: '/workout/finish' }); router.push('/(auth)/register'); return; }
+    const byName = new Map((exercises ?? []).map((e) => [(e.name ?? '').toLowerCase(), e.id ?? '']));
+    const resolved = { ...finished, exercises: finished.exercises.map((e) => (isLocalId(e.exerciseId) ? { ...e, exerciseId: byName.get(localName(e.exerciseId).toLowerCase()) ?? '' } : e)) };
+    const missing = resolved.exercises.filter((e) => e.logged.length && !e.exerciseId).map((e) => e.name);
+    if (missing.length) { setErr(`Couldn't match ${missing.join(', ')} to the exercise library yet. Try again in a moment.`); return; }
     try {
-      const w = await save.mutateAsync(toRequest(finished));
+      const w = await save.mutateAsync(toRequest(resolved));
+      ob.finish();
       dispatch(markSaved);
       router.replace({ pathname: '/workout/summary', params: { id: w.id ?? '' } });
     } catch (e) {

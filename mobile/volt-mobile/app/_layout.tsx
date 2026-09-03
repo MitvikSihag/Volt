@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuth } from '@/auth/store';
+import { onboardingActive, useOnboarding } from '@/onboarding/store';
 import { color } from '@/ui/tokens';
 
 const queryClient = new QueryClient({
@@ -21,14 +22,15 @@ const queryClient = new QueryClient({
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
 function AuthGate() {
-  const token = useAuth((s) => s.accessToken);
+  const token = useAuth((s) => s.accessToken); const next = useAuth((s) => s.next);
+  const onboarding = useOnboarding((o) => onboardingActive(o)); const seen = useOnboarding((o) => o.goal != null || o.done);
   const segments = useSegments();
   const router = useRouter();
   useEffect(() => {
-    const inAuth = segments[0] === '(auth)';
-    if (!token && !inAuth) router.replace('/(auth)/login');
-    if (token && inAuth) router.replace('/(tabs)');
-  }, [token, segments]);
+    const inAuth = segments[0] === '(auth)'; const inOnboarding = segments[0] === '(onboarding)'; const inWorkout = segments[0] === 'workout';
+    if (!token && !inAuth && !inOnboarding && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
+    if (token && inAuth) { useAuth.setState({ next: null }); router.replace((next as '/(tabs)') ?? '/(tabs)'); }
+  }, [token, segments, onboarding]);
   return null;
 }
 
@@ -44,6 +46,7 @@ export default function RootLayout() {
         <AuthGate />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.base }, animation: 'fade', animationDuration: 200 }}>
           <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="workout/live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="workout/picker" options={{ presentation: 'modal' }} />
