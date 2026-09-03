@@ -44,7 +44,7 @@ export default function SaveRun() {
 
   return (
     <Zone style={{ flex: 1, paddingTop: insets.top }}>
-      <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: color.base, zIndex: 1 }}>
         <Pressable onPress={() => router.back()} hitSlop={12}><Mono tone="t2" size={18}>←</Mono></Pressable>
         <Meta tone="t3">{started.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {started.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</Meta>
         <Pressable onPress={onSave} hitSlop={12} disabled={save.isPending}><Body size={15}>{save.isPending ? 'Saving…' : 'Save'}</Body></Pressable>

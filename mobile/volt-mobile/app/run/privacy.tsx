@@ -24,7 +24,6 @@ export default function Privacy() {
   );
   return (
     <Zone level="raised" style={{ flex: 1, paddingTop: 12 }}>
-      <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: color.t4, alignSelf: 'center' }} />
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: insets.bottom + 24 }}>
         <Heading size={22}>Privacy</Heading>
         <Body tone="t2" size={13} style={{ marginTop: 4 }}>Everything private about this run lives here</Body>
