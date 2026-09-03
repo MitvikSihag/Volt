@@ -115,7 +115,7 @@ export default function ExerciseDetail() {
               <View key={i}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14 }}>
                   <Meta tone="t3" style={{ width: 72 }}>{REC_LABEL[r.type ?? ''] ?? r.type}</Meta>
-                  <Mono tone="gold" size={15}>{r.value != null ? Math.round(r.value * 2) / 2 : '—'}</Mono>
+                  <Mono tone="gold" size={15}>{r.value != null ? (Math.round(r.value * 2) / 2).toLocaleString() : '—'}</Mono>
                   <Mono tone="t3" size={11} style={{ marginLeft: 6, flex: 1 }}>{r.type === 'MAX_REPS_AT_WEIGHT' ? `at ${r.contextWeightKg ?? '—'} kg` : 'kg'}</Mono>
                   <Meta tone="t3">{r.achievedAt ? new Date(r.achievedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}</Meta>
                 </View>
