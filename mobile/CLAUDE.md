@@ -40,6 +40,7 @@ volt-mobile/
 │   ├── (auth)/          login, register
 │   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
 │   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
+│   ├── run/             live (Live Run, GPS), save (Save/Edit activity), privacy (bottom sheet)
 │   ├── exercise/[id].tsx Exercise Detail — About · History · Charts · Records
 │   ├── history.tsx      History (lifts + cardio, week groups)
 │   └── profile.tsx      Profile — month calendar with dual dots, totals, link to History
@@ -47,7 +48,9 @@ volt-mobile/
     ├── api/             schema.d.ts (generated), client.ts, queries.ts
     ├── auth/store.ts
     ├── session/         reducer.ts (pure, tested), toRequest.ts, pr.ts, store.ts, fromRoutine.ts
-    └── ui/              tokens.ts, primitives.tsx, Bolt.tsx, LineChart.tsx (svg), SessionPill.tsx, useNow.ts, field.ts
+    ├── run/             geo.ts (pure, tested: distance, splits, pace, trim, polyline), store.ts, tracker.ts (expo-location + task)
+    ├── settings/store.ts privacy + share defaults (local until the API has them)
+    └── ui/              tokens.ts, primitives.tsx, Bolt.tsx, LineChart.tsx, RouteArt.tsx (svg), SessionPill.tsx, useNow.ts, field.ts
 ```
 
 ## Offline model (slice 1)
@@ -78,7 +81,8 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 4. Events entity (race countdown on Today).
 
 ## Screens built (artboard numbers)
-01 Today · 02 Live Lift · 06 Profile · 08 History · 10 Finish · 11 Summary · 13/14 Exercise Detail.
+01 Today · 02 Live Lift · 03 Live Run · 06 Profile · 08 History · 10 Finish · 11 Summary ·
+13/14 Exercise Detail · 16 Save/Edit activity · 17 Privacy sheet.
 Plus login, register, exercise picker (no artboards); Plan/Feed/Rivals tabs are placeholders.
 
 ## Navigation rules learned the hard way
@@ -88,6 +92,14 @@ Plus login, register, exercise picker (no artboards); Plan/Feed/Rivals tabs are 
   that stack; use `router.dismissAll()`, or Today re-presents as a sheet.
 - Surfaces paint edge to edge behind the status bar (the artboards' `9:41` row is the OS).
 
+## GPS recording
+`src/run/tracker.ts` registers a TaskManager background task (works on device with the Always
+permission; Expo Go on iOS supports it, Android background needs a development build) and falls
+back to a foreground watch. Points go into the persisted run store; pauses open a new segment so
+distance never bridges a pause. Save trims the route ends per the privacy settings **before** the
+POST, then sends one nested `POST /api/activities` with laps from the per-km splits. Simulator:
+`xcrun simctl location <udid> start --speed=3.3 <lat,lng ...>` to drive a route.
+
 ## Next slices
-Live Run (03) + Save/Edit (16) + Privacy (17) → Onboarding 18–20 (deferred account) → Share
-cards (12) → Today low states (23–25) when Plan exists. See [PRODUCT.md §7](../PRODUCT.md).
+Onboarding 18–20 (deferred account) → Share cards (12) → Settings (22) → Today low states
+(23–25) when Plan exists → Live Activity / lock screen. See [PRODUCT.md §7](../PRODUCT.md).
