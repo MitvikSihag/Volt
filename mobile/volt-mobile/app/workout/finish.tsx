@@ -24,7 +24,7 @@ export default function Finish() {
   const [rpe, setRpe] = useState(session?.finish?.rpe ?? 8); const [note, setNote] = useState(session?.finish?.note ?? '');
   const [stoppedAt] = useState(() => session?.finish?.completedAt ?? new Date().toISOString());
   const [err, setErr] = useState<string | null>(null);
-  if (!session) { router.dismissAll(); return null; }
+  if (!session) { (router.canDismiss() && router.dismissAll(), router.replace('/(tabs)')); return null; }
   const sets = loggedCount(session);
 
   const onSave = async () => {
@@ -45,7 +45,7 @@ export default function Finish() {
       setErr(`${e instanceof Error ? e.message : 'No connection'}. Your session is kept on this phone — retry from Today.`);
     }
   };
-  const onDiscard = () => Alert.alert('Discard session?', 'This cannot be undone.', [{ text: 'Keep', style: 'cancel' }, { text: 'Discard', style: 'destructive', onPress: () => { discard(); router.dismissAll(); } }]);
+  const onDiscard = () => Alert.alert('Discard session?', 'This cannot be undone.', [{ text: 'Keep', style: 'cancel' }, { text: 'Discard', style: 'destructive', onPress: () => { discard(); (router.canDismiss() && router.dismissAll(), router.replace('/(tabs)')); } }]);
 
   return (
     <Zone style={{ flex: 1 }}><View style={{ flex: 1, padding: 24, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 }}>

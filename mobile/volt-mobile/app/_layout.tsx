@@ -29,7 +29,11 @@ function AuthGate() {
   useEffect(() => {
     const inAuth = segments[0] === '(auth)'; const inOnboarding = segments[0] === '(onboarding)'; const inWorkout = segments[0] === 'workout';
     if (!token && !inAuth && !inOnboarding && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
-    if (token && inAuth) { useAuth.setState({ next: null }); router.replace((next as '/(tabs)') ?? '/(tabs)'); }
+    if (token && inAuth) {
+      useAuth.setState({ next: null });
+      if (router.canDismiss()) router.dismissAll();
+      if (next) router.push(next as '/(tabs)'); else router.replace('/(tabs)');
+    }
   }, [token, segments, onboarding]);
   return null;
 }
@@ -45,7 +49,7 @@ export default function RootLayout() {
         <StatusBar style="light" />
         <AuthGate />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.base }, animation: 'fade', animationDuration: 200 }}>
-          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(auth)" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="workout/live" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />

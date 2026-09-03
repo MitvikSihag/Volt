@@ -22,7 +22,7 @@ export default function Summary() {
   const prs = (w?.exercises ?? []).flatMap((e) => (e.sets ?? []).filter((s) => s.isPr).map((s) => ({ name: e.exerciseName, w: s.weightKg, r: s.reps })));
   const started = w?.startedAt ?? session?.startedAt; const ended = w?.completedAt ?? session?.finish?.completedAt;
   const date = started ? new Date(started).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
-  const done = () => { if (readonly) return router.back(); discard(); router.dismissAll(); };
+  const done = () => { if (readonly) return router.back(); discard(); if (router.canDismiss()) router.dismissAll(); router.replace('/(tabs)'); };
   const share = () => void Share.share({ message: [w?.title ?? session?.title, w?.totalVolumeKg != null ? `${Math.round(w.totalVolumeKg).toLocaleString()} kg` : null, `${setCount} sets`, ended && started ? formatElapsed(Date.parse(ended) - Date.parse(started)) : null].filter(Boolean).join(' · ') });
 
   return (
