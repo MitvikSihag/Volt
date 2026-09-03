@@ -37,7 +37,8 @@ phone use the Mac's LAN IP). `.npmrc` sets `legacy-peer-deps` — required for `
 volt-mobile/
 ├── app/                 Expo Router routes
 │   ├── _layout.tsx      fonts, QueryClient + persister, auth hydrate + gate, stack
-│   ├── (auth)/          login, register
+│   ├── (auth)/          login, register (full-screen modal; register honours `useAuth.next`)
+│   ├── (onboarding)/    goal (18), week (19) — runs without a token
 │   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
 │   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
 │   ├── run/             live (Live Run, GPS), save (Save/Edit activity), privacy (bottom sheet)
@@ -50,6 +51,7 @@ volt-mobile/
     ├── session/         reducer.ts (pure, tested), toRequest.ts, pr.ts, store.ts, fromRoutine.ts
     ├── run/             geo.ts (pure, tested: distance, splits, pace, trim, polyline), store.ts, tracker.ts (expo-location + task)
     ├── settings/store.ts privacy + share defaults (local until the API has them)
+    ├── onboarding/      store.ts (goal, event date, first-set stopwatch), templates.ts (seeded weeks; `local:<name>` ids)
     └── ui/              tokens.ts, primitives.tsx, Bolt.tsx, LineChart.tsx, RouteArt.tsx (svg), SessionPill.tsx, useNow.ts, field.ts
 ```
 
@@ -82,7 +84,7 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 
 ## Screens built (artboard numbers)
 01 Today · 02 Live Lift · 03 Live Run · 06 Profile · 08 History · 10 Finish · 11 Summary ·
-13/14 Exercise Detail · 16 Save/Edit activity · 17 Privacy sheet.
+13/14 Exercise Detail · 16 Save/Edit activity · 17 Privacy sheet · 18–20 Onboarding.
 Plus login, register, exercise picker (no artboards); Plan/Feed/Rivals tabs are placeholders.
 
 ## Navigation rules learned the hard way
@@ -100,6 +102,12 @@ distance never bridges a pause. Save trims the route ends per the privacy settin
 POST, then sends one nested `POST /api/activities` with laps from the per-km splits. Simulator:
 `xcrun simctl location <udid> start --speed=3.3 <lat,lng ...>` to drive a route.
 
+## Deferred account (onboarding)
+The gate lets `(onboarding)` and `workout/*` run without a token while onboarding is active.
+The seeded week uses `local:<seed name>` exercise ids; Finish asks for the account at Save
+(`useAuth.next = '/workout/finish'`), then resolves names against `GET /api/exercises` before
+the POST. The chosen goal drives Today's race-countdown line until an Events entity exists.
+
 ## Next slices
-Onboarding 18–20 (deferred account) → Share cards (12) → Settings (22) → Today low states
-(23–25) when Plan exists → Live Activity / lock screen. See [PRODUCT.md §7](../PRODUCT.md).
+Share cards (12) → Settings (22) → Today low states (23–25) when Plan exists → Live Activity /
+lock screen. See [PRODUCT.md §7](../PRODUCT.md).

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboard, useExercises, useLastSets, useMe, useRoutines } from '@/api/queries';
 import { fromRoutine } from '@/session/fromRoutine';
 import { useOnboarding } from '@/onboarding/store';
+import { toSession, WEEK } from '@/onboarding/templates';
 import { useRun } from '@/run/store';
 import { newId, useSession } from '@/session/store';
 import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
@@ -19,6 +20,10 @@ export default function Today() {
   const session = useSession((s) => s.session); const start = useSession((s) => s.start); const discard = useSession((s) => s.discard);
   const routine = routines?.[0]; const runStatus = useRun((r) => r.status);
   const ob = useOnboarding();
+  // No routines yet → preview the next lift from the seeded week (day 0 = the day the goal was chosen)
+  const plan = ob.goal ? WEEK[ob.goal] : [];
+  const dayIdx = ob.startedAt ? Math.floor((Date.now() - Date.parse(ob.startedAt)) / 864e5) % 7 : 0;
+  const seeded = !routines?.length && plan.length ? (plan.find((s) => s.kind === 'lift' && s.day >= dayIdx) ?? plan.find((s) => s.kind === 'lift')) : undefined;
   const raceLine = ob.eventName && ob.eventDate ? [ob.eventName, `${Math.max(0, Math.ceil((Date.parse(ob.eventDate) - Date.now()) / 864e5))} days`, ob.startedAt ? `WK ${Math.floor((Date.now() - Date.parse(ob.startedAt)) / (7 * 864e5)) + 1}` : null].filter(Boolean).join(' / ') : null;
   const routineIds = (routine?.exercises ?? []).map((e) => e.exerciseId ?? '').filter(Boolean);
   const { data: lastSets } = useLastSets(routineIds);
@@ -37,6 +42,7 @@ export default function Today() {
   const begin = (adhoc: boolean) => {
     if (session?.status === 'live') return router.push('/workout/live');
     const planned = !adhoc && routine;
+    if (!adhoc && !routine && seeded) { start({ id: newId(), title: seeded.title, exercises: toSession(seeded), now: now.toISOString() }); return router.push('/workout/live'); }
     start({ id: newId(), title: planned ? routine.name ?? 'Session' : 'Ad-hoc session', routineId: planned ? routine.id : undefined, exercises: planned ? fromRoutine(routine, byId) : [], now: now.toISOString() });
     router.push('/workout/live');
   };
@@ -53,7 +59,7 @@ export default function Today() {
           <View style={{ paddingHorizontal: 24, paddingTop: 28, flexDirection: 'row', alignItems: 'flex-start' }}>
             <View style={{ flex: 1 }}>
               <Heading>{DAY[now.getDay()]}.</Heading>
-              <Heading tone="t2">{routine?.name ? `${routine.name}.` : 'No plan today.'}</Heading>
+              <Heading tone="t2">{routine?.name ? `${routine.name}.` : seeded ? `${seeded.title}.` : 'No plan today.'}</Heading>
             </View>
             <Pressable onPress={() => router.push('/profile')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color.raised, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}><Mono size={12}>{initials}</Mono></Pressable>
           </View>
@@ -74,8 +80,20 @@ export default function Today() {
           <Hairline />
 
           <Zone level="raised" style={{ padding: 24, gap: 4 }}>
-            <Meta tone="ember">● Session 1{routine?.exercises?.length ? ` · ${routine.exercises.length} lifts` : ''}</Meta>
-            <Heading size={24} style={{ marginTop: 8, marginBottom: 8 }}>{routine?.name ?? 'Ad-hoc session'}</Heading>
+            <Meta tone="ember">● Session 1{routine?.exercises?.length ? ` · ${routine.exercises.length} lifts` : seeded ? ` · ${seeded.minutes} min · ${seeded.lifts?.length ?? 0} lifts` : ''}</Meta>
+            <Heading size={24} style={{ marginTop: 8, marginBottom: 8 }}>{routine?.name ?? seeded?.title ?? 'Ad-hoc session'}</Heading>
+            {!routine && seeded && (seeded.lifts ?? []).slice(0, 3).map((l) => (
+              <View key={l.name} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 }}>
+                <Body>{l.name}</Body>
+                <Mono tone="t2" size={13}>{l.sets}×{l.reps}</Mono>
+              </View>
+            ))}
+            {!routine && seeded && (seeded.lifts?.length ?? 0) > 3 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
+                <Body tone="t2" size={13}>+ {(seeded.lifts?.length ?? 0) - 3} more · from your first week</Body>
+                <Mono tone="t3" size={13}>›</Mono>
+              </View>
+            )}
             {(routine?.exercises ?? []).slice(0, 3).map((e) => (
               <View key={e.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 }}>
                 <Body>{e.exerciseName}</Body>
@@ -88,7 +106,7 @@ export default function Today() {
                 <Mono tone="t3" size={13}>›</Mono>
               </View>
             )}
-            {!routine && <Body tone="t2" size={13}>No routines yet. Start logs an empty session; long-press always does.</Body>}
+            {!routine && !seeded && <Body tone="t2" size={13}>No routines yet. Start logs an empty session; long-press always does.</Body>}
             <Pressable onPress={() => router.push('/run/live')} style={{ marginTop: 10, borderLeftWidth: 2, borderLeftColor: color.jade, paddingLeft: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
               <Body tone="t2" size={13}>{runStatus === 'idle' ? 'Record a run' : 'Run in progress'}</Body><Mono tone="t3" size={13}>›</Mono>
             </Pressable>
