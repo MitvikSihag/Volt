@@ -26,7 +26,7 @@ export default function ShareCard() {
   const prs = (w?.exercises ?? []).flatMap((e) => (e.sets ?? []).filter((s) => s.isPr).map((s) => ({ name: e.exerciseName, w: s.weightKg, r: s.reps })));
   const duration = w?.startedAt && w?.completedAt ? formatElapsed(Date.parse(w.completedAt) - Date.parse(w.startedAt)) : null;
   const date = w?.startedAt ? new Date(w.startedAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase() : '';
-  const scale = 0.28;
+  const scale = 0.17;
 
   const share = async () => {
     try {
@@ -52,7 +52,7 @@ export default function ShareCard() {
               <View key={k}>
                 <Pressable onPress={() => setOn({ ...on, [k]: !on[k] })} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 10 }}>
                   <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: on[k] ? color.t1 : color.t4, backgroundColor: on[k] ? color.t1 : 'transparent' }} />
-                  <Body size={14} tone={on[k] ? 't1' : 't3'}>{l}</Body>
+                  <Body size={14} tone={on[k] ? 't1' : 't3'} numberOfLines={1} style={{ flexShrink: 1 }}>{l}</Body>
                 </Pressable>
                 <Hairline />
               </View>
