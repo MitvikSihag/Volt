@@ -19,7 +19,7 @@ export default function ShareCard() {
   const router = useRouter(); const insets = useSafeAreaInsets(); const { id } = useLocalSearchParams<{ id: string }>();
   const { data: w } = useWorkout(id); const { data: exercises } = useExercises(); const session = useSession((s) => s.session); const { fmt, unit } = useUnits();
   const [on, setOn] = useState<Record<Field, boolean>>({ volume: true, duration: true, sets: true, muscles: true, records: true });
-  const shot = useRef<{ capture?: () => Promise<string> }>(null);
+  const shot = useRef<React.ComponentRef<typeof ViewShot>>(null);
   const muscleOf = new Map((exercises ?? []).map((e) => [e.id ?? '', e.primaryMuscleGroup ?? 'FULL_BODY']));
   const muscles = new Map<string, number>();
   for (const e of w?.exercises ?? []) { const m = muscleOf.get(e.exerciseId ?? '') ?? 'FULL_BODY'; muscles.set(m, (muscles.get(m) ?? 0) + (e.sets?.length ?? 0)); }
