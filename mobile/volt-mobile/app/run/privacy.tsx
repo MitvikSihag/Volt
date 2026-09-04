@@ -19,7 +19,7 @@ export default function Privacy() {
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
       <Body size={15} style={{ flex: 1 }}>{label}</Body>
       {hint && <Meta tone="t3" style={{ marginRight: 12 }}>{hint}</Meta>}
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: color.t1, false: color.raised }} thumbColor={value ? color.sunken : color.t3} />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: color.t2, false: color.raised }} thumbColor={color.t1} ios_backgroundColor={color.raised} />
     </View>
   );
   return (

@@ -26,7 +26,7 @@ function Row({ label, sub, right, onPress }: { label: string; sub?: string; righ
   </>);
 }
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
-  <Switch value={value} onValueChange={onChange} trackColor={{ true: color.t1, false: color.raised }} thumbColor={value ? color.sunken : color.t3} />
+  <Switch value={value} onValueChange={onChange} trackColor={{ true: color.t2, false: color.raised }} thumbColor={color.t1} ios_backgroundColor={color.raised} />
 );
 
 export default function Settings() {
@@ -52,14 +52,17 @@ export default function Settings() {
         </Section>
 
         <Section title="Rest timer">
-          <Row label="Default rest" sub="Used when a routine has none" right={
+          <Row label="Default rest" sub="Used when a routine has none" right={null} />
+          <View style={{ paddingHorizontal: 24, paddingBottom: 14, marginTop: -8 }}>
             <View style={{ flexDirection: 'row', gap: 6 }}>
               {REST.map((r) => (
                 <Pressable key={r} onPress={() => s.set({ restSeconds: r })} style={{ paddingHorizontal: 9, height: 28, borderRadius: 14, justifyContent: 'center', backgroundColor: s.restSeconds === r ? color.t1 : color.raised }}>
                   <Mono size={11} style={{ color: s.restSeconds === r ? color.sunken : color.t2 }}>{Math.floor(r / 60)}:{String(r % 60).padStart(2, '0')}</Mono>
                 </Pressable>
               ))}
-            </View>} />
+            </View>
+          </View>
+          <Hairline />
         </Section>
 
         <Section title="Plate config">
