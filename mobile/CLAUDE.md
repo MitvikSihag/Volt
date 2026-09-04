@@ -66,8 +66,8 @@ shows a retry row. A session is never lost.
 ## Product constraints that shape the code
 - Logging speed is sacred: ≤2 taps per set, previous-session prefill, one action in the thumb zone.
 - kg is the default unit everywhere; lb is a settings toggle (not built yet).
-- Measurement type should come from the Exercise config — the API has none yet, so the logger
-  infers reps-only from `equipment === BODYWEIGHT`.
+- Measurement type comes from `Exercise.measurementType`; the logger renders reps / seconds /
+  metres from it and maps them to `reps` / `durationSeconds` / `distanceMeters` on save.
 - GPS recording must survive backgrounding (Android reliability is a feature, not a bug class).
 - Live Activity / lock-screen (rest countdown + tick sets) is v1 scope, not polish.
 
@@ -79,11 +79,13 @@ Grammar: `#121212` darkness ladder, ember `#FF5A1F` = strength, jade `#31A98D` =
 gold = earned only, mono numerals, grayscale chrome, one number owns each screen.
 Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via CSS vars).
 
-## Backend follow-ups surfaced by slice 1
-1. Session-level `rpe` on `CreateWorkoutRequest` / `WorkoutResponse` (currently prefixed into `notes`).
-2. `measurementType` on Exercise (`REPS_WEIGHT | DISTANCE | DURATION | REPS_ONLY`).
-3. Load and rating endpoints (Today's 842, Summary's load-earned and rating delta).
-4. Events entity (race countdown on Today).
+## Backend follow-ups still open
+1. Load and rating endpoints (Today's 842 and split baseline, Summary's load-earned and rating delta).
+2. Events entity (race countdown on Today — currently from the local onboarding goal).
+3. Plan / week entity (Today's session preview and the Plan tab — currently the local seeded week).
+4. Activity visibility + share defaults (currently local settings).
+5. Social phase (Feed, Rivals, Friends, Challenges).
+Shipped 4 Sep 2026: `measurementType` on Exercise and session-level `rpe` on Workout.
 
 ## Screens built (artboard numbers)
 01 Today · 02 Live Lift · 03 Live Run · 06 Profile · 08 History · 10 Finish · 11 Summary ·

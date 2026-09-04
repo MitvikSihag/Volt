@@ -32,8 +32,8 @@ yet.
 | Entity | Description |
 |---|---|
 | `User` | Profile, goals, body stats |
-| `Exercise` | Library entry (name, muscle groups, equipment); system or user-created |
-| `Workout` | A strength session (belongs to User, has many WorkoutExercises) |
+| `Exercise` | Library entry (name, muscle groups, equipment, measurement type); system or user-created |
+| `Workout` | A strength session (belongs to User, has many WorkoutExercises); optional session `rpe` 1–10 |
 | `WorkoutExercise` | An ordered exercise entry within a workout, containing WorkoutSets |
 | `WorkoutSet` | One set in a workout exercise (reps, weight, set type) |
 | `Routine` | Reusable strength-workout template |
@@ -97,8 +97,9 @@ SPRING_DATASOURCE_USERNAME=volt SPRING_DATASOURCE_PASSWORD=volt ./gradlew bootRu
 ```
 
 ### Schema changes
-Flyway is the single source of truth on the Postgres profile. Never edit an applied
-migration — add `V2__*.sql`, `V3__*.sql`, … under `src/main/resources/db/migration`.
+Flyway is the single source of truth on the Postgres profile. Until the first real users exist,
+the V1 baseline is edited in place (PRODUCT.md §2 locked decision); once a database is deployed,
+never edit an applied migration — add `V2__*.sql`, `V3__*.sql`, … under `src/main/resources/db/migration`.
 `FlywayPostgresIntegrationTest` (Testcontainers) boots the app under Postgres with
 `ddl-auto=validate` and fails if a migration and the JPA entities drift apart. It may skip locally
 when Docker is absent, but fails closed when Docker is unavailable in CI.
