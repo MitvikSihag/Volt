@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useActivities, useMe, useStats, useWorkouts } from '@/api/queries';
-import { useAuth } from '@/auth/store';
 import { Body, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 
@@ -30,7 +29,7 @@ export default function Profile() {
         <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
           <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
             <Pressable onPress={() => router.back()} hitSlop={12}><Mono tone="t2" size={18}>←</Mono></Pressable>
-            <Pressable onPress={() => useAuth.getState().logout()} hitSlop={12}><Meta tone="t2">Log out</Meta></Pressable>
+            <Pressable onPress={() => router.push('/settings')} hitSlop={12}><Meta tone="t2">Settings</Meta></Pressable>
           </View>
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
             <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: color.raised, alignItems: 'center', justifyContent: 'center' }}><Mono size={16}>{initials}</Mono></View>

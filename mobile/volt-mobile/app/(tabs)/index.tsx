@@ -9,12 +9,13 @@ import { useRun } from '@/run/store';
 import { newId, useSession } from '@/session/store';
 import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
+import { useUnits } from '@/settings/units';
 
 const DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const sum = (xs: { volumeKg?: number }[]) => xs.reduce((n, d) => n + (d.volumeKg ?? 0), 0);
 
 export default function Today() {
-  const router = useRouter();
+  const router = useRouter(); const units = useUnits();
   const { data: me } = useMe(); const { data: dash } = useDashboard();
   const { data: routines } = useRoutines(); const { data: exercises } = useExercises();
   const session = useSession((s) => s.session); const start = useSession((s) => s.start); const discard = useSession((s) => s.discard);
@@ -48,7 +49,7 @@ export default function Today() {
   };
   const setLine = (e: NonNullable<typeof routine>['exercises'] extends (infer T)[] | undefined ? T : never) => {
     const last = lastById.get(e.exerciseId);
-    return [`${e.targetSets ?? '–'}×${e.targetReps ?? '–'}`, last?.weightKg != null ? String(last.weightKg) : null].filter(Boolean).join(' · ');
+    return [`${e.targetSets ?? '–'}×${e.targetReps ?? '–'}`, last?.weightKg != null ? units.fmt(last.weightKg) : null].filter(Boolean).join(' · ');
   };
 
   return (
@@ -66,7 +67,7 @@ export default function Today() {
           <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{raceLine ?? dateLine}</Meta>
 
           <View style={{ paddingHorizontal: 24, paddingTop: 36, flexDirection: 'row', alignItems: 'flex-end' }}>
-            <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(volume).toLocaleString()}</Numeral></View>
+            <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(units.toDisplay(volume)).toLocaleString()}</Numeral></View>
             {delta != null && <Mono tone="t1" size={15} style={{ marginLeft: 10, marginBottom: 14 }}>{delta >= 0 ? '▲' : '▼'} {Math.abs(delta)}%</Mono>}
             <View style={{ flex: 1 }} />
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 16, flexShrink: 0, marginLeft: 12 }}>
@@ -75,7 +76,7 @@ export default function Today() {
               ))}
             </View>
           </View>
-          <Body tone="t2" style={{ paddingHorizontal: 24, marginTop: 4 }}>Volume, last seven days · kg</Body>
+          <Body tone="t2" style={{ paddingHorizontal: 24, marginTop: 4 }}>Volume, last seven days · {units.unit}</Body>
           <View style={{ height: 28 }} />
           <Hairline />
 

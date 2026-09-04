@@ -1,4 +1,5 @@
 import type { ExerciseInput } from '@/session/reducer';
+import { useSettings } from '@/settings/store';
 
 export type Goal = 'hyrox' | 'half' | 'lift' | 'fit';
 type Lift = { name: string; muscle: string; bodyweight?: boolean; sets: number; reps: number; rest?: number };
@@ -46,7 +47,7 @@ export const localName = (id: string) => id.slice('local:'.length);
 
 export function toSession(s: PlannedSession): ExerciseInput[] {
   return (s.lifts ?? []).map((l) => ({
-    exerciseId: localId(l.name), name: l.name, muscle: l.muscle, bodyweight: !!l.bodyweight, restSeconds: l.rest ?? 120,
+    exerciseId: localId(l.name), name: l.name, muscle: l.muscle, bodyweight: !!l.bodyweight, restSeconds: l.rest ?? useSettings.getState().restSeconds,
     planned: Array.from({ length: l.sets }, () => ({ weightKg: null, reps: l.reps })),
   }));
 }

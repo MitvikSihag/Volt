@@ -6,6 +6,7 @@ import { useActivities, useWorkouts } from '@/api/queries';
 import { formatElapsed } from '@/session/fromRoutine';
 import { Body, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
+import { useUnits } from '@/settings/units';
 
 type Row = { id: string; kind: 'lift' | 'cardio'; title: string; at: string; meta: string; value: string; unit: string };
 const FILTERS = ['All', 'Lifts', 'Cardio'] as const;
@@ -19,13 +20,13 @@ function weekLabel(iso: string, now: Date) {
 }
 
 export default function History() {
-  const router = useRouter(); const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
+  const router = useRouter(); const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All'); const units = useUnits();
   const { data: workouts } = useWorkouts(); const { data: activities } = useActivities();
   const rows: Row[] = [
     ...(workouts?.content ?? []).map((w): Row => ({
       id: w.id ?? '', kind: 'lift', title: w.title ?? 'Session', at: w.startedAt ?? '',
       meta: [new Date(w.startedAt ?? '').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), w.completedAt && w.startedAt ? `${Math.round((Date.parse(w.completedAt) - Date.parse(w.startedAt)) / 60000)} min` : null, w.exercises?.length ? `${w.exercises.length} exercise${w.exercises.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · '),
-      value: w.totalVolumeKg != null ? Math.round(w.totalVolumeKg).toLocaleString() : '—', unit: 'kg',
+      value: w.totalVolumeKg != null ? Math.round(units.toDisplay(w.totalVolumeKg)).toLocaleString() : '—', unit: units.unit,
     })),
     ...(activities?.content ?? []).map((a): Row => ({
       id: a.id ?? '', kind: 'cardio', title: a.title ?? (a.type ?? 'Run').toLowerCase(), at: a.startedAt ?? '',

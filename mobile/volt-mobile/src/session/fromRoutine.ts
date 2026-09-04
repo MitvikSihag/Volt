@@ -1,5 +1,7 @@
 import type { S } from '@/api/queries';
-import { DEFAULT_REST, ExerciseInput } from './reducer';
+import { useSettings } from '@/settings/store';
+import { ExerciseInput } from './reducer';
+const DEFAULT_REST = () => useSettings.getState().restSeconds;
 
 export function fromRoutine(r: S['RoutineResponse'], byId: Map<string, S['ExerciseResponse']>): ExerciseInput[] {
   return (r.exercises ?? []).map((re) => {
@@ -8,14 +10,14 @@ export function fromRoutine(r: S['RoutineResponse'], byId: Map<string, S['Exerci
     return {
       exerciseId: re.exerciseId ?? '', name: re.exerciseName ?? ex?.name ?? 'Exercise',
       muscle: ex?.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: ex?.equipment === 'BODYWEIGHT',
-      restSeconds: re.restSeconds ?? DEFAULT_REST,
+      restSeconds: re.restSeconds ?? DEFAULT_REST(),
       planned: Array.from({ length: sets }, () => ({ weightKg: null, reps: re.targetReps ?? null })),
     };
   });
 }
 
 export function toInput(ex: S['ExerciseResponse']): ExerciseInput {
-  return { exerciseId: ex.id ?? '', name: ex.name ?? 'Exercise', muscle: ex.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: ex.equipment === 'BODYWEIGHT', restSeconds: DEFAULT_REST, planned: [] };
+  return { exerciseId: ex.id ?? '', name: ex.name ?? 'Exercise', muscle: ex.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: ex.equipment === 'BODYWEIGHT', restSeconds: DEFAULT_REST(), planned: [] };
 }
 
 export const formatElapsed = (ms: number) => {

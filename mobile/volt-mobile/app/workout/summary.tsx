@@ -7,10 +7,11 @@ import { loggedCount } from '@/session/reducer';
 import { useSession } from '@/session/store';
 import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
+import { useUnits } from '@/settings/units';
 
 export default function Summary() {
   const router = useRouter(); const { id, readonly } = useLocalSearchParams<{ id: string; readonly?: string }>(); const insets = useSafeAreaInsets();
-  const { data: exercises } = useExercises();
+  const { data: exercises } = useExercises(); const units = useUnits();
   const { data: w } = useWorkout(id);
   const live = useSession((s) => s.session); const discard = useSession((s) => s.discard);
   const session = readonly ? null : live;
@@ -35,8 +36,8 @@ export default function Summary() {
             <Pressable onPress={done} hitSlop={12}><Mono tone="t2" size={18}>×</Mono></Pressable>
           </View>
           <Meta style={{ marginTop: 6 }}>{date}{ended ? ` · ${new Date(ended).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ''}</Meta>
-          <Numeral style={{ marginTop: 40 }}>{w?.totalVolumeKg == null ? '—' : Math.round(w.totalVolumeKg).toLocaleString()}</Numeral>
-          <Body tone="t2">Total volume · kg</Body>
+          <Numeral style={{ marginTop: 40 }}>{w?.totalVolumeKg == null ? '—' : Math.round(units.toDisplay(w.totalVolumeKg)).toLocaleString()}</Numeral>
+          <Body tone="t2">Total volume · {units.unit}</Body>
           <View style={{ height: 32 }} /><Hairline />
           <View style={{ paddingVertical: 16, flexDirection: 'row', justifyContent: 'space-between' }}><Body tone="t2">Duration</Body><Mono>{ended && started ? formatElapsed(Date.parse(ended) - Date.parse(started)) : '—'}</Mono></View>
           <Hairline />
@@ -55,14 +56,14 @@ export default function Summary() {
             {prs.map((p, i) => (
               <View key={i} style={{ paddingTop: 12, gap: 3 }}>
                 <Body tone="gold">★ {p.name} — {p.r}-rep best</Body>
-                <Meta>{p.w ?? 'BW'} kg × {p.r}</Meta>
+                <Meta>{p.w == null ? 'BW' : units.fmt(p.w)} {units.unit} × {p.r}</Meta>
               </View>
             ))}
           </>)}
         </ScrollView>
         <View style={{ padding: 24, flexDirection: 'row', gap: 12 }}>
           <View style={{ flex: 1 }}><Button label="Done" tone="ghost" onPress={done} /></View>
-          <View style={{ flex: 1 }}><Button label="Share" onPress={share} /></View>
+          <View style={{ flex: 1 }}><Button label="Share" onPress={() => router.push({ pathname: '/workout/share', params: { id: id ?? '' } })} /></View>
         </View>
       </View>
     </Zone>

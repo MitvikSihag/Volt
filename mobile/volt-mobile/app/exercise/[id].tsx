@@ -9,6 +9,7 @@ import { newId, useSession } from '@/session/store';
 import { LineChart } from '@/ui/LineChart';
 import { Body, Button, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
+import { useUnits } from '@/settings/units';
 
 const TABS = ['About', 'History', 'Charts', 'Records'] as const;
 const SERIES = [{ k: 'estimatedOneRepMax', l: 'E1RM' }, { k: 'bestWeightKg', l: 'Heaviest set' }, { k: 'volumeKg', l: 'Volume' }] as const;
@@ -17,7 +18,7 @@ const REC_LABEL: Record<string, string> = { ONE_REP_MAX: 'e1RM', MAX_WEIGHT: 'He
 
 export default function ExerciseDetail() {
   const router = useRouter(); const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
-  const { width } = useWindowDimensions(); const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions(); const insets = useSafeAreaInsets(); const units = useUnits();
   const { data: ex } = useExercise(id); const { data: records } = useRecords(id); const { data: prog } = useProgression(id); const { data: hist } = useExerciseHistory(id);
   const [active, setActive] = useState<(typeof TABS)[number]>((TABS as readonly string[]).includes(tab ?? '') ? (tab as (typeof TABS)[number]) : 'Charts');
   const [series, setSeries] = useState<(typeof SERIES)[number]['k']>('estimatedOneRepMax');
@@ -57,8 +58,8 @@ export default function ExerciseDetail() {
           <Meta tone="t3">{[ex?.equipment, ex?.movementType, ex?.equipment === 'BODYWEIGHT' ? 'reps' : 'weight × reps'].filter(Boolean).join('  ·  ')}</Meta>
         </View>
         <View style={{ paddingHorizontal: 24, paddingTop: 24, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <Numeral size={56}>{e1rm != null ? Math.round(e1rm * 2) / 2 : '—'}</Numeral>
-          <Mono tone="t2" size={13} style={{ marginLeft: 6, marginBottom: 10 }}>kg</Mono>
+          <Numeral size={56}>{e1rm != null ? units.fmt(Math.round(e1rm * 2) / 2) : '—'}</Numeral>
+          <Mono tone="t2" size={13} style={{ marginLeft: 6, marginBottom: 10 }}>{units.unit}</Mono>
         </View>
         <Body tone="t2" size={13} style={{ paddingHorizontal: 24 }}>Estimated 1-rep max</Body>
 

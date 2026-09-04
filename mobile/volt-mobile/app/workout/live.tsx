@@ -13,6 +13,8 @@ import { isLocalId } from '@/onboarding/templates';
 import { Body, Button, Hairline, Heading, Meta, Mono, Numeral, Stepper, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 import { useNow } from '@/ui/useNow';
+import { useSettings } from '@/settings/store';
+import { platesPerSide, useUnits } from '@/settings/units';
 
 export default function Live() {
   const router = useRouter(); const now = useNow(); const insets = useSafeAreaInsets();
@@ -23,6 +25,8 @@ export default function Live() {
   const { data: lastSets } = useLastSets(ids);
   const { data: records } = useRecords(ex && !isLocalId(ex.exerciseId) ? ex.exerciseId : undefined);
   const ob = useOnboarding(); const onboarding = onboardingActive(ob);
+  const units = useUnits(); const settings = useSettings();
+  const prEnabled = (records ?? []).filter((r) => r.type && settings.prTypes[r.type]);
   const firstSetMs = ob.openedAt && ob.firstSetAt ? Date.parse(ob.firstSetAt) - Date.parse(ob.openedAt) : null;
 
   useEffect(() => {
@@ -38,10 +42,12 @@ export default function Live() {
   const restLeft = session.restUntil ? Date.parse(session.restUntil) - now : 0;
   const canLog = !!ex && (ex.bodyweight || session.current.weightKg != null) && (session.current.reps ?? 0) > 0;
   const nextEx = session.exercises[session.currentExercise + 1];
-  const willPr = !!ex && !!records && isPr(session.current, records);
+  const willPr = !!ex && prEnabled.length > 0 && isPr(session.current, prEnabled);
   const label = records ? prLabel(records) : null;
   const weight = session.current.weightKg;
-  const half = weight != null && String(weight).endsWith('.5');
+  const shown = weight == null ? null : units.toDisplay(weight);
+  const whole = shown == null ? null : Math.floor(shown); const frac = shown == null ? null : Math.round((shown - Math.floor(shown)) * 10);
+  const plates = weight != null && !ex?.bodyweight && units.unit === 'kg' && weight > settings.barKg ? platesPerSide(weight, settings.barKg, settings.plates) : null;
 
   const onLog = () => { dispatch((s) => logSet(s, new Date().toISOString())); if (onboarding) ob.markFirstSet(); };
   const swipeDown = Gesture.Pan().runOnJS(true).activeOffsetY(16).onEnd((e) => { if (e.translationY > 80) leave(); });
@@ -83,9 +89,9 @@ export default function Live() {
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
             {!ex.bodyweight && (
               <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-                {weight == null ? <Numeral size={44} tone="t4" style={{ marginBottom: 12 }}>--</Numeral> : <Numeral size={88}>{String(Math.floor(weight))}</Numeral>}
-                {half && <Numeral size={40} tone="t2" style={{ marginBottom: 8 }}>.5</Numeral>}
-                <Mono tone="t2" size={13} style={{ marginBottom: 16, marginLeft: 6 }}>kg</Mono>
+                {whole == null ? <Numeral size={44} tone="t4" style={{ marginBottom: 12 }}>--</Numeral> : <Numeral size={88}>{String(whole)}</Numeral>}
+                {!!frac && <Numeral size={40} tone="t2" style={{ marginBottom: 8 }}>.{frac}</Numeral>}
+                <Mono tone="t2" size={13} style={{ marginBottom: 16, marginLeft: 6 }}>{units.unit}</Mono>
               </View>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: 'auto' }}>
@@ -94,8 +100,9 @@ export default function Live() {
             </View>
           </View>
           {willPr && <Meta tone="gold" style={{ paddingHorizontal: 24, paddingTop: 8 }}>New record if you log this</Meta>}
+          {plates && plates.length > 0 && <Meta tone="t3" style={{ paddingHorizontal: 24, paddingTop: 8 }}>Bar {settings.barKg} · {plates.join(' + ')} per side</Meta>}
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', gap: 12 }}>
-            {!ex.bodyweight && <Stepper label="2.5 kg" onMinus={() => dispatch((s) => step(s, 'weightKg', -2.5))} onPlus={() => dispatch((s) => step(s, 'weightKg', 2.5))} />}
+            {!ex.bodyweight && <Stepper label={units.stepLabel} onMinus={() => dispatch((s) => step(s, 'weightKg', -units.stepKg))} onPlus={() => dispatch((s) => step(s, 'weightKg', units.stepKg))} />}
             <Stepper label="rep" onMinus={() => dispatch((s) => step(s, 'reps', -1))} onPlus={() => dispatch((s) => step(s, 'reps', 1))} />
           </View>
 
@@ -112,14 +119,14 @@ export default function Live() {
             </Pressable>
             {expanded && ex.logged.map((l, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
-                <Mono tone="t2" size={13}>{String(i + 1).padStart(2, '0')}  {l.weightKg ?? 'BW'} × {l.reps}</Mono>
+                <Mono tone="t2" size={13}>{String(i + 1).padStart(2, '0')}  {l.weightKg == null ? 'BW' : units.fmt(l.weightKg)} × {l.reps}</Mono>
                 <Pressable onPress={() => dispatch((s) => removeLoggedSet(s, s.currentExercise, i))} hitSlop={8}><Meta>Remove</Meta></Pressable>
               </View>
             ))}
             <View style={{ height: 12 }} /><Hairline />
             {ex.planned.slice(ex.logged.length).map((p, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12 }}>
-                <Mono tone={i === 0 ? 't1' : 't4'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg ?? (ex.bodyweight ? 'BW' : '—')} × {p.reps ?? '—'}</Mono>
+                <Mono tone={i === 0 ? 't1' : 't4'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg == null ? (ex.bodyweight ? 'BW' : '—') : units.fmt(p.weightKg)} × {p.reps ?? '—'}</Mono>
                 <Meta tone={i === 0 ? 'ember' : 't4'}>{i === 0 ? 'Now' : '—'}</Meta>
               </View>
             ))}
