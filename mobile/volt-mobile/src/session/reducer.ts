@@ -1,8 +1,11 @@
 export type SetType = 'NORMAL' | 'WARMUP' | 'DROP_SET' | 'FAILURE';
+export type Measurement = 'REPS_WEIGHT' | 'DISTANCE' | 'DURATION' | 'REPS_ONLY';
+/** Unit of the `reps` field for a measurement type: reps, seconds or metres. */
+export const unitOf = (m: Measurement | undefined) => (m === 'DURATION' ? 's' : m === 'DISTANCE' ? 'm' : 'reps');
 export type SetValues = { weightKg: number | null; reps: number | null };
 export type LoggedSet = SetValues & { setType: SetType; at: string };
 export type SessionExercise = {
-  exerciseId: string; name: string; muscle: string; bodyweight: boolean; restSeconds: number;
+  exerciseId: string; name: string; muscle: string; bodyweight: boolean; measurement?: Measurement; restSeconds: number;
   planned: SetValues[]; logged: LoggedSet[];
 };
 export type ExerciseInput = Omit<SessionExercise, 'logged'>;

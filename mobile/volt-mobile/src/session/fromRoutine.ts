@@ -9,7 +9,7 @@ export function fromRoutine(r: S['RoutineResponse'], byId: Map<string, S['Exerci
     const sets = Math.max(1, re.targetSets ?? 3);
     return {
       exerciseId: re.exerciseId ?? '', name: re.exerciseName ?? ex?.name ?? 'Exercise',
-      muscle: ex?.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: ex?.equipment === 'BODYWEIGHT',
+      muscle: ex?.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: (ex?.measurementType ?? (ex?.equipment === 'BODYWEIGHT' ? 'REPS_ONLY' : 'REPS_WEIGHT')) !== 'REPS_WEIGHT', measurement: ex?.measurementType ?? (ex?.equipment === 'BODYWEIGHT' ? 'REPS_ONLY' : 'REPS_WEIGHT'),
       restSeconds: re.restSeconds ?? DEFAULT_REST(),
       planned: Array.from({ length: sets }, () => ({ weightKg: null, reps: re.targetReps ?? null })),
     };
@@ -17,7 +17,8 @@ export function fromRoutine(r: S['RoutineResponse'], byId: Map<string, S['Exerci
 }
 
 export function toInput(ex: S['ExerciseResponse']): ExerciseInput {
-  return { exerciseId: ex.id ?? '', name: ex.name ?? 'Exercise', muscle: ex.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: ex.equipment === 'BODYWEIGHT', restSeconds: DEFAULT_REST(), planned: [] };
+  const measurement = ex.measurementType ?? (ex.equipment === 'BODYWEIGHT' ? 'REPS_ONLY' : 'REPS_WEIGHT');
+  return { exerciseId: ex.id ?? '', name: ex.name ?? 'Exercise', muscle: ex.primaryMuscleGroup ?? 'FULL_BODY', bodyweight: measurement !== 'REPS_WEIGHT', measurement, restSeconds: DEFAULT_REST(), planned: [] };
 }
 
 export const formatElapsed = (ms: number) => {

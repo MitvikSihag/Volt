@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLastSets, useRecords } from '@/api/queries';
 import { formatElapsed } from '@/session/fromRoutine';
 import { isPr, prLabel } from '@/session/pr';
-import { clearRest, goToExercise, logSet, prefill, removeLoggedSet, step } from '@/session/reducer';
+import { clearRest, goToExercise, logSet, prefill, removeLoggedSet, step, unitOf } from '@/session/reducer';
 import { useSession } from '@/session/store';
 import { onboardingActive, useOnboarding } from '@/onboarding/store';
 import { isLocalId } from '@/onboarding/templates';
@@ -41,6 +41,8 @@ export default function Live() {
 
   const restLeft = session.restUntil ? Date.parse(session.restUntil) - now : 0;
   const canLog = !!ex && (ex.bodyweight || session.current.weightKg != null) && (session.current.reps ?? 0) > 0;
+  const unit = unitOf(ex?.measurement); const repStep = unit === 'reps' ? 1 : 5; const repLabel = unit === 'reps' ? 'rep' : `${repStep} ${unit}`;
+  const showWeight = !!ex && (ex.measurement === 'REPS_WEIGHT' || ex.measurement === 'DISTANCE' || (!ex.measurement && !ex.bodyweight));
   const nextEx = session.exercises[session.currentExercise + 1];
   const willPr = !!ex && prEnabled.length > 0 && isPr(session.current, prEnabled);
   const label = records ? prLabel(records) : null;
@@ -87,7 +89,7 @@ export default function Live() {
             <Meta>Set {ex.logged.length + 1} of {Math.max(ex.planned.length, ex.logged.length + 1)}{label ? ` · ${label}` : onboarding ? ' · No history yet' : ''}</Meta>
           </View>
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
-            {!ex.bodyweight && (
+            {showWeight && (
               <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
                 {whole == null ? <Numeral size={44} tone="t4" style={{ marginBottom: 12 }}>--</Numeral> : <Numeral size={88}>{String(whole)}</Numeral>}
                 {!!frac && <Numeral size={40} tone="t2" style={{ marginBottom: 8 }}>.{frac}</Numeral>}
@@ -96,14 +98,14 @@ export default function Live() {
             )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: 'auto' }}>
               <Numeral size={44}>{session.current.reps ?? '—'}</Numeral>
-              <Mono tone="t2" size={13} style={{ marginBottom: 8, marginLeft: 6 }}>reps</Mono>
+              <Mono tone="t2" size={13} style={{ marginBottom: 8, marginLeft: 6 }}>{unit}</Mono>
             </View>
           </View>
           {willPr && <Meta tone="gold" style={{ paddingHorizontal: 24, paddingTop: 8 }}>New record if you log this</Meta>}
           {plates && plates.length > 0 && <Meta tone="t3" style={{ paddingHorizontal: 24, paddingTop: 8 }}>Bar {settings.barKg} · {plates.join(' + ')} per side</Meta>}
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', gap: 12 }}>
-            {!ex.bodyweight && <Stepper label={units.stepLabel} onMinus={() => dispatch((s) => step(s, 'weightKg', -units.stepKg))} onPlus={() => dispatch((s) => step(s, 'weightKg', units.stepKg))} />}
-            <Stepper label="rep" onMinus={() => dispatch((s) => step(s, 'reps', -1))} onPlus={() => dispatch((s) => step(s, 'reps', 1))} />
+            {showWeight && <Stepper label={units.stepLabel} onMinus={() => dispatch((s) => step(s, 'weightKg', -units.stepKg))} onPlus={() => dispatch((s) => step(s, 'weightKg', units.stepKg))} />}
+            <Stepper label={repLabel} onMinus={() => dispatch((s) => step(s, 'reps', -repStep))} onPlus={() => dispatch((s) => step(s, 'reps', repStep))} />
           </View>
 
           <Zone level="raised" style={{ flex: 1, marginTop: 24, paddingHorizontal: 24, paddingVertical: 16 }}>
@@ -119,14 +121,14 @@ export default function Live() {
             </Pressable>
             {expanded && ex.logged.map((l, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
-                <Mono tone="t2" size={13}>{String(i + 1).padStart(2, '0')}  {l.weightKg == null ? 'BW' : units.fmt(l.weightKg)} × {l.reps}</Mono>
+                <Mono tone="t2" size={13}>{String(i + 1).padStart(2, '0')}  {l.weightKg == null ? (showWeight ? '—' : 'BW') : units.fmt(l.weightKg)} × {l.reps}{unit === 'reps' ? '' : ` ${unit}`}</Mono>
                 <Pressable onPress={() => dispatch((s) => removeLoggedSet(s, s.currentExercise, i))} hitSlop={8}><Meta>Remove</Meta></Pressable>
               </View>
             ))}
             <View style={{ height: 12 }} /><Hairline />
             {ex.planned.slice(ex.logged.length).map((p, i) => (
               <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12 }}>
-                <Mono tone={i === 0 ? 't1' : 't4'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg == null ? (ex.bodyweight ? 'BW' : '—') : units.fmt(p.weightKg)} × {p.reps ?? '—'}</Mono>
+                <Mono tone={i === 0 ? 't1' : 't4'} size={13}>{String(ex.logged.length + i + 1).padStart(2, '0')}  {p.weightKg == null ? (showWeight ? '—' : 'BW') : units.fmt(p.weightKg)} × {p.reps ?? '—'}{unit === 'reps' ? '' : ` ${unit}`}</Mono>
                 <Meta tone={i === 0 ? 'ember' : 't4'}>{i === 0 ? 'Now' : '—'}</Meta>
               </View>
             ))}

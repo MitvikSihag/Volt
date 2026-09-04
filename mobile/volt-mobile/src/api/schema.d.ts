@@ -459,6 +459,8 @@ export interface components {
             equipment?: "BARBELL" | "DUMBBELL" | "MACHINE" | "CABLE" | "BODYWEIGHT" | "KETTLEBELL" | "RESISTANCE_BAND" | "OTHER";
             /** @enum {string} */
             movementType?: "COMPOUND" | "ISOLATION";
+            /** @enum {string} */
+            measurementType?: "REPS_WEIGHT" | "DISTANCE" | "DURATION" | "REPS_ONLY";
         };
         ExerciseResponse: {
             /** Format: uuid */
@@ -472,6 +474,8 @@ export interface components {
             equipment?: "BARBELL" | "DUMBBELL" | "MACHINE" | "CABLE" | "BODYWEIGHT" | "KETTLEBELL" | "RESISTANCE_BAND" | "OTHER";
             /** @enum {string} */
             movementType?: "COMPOUND" | "ISOLATION";
+            /** @enum {string} */
+            measurementType?: "REPS_WEIGHT" | "DISTANCE" | "DURATION" | "REPS_ONLY";
             system?: boolean;
         };
         CreateWorkoutExerciseRequest: {
@@ -489,6 +493,8 @@ export interface components {
             startedAt: string;
             /** Format: date-time */
             completedAt?: string;
+            /** Format: int32 */
+            rpe?: number;
             exercises?: components["schemas"]["CreateWorkoutExerciseRequest"][];
         };
         CreateWorkoutSetRequest: {
@@ -530,6 +536,8 @@ export interface components {
             startedAt?: string;
             /** Format: date-time */
             completedAt?: string;
+            /** Format: int32 */
+            rpe?: number;
             inProgress?: boolean;
             /** Format: double */
             totalVolumeKg?: number;
@@ -608,6 +616,8 @@ export interface components {
             equipment: "BARBELL" | "DUMBBELL" | "MACHINE" | "CABLE" | "BODYWEIGHT" | "KETTLEBELL" | "RESISTANCE_BAND" | "OTHER";
             /** @enum {string} */
             movementType: "COMPOUND" | "ISOLATION";
+            /** @enum {string} */
+            measurementType?: "REPS_WEIGHT" | "DISTANCE" | "DURATION" | "REPS_ONLY";
         };
         RegisterRequest: {
             username: string;
@@ -717,6 +727,8 @@ export interface components {
             notes?: string;
             /** Format: date-time */
             completedAt?: string;
+            /** Format: int32 */
+            rpe?: number;
         };
         UpdateProfileRequest: {
             displayName?: string;
