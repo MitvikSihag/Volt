@@ -1,44 +1,21 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../components/theme';
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
-function TabIcon({ name, focused }: { name: IoniconName; focused: boolean }) {
-  return <Ionicons name={focused ? name : (`${name}-outline` as IoniconName)} size={24} color={focused ? Colors.primary : Colors.textMuted} />;
-}
-
+import { SessionPill } from '@/ui/SessionPill';
+import { color, font } from '@/ui/tokens';
 export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
-        tabBarStyle: { borderTopColor: Colors.border, backgroundColor: Colors.surface },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{ title: 'Home', tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="log"
-        options={{ title: 'Log', tabBarIcon: ({ focused }) => <TabIcon name="barbell" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="record"
-        options={{ title: 'Record', tabBarIcon: ({ focused }) => <TabIcon name="navigate" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="feed"
-        options={{ title: 'Feed', tabBarIcon: ({ focused }) => <TabIcon name="people" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} /> }}
-      />
-    </Tabs>
+    <>
+      <Tabs screenOptions={{
+        headerShown: false, tabBarShowLabel: true, tabBarIconStyle: { display: 'none' },
+        tabBarStyle: { backgroundColor: color.sunken, borderTopWidth: 0, height: 84, paddingTop: 12 },
+        tabBarLabelStyle: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase' },
+        tabBarActiveTintColor: color.t1, tabBarInactiveTintColor: color.t4, sceneStyle: { backgroundColor: color.base },
+      }}>
+        <Tabs.Screen name="index" options={{ title: 'Today' }} />
+        <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
+        <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
+        <Tabs.Screen name="rivals" options={{ title: 'Rivals' }} />
+      </Tabs>
+      <SessionPill />
+    </>
   );
 }

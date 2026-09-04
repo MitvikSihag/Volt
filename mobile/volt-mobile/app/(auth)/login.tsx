@@ -1,103 +1,35 @@
+import { Link } from 'expo-router';
 import { useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
-} from 'react-native';
-import { router, Link } from 'expo-router';
-import { useAuthStore } from '../../store/auth-store';
-import { Colors, Typography, Spacing } from '../../components/theme';
+import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/auth/store';
+import { field } from '@/ui/field';
+import { Bolt } from '@/ui/Bolt';
+import { Body, Button, Heading, Zone } from '@/ui/primitives';
+import { color } from '@/ui/tokens';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const login = useAuthStore((s) => s.login);
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Missing fields', 'Enter your email and password.');
-      return;
-    }
-    setLoading(true);
-    try {
-      await login(email, password);
-      router.replace('/(tabs)');
-    } catch {
-      Alert.alert('Login failed', 'Check your credentials and try again.');
-    } finally {
-      setLoading(false);
-    }
+export default function Login() {
+  const login = useAuth((s) => s.login);
+  const [id, setId] = useState(''); const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
+  const submit = async () => {
+    setBusy(true); setErr(null);
+    try { await login(id.trim(), pw); } catch (e) { setErr(e instanceof Error ? e.message : 'Could not sign in'); } finally { setBusy(false); }
   };
-
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
-      <View style={styles.inner}>
-        <Text style={styles.logo}>⚡ Volt</Text>
-        <Text style={styles.tagline}>Your fitness. All in one place.</Text>
-
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={Colors.textMuted}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor={Colors.textMuted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            textContentType="password"
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <Link href="/(auth)/register" asChild>
-            <TouchableOpacity>
-              <Text style={styles.link}>Sign up</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+    <Zone style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 12 }}>
+          <View style={{ marginBottom: 16 }}><Bolt size={40} /></View>
+          <Heading style={{ marginBottom: 24 }}>Sign in.</Heading>
+          <TextInput style={field} placeholder="Username or email" placeholderTextColor={color.t3} autoCapitalize="none" autoCorrect={false} value={id} onChangeText={setId} />
+          <TextInput style={field} placeholder="Password" placeholderTextColor={color.t3} secureTextEntry value={pw} onChangeText={setPw} onSubmitEditing={submit} />
+          {err && <Body tone="ember" size={13}>{err}</Body>}
+          <View style={{ height: 8 }} />
+          <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={submit} disabled={busy || !id || !pw} />
+          <Link href="/(auth)/register" style={{ alignSelf: 'center', marginTop: 16 }}><Body tone="t2">New here? Create an account</Body></Link>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </Zone>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.xl },
-  logo: { fontSize: 40, fontWeight: '800', color: Colors.primary, textAlign: 'center', marginBottom: Spacing.xs },
-  tagline: { ...Typography.body, color: Colors.textMuted, textAlign: 'center', marginBottom: Spacing.xxl },
-  form: { gap: Spacing.md },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: Spacing.md,
-    fontSize: 16,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    padding: Spacing.md,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: Spacing.xl },
-  footerText: { ...Typography.body, color: Colors.textMuted },
-  link: { ...Typography.body, color: Colors.primary, fontWeight: '600' },
-});

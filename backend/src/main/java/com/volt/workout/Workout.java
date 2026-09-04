@@ -4,6 +4,8 @@ import com.volt.common.BaseEntity;
 import com.volt.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
@@ -45,6 +47,10 @@ public class Workout extends BaseEntity {
     @Column
     private Instant completedAt;
 
+    @Min(1) @Max(10)
+    @Column
+    private Integer rpe;
+
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<WorkoutExercise> exercises = new ArrayList<>();
@@ -61,6 +67,8 @@ public class Workout extends BaseEntity {
     public Instant getStartedAt() { return startedAt; }
     public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
 
+    public Integer getRpe() { return rpe; }
+    public void setRpe(Integer rpe) { this.rpe = rpe; }
     public Instant getCompletedAt() { return completedAt; }
     public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
 

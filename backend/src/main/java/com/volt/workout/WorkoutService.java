@@ -57,6 +57,7 @@ public class WorkoutService {
         workout.setNotes(request.notes());
         workout.setStartedAt(request.startedAt());
         workout.setCompletedAt(request.completedAt());
+        workout.setRpe(request.rpe());
 
         if (request.exercises() != null) {
             int position = 0;
@@ -124,6 +125,7 @@ public class WorkoutService {
 
         if (request.title() != null) workout.setTitle(request.title());
         if (request.notes() != null) workout.setNotes(request.notes());
+        if (request.rpe() != null) workout.setRpe(request.rpe());
         if (request.completedAt() != null) {
             validateWorkoutTimes(workout.getStartedAt(), request.completedAt());
             workout.setCompletedAt(request.completedAt());

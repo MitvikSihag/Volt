@@ -1,6 +1,8 @@
 package com.volt.workout.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -19,6 +21,9 @@ public record CreateWorkoutRequest(
         Instant startedAt,
 
         Instant completedAt,
+
+        @Min(1) @Max(10)
+        Integer rpe,
 
         @Valid
         List<CreateWorkoutExerciseRequest> exercises

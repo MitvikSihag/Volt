@@ -1,156 +1,127 @@
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../store/auth-store';
-import { RECENT_WORKOUTS, RECENT_ACTIVITIES } from '../../lib/mock-data';
-import { formatDuration, formatDistance, formatRelativeTime, formatVolume } from '../../lib/format';
-import { Colors, Typography, Spacing, Shadow } from '../../components/theme';
-import { Activity, ActivityType, Workout } from '../../types';
+import { useDashboard, useExercises, useLastSets, useMe, useRoutines } from '@/api/queries';
+import { fromRoutine } from '@/session/fromRoutine';
+import { useOnboarding } from '@/onboarding/store';
+import { toSession, WEEK } from '@/onboarding/templates';
+import { useRun } from '@/run/store';
+import { newId, useSession } from '@/session/store';
+import { Body, Button, HeaderWash, Hairline, Heading, Meta, Mono, Numeral, Zone } from '@/ui/primitives';
+import { color } from '@/ui/tokens';
+import { useUnits } from '@/settings/units';
 
-const ACTIVITY_ICONS: Record<ActivityType, keyof typeof Ionicons.glyphMap> = {
-  run: 'walk',
-  ride: 'bicycle',
-  hike: 'trail-sign',
-  walk: 'footsteps',
-};
+const DAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const sum = (xs: { volumeKg?: number }[]) => xs.reduce((n, d) => n + (d.volumeKg ?? 0), 0);
 
-const ACTIVITY_COLORS: Record<ActivityType, string> = {
-  run: Colors.cardio.run,
-  ride: Colors.cardio.ride,
-  hike: Colors.cardio.hike,
-  walk: Colors.cardio.walk,
-};
+export default function Today() {
+  const router = useRouter(); const units = useUnits();
+  const { data: me } = useMe(); const { data: dash } = useDashboard();
+  const { data: routines } = useRoutines(); const { data: exercises } = useExercises();
+  const session = useSession((s) => s.session); const start = useSession((s) => s.start); const discard = useSession((s) => s.discard);
+  const routine = routines?.[0]; const runStatus = useRun((r) => r.status);
+  const ob = useOnboarding();
+  // No routines yet → preview the next lift from the seeded week (day 0 = the day the goal was chosen)
+  const plan = ob.goal ? WEEK[ob.goal] : [];
+  const dayIdx = ob.startedAt ? Math.floor((Date.now() - Date.parse(ob.startedAt)) / 864e5) % 7 : 0;
+  const seeded = !routines?.length && plan.length ? (plan.find((s) => s.kind === 'lift' && s.day >= dayIdx) ?? plan.find((s) => s.kind === 'lift')) : undefined;
+  const raceLine = ob.eventName && ob.eventDate ? [ob.eventName, `${Math.max(0, Math.ceil((Date.parse(ob.eventDate) - Date.now()) / 864e5))} days`, ob.startedAt ? `WK ${Math.floor((Date.now() - Date.parse(ob.startedAt)) / (7 * 864e5)) + 1}` : null].filter(Boolean).join(' / ') : null;
+  const routineIds = (routine?.exercises ?? []).map((e) => e.exerciseId ?? '').filter(Boolean);
+  const { data: lastSets } = useLastSets(routineIds);
+  const lastById = new Map((lastSets ?? []).map((l) => [l.exerciseId, l]));
+  const byId = new Map((exercises ?? []).map((e) => [e.id ?? '', e]));
+  const initials = (me?.displayName ?? me?.username ?? '?').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
-function WorkoutCard({ workout }: { workout: Workout }) {
-  const totalSets = workout.exercises.reduce((acc, e) => acc + e.sets.length, 0);
-  return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconBadge, { backgroundColor: Colors.primaryLight }]}>
-          <Ionicons name="barbell" size={18} color={Colors.primary} />
-        </View>
-        <Text style={styles.cardTime}>{formatRelativeTime(workout.startedAt)}</Text>
-      </View>
-      <Text style={styles.cardTitle}>{workout.title}</Text>
-      <View style={styles.cardStats}>
-        <StatChip icon="time-outline" label={formatDuration(workout.durationSeconds ?? 0)} />
-        <StatChip icon="layers-outline" label={`${totalSets} sets`} />
-        {workout.totalVolume != null && (
-          <StatChip icon="trending-up-outline" label={formatVolume(workout.totalVolume)} />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
+  const days = dash?.chartData ?? [];
+  const week = days.slice(-7); const prior = days.slice(-14, -7);
+  const volume = dash?.week?.volumeKg;
+  const delta = prior.length && sum(prior) > 0 ? Math.round(((sum(week) - sum(prior)) / sum(prior)) * 100) : null;
+  const max = Math.max(1, ...week.map((d) => d.volumeKg ?? 0));
+  const now = new Date();
+  const dateLine = [now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), dash?.week ? `${dash.week.workouts ?? 0} sessions` : null, dash?.week ? `${dash.week.activeDays ?? 0} active days` : null].filter(Boolean).join(' / ');
 
-function ActivityCard({ activity }: { activity: Activity }) {
-  const color = ACTIVITY_COLORS[activity.type];
-  const icon = ACTIVITY_ICONS[activity.type];
-  return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconBadge, { backgroundColor: `${color}22` }]}>
-          <Ionicons name={icon} size={18} color={color} />
-        </View>
-        <Text style={styles.cardTime}>{formatRelativeTime(activity.startedAt)}</Text>
-      </View>
-      <Text style={styles.cardTitle}>{activity.title}</Text>
-      <View style={styles.cardStats}>
-        <StatChip icon="time-outline" label={formatDuration(activity.durationSeconds)} />
-        <StatChip icon="navigate-outline" label={formatDistance(activity.distanceMeters)} />
-        {activity.avgHeartRate != null && (
-          <StatChip icon="heart-outline" label={`${activity.avgHeartRate} bpm`} />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-function StatChip({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <View style={styles.chip}>
-      <Ionicons name={icon} size={13} color={Colors.textSecondary} />
-      <Text style={styles.chipText}>{label}</Text>
-    </View>
-  );
-}
-
-export default function HomeScreen() {
-  const user = useAuthStore((s) => s.user);
+  const begin = (adhoc: boolean) => {
+    if (session?.status === 'live') return router.push('/workout/live');
+    const planned = !adhoc && routine;
+    if (!adhoc && !routine && seeded) { start({ id: newId(), title: seeded.title, exercises: toSession(seeded), now: now.toISOString() }); return router.push('/workout/live'); }
+    start({ id: newId(), title: planned ? routine.name ?? 'Session' : 'Ad-hoc session', routineId: planned ? routine.id : undefined, exercises: planned ? fromRoutine(routine, byId) : [], now: now.toISOString() });
+    router.push('/workout/live');
+  };
+  const setLine = (e: NonNullable<typeof routine>['exercises'] extends (infer T)[] | undefined ? T : never) => {
+    const last = lastById.get(e.exerciseId);
+    return [`${e.targetSets ?? '–'}×${e.targetReps ?? '–'}`, last?.weightKg != null ? units.fmt(last.weightKg) : null].filter(Boolean).join(' · ');
+  };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good {getGreeting()},</Text>
-            <Text style={styles.name}>{user?.displayName ?? 'Athlete'} 👋</Text>
+    <Zone style={{ flex: 1 }}>
+      <HeaderWash tone="ember" />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+          <View style={{ paddingHorizontal: 24, paddingTop: 28, flexDirection: 'row', alignItems: 'flex-start' }}>
+            <View style={{ flex: 1 }}>
+              <Heading>{DAY[now.getDay()]}.</Heading>
+              <Heading tone="t2">{routine?.name ? `${routine.name}.` : seeded ? `${seeded.title}.` : 'No plan today.'}</Heading>
+            </View>
+            <Pressable onPress={() => router.push('/profile')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color.raised, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}><Mono size={12}>{initials}</Mono></Pressable>
           </View>
-          <TouchableOpacity style={styles.notifBtn}>
-            <Ionicons name="notifications-outline" size={24} color={Colors.text} />
-          </TouchableOpacity>
-        </View>
+          <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{raceLine ?? dateLine}</Meta>
 
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.primaryAction} onPress={() => router.push('/workout/active')} activeOpacity={0.85}>
-            <Ionicons name="barbell" size={22} color="#fff" />
-            <Text style={styles.primaryActionText}>Start Workout</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryAction} onPress={() => router.push('/(tabs)/record')} activeOpacity={0.85}>
-            <Ionicons name="navigate" size={22} color={Colors.primary} />
-            <Text style={styles.secondaryActionText}>Record Activity</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={{ paddingHorizontal: 24, paddingTop: 36, flexDirection: 'row', alignItems: 'flex-end' }}>
+            <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(units.toDisplay(volume)).toLocaleString()}</Numeral></View>
+            {delta != null && <Mono tone="t1" size={15} style={{ marginLeft: 10, marginBottom: 14 }}>{delta >= 0 ? '▲' : '▼'} {Math.abs(delta)}%</Mono>}
+            <View style={{ flex: 1 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: 16, flexShrink: 0, marginLeft: 12 }}>
+              {week.map((d, i) => (
+                <View key={i} style={{ width: 6, height: 4 + Math.round(28 * ((d.volumeKg ?? 0) / max)), backgroundColor: i === week.length - 1 ? color.t1 : color.t4, borderRadius: 1 }} />
+              ))}
+            </View>
+          </View>
+          <Body tone="t2" style={{ paddingHorizontal: 24, marginTop: 4 }}>Volume, last seven days · {units.unit}</Body>
+          <View style={{ height: 28 }} />
+          <Hairline />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Workouts</Text>
-          {RECENT_WORKOUTS.map((w) => <WorkoutCard key={w.id} workout={w} />)}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activities</Text>
-          {RECENT_ACTIVITIES.map((a) => <ActivityCard key={a.id} activity={a} />)}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <Zone level="raised" style={{ padding: 24, gap: 4 }}>
+            <Meta tone="ember">● Session 1{routine?.exercises?.length ? ` · ${routine.exercises.length} lifts` : seeded ? ` · ${seeded.minutes} min · ${seeded.lifts?.length ?? 0} lifts` : ''}</Meta>
+            <Heading size={24} style={{ marginTop: 8, marginBottom: 8 }}>{routine?.name ?? seeded?.title ?? 'Ad-hoc session'}</Heading>
+            {!routine && seeded && (seeded.lifts ?? []).slice(0, 3).map((l) => (
+              <View key={l.name} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 }}>
+                <Body>{l.name}</Body>
+                <Mono tone="t2" size={13}>{l.sets}×{l.reps}</Mono>
+              </View>
+            ))}
+            {!routine && seeded && (seeded.lifts?.length ?? 0) > 3 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
+                <Body tone="t2" size={13}>+ {(seeded.lifts?.length ?? 0) - 3} more · from your first week</Body>
+                <Mono tone="t3" size={13}>›</Mono>
+              </View>
+            )}
+            {(routine?.exercises ?? []).slice(0, 3).map((e) => (
+              <View key={e.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 }}>
+                <Body>{e.exerciseName}</Body>
+                <Mono tone="t2" size={13}>{setLine(e)}</Mono>
+              </View>
+            ))}
+            {(routine?.exercises?.length ?? 0) > 3 && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 }}>
+                <Body tone="t2" size={13}>+ {routine!.exercises!.length - 3} more · tap for detail</Body>
+                <Mono tone="t3" size={13}>›</Mono>
+              </View>
+            )}
+            {!routine && !seeded && <Body tone="t2" size={13}>No routines yet. Start logs an empty session; long-press always does.</Body>}
+            <Pressable onPress={() => router.push('/run/live')} style={{ marginTop: 10, borderLeftWidth: 2, borderLeftColor: color.jade, paddingLeft: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Body tone="t2" size={13}>{runStatus === 'idle' ? 'Record a run' : 'Run in progress'}</Body><Mono tone="t3" size={13}>›</Mono>
+            </Pressable>
+            {session?.status === 'unsaved' && (
+              <Pressable onPress={() => router.push('/workout/finish')} style={{ marginTop: 8, borderLeftWidth: 2, borderLeftColor: color.ember, paddingLeft: 12 }}>
+                <Body tone="t2" size={13}>Unsaved session — tap to retry</Body>
+              </Pressable>
+            )}
+            <View style={{ height: 20 }} />
+            <Button label={session?.status === 'live' ? 'Resume session' : 'Start session'} onPress={() => begin(false)} onLongPress={() => begin(true)} delayLongPress={400} />
+            {session?.status === 'saved' && <Pressable onPress={discard}><Body tone="t3" size={12} style={{ textAlign: 'center', marginTop: 12 }}>Clear last session</Body></Pressable>}
+          </Zone>
+        </ScrollView>
+      </SafeAreaView>
+    </Zone>
   );
 }
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'morning';
-  if (h < 17) return 'afternoon';
-  return 'evening';
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.md, paddingBottom: Spacing.xxl },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing.lg },
-  greeting: { ...Typography.body, color: Colors.textMuted },
-  name: { ...Typography.h2, marginTop: 2 },
-  notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', ...Shadow.sm },
-  quickActions: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
-  primaryAction: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: Spacing.sm, backgroundColor: Colors.primary, borderRadius: 14, padding: Spacing.md, ...Shadow.md,
-  },
-  primaryActionText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  secondaryAction: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: Spacing.sm, backgroundColor: Colors.surface, borderRadius: 14, padding: Spacing.md,
-    borderWidth: 1.5, borderColor: Colors.primary,
-  },
-  secondaryActionText: { color: Colors.primary, fontSize: 15, fontWeight: '700' },
-  section: { marginBottom: Spacing.lg },
-  sectionTitle: { ...Typography.h3, marginBottom: Spacing.sm },
-  card: { backgroundColor: Colors.surface, borderRadius: 16, padding: Spacing.md, marginBottom: Spacing.sm, ...Shadow.sm },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
-  iconBadge: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  cardTime: { ...Typography.caption },
-  cardTitle: { ...Typography.h3, fontSize: 16, marginBottom: Spacing.sm },
-  cardStats: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.surfaceAlt, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  chipText: { ...Typography.caption, color: Colors.textSecondary, fontSize: 12 },
-});

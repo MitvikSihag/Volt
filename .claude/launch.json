@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "metro-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8081"
+      ],
+      "cwd": "mobile/volt-mobile",
+      "port": 8081
+    },
+    {
+      "name": "metro-ios",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "expo",
+        "start",
+        "--ios",
+        "--port",
+        "8081"
+      ],
+      "cwd": "mobile/volt-mobile",
+      "port": 8081
+    }
+  ]
+}

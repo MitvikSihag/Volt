@@ -2,6 +2,7 @@ package com.volt.workout.dto;
 
 import com.volt.workout.Equipment;
 import com.volt.workout.Exercise;
+import com.volt.workout.MeasurementType;
 import com.volt.workout.MovementType;
 import com.volt.workout.MuscleGroup;
 
@@ -16,6 +17,7 @@ public record ExerciseResponse(
         Set<MuscleGroup> secondaryMuscleGroups,
         Equipment equipment,
         MovementType movementType,
+        MeasurementType measurementType,
         boolean system
 ) {
     public static ExerciseResponse from(Exercise e) {
@@ -29,6 +31,7 @@ public record ExerciseResponse(
                         : Set.copyOf(e.getSecondaryMuscleGroups()),
                 e.getEquipment(),
                 e.getMovementType(),
+                e.getMeasurementType(),
                 e.isSystem()
         );
     }

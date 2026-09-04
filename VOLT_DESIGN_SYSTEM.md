@@ -29,11 +29,11 @@ a single 1px hairline — never a card.
 ### Color — chrome is grayscale; color only ever touches data
 | Token | Value | Meaning |
 |---|---|---|
-| ember | `#FF5A1F` | strength data, strength accents, the bolt (sole brand exception) |
+| ember | `#FF5A1F` | strength data only. Not the bolt, not deltas, not the live-recording dot (those read white/neutral; positive deltas use a ▲ glyph in the white ramp) |
 | jade | `#31A98D` | endurance data (one jade everywhere — unified Sep 2026) |
 | gold | (defined in design file) | **earned rewards only** — medals, streaks, crowns. Locked things fill stone gray, never dim gold |
 | yellow | caution | gaps/undertrained callouts only |
-| text ramp | `#FAFAFA / #A8A8AA / #6E6E70` | 3-step hierarchy; never pure white |
+| text ramp | `#FAFAFA / #A8A8AA / #6E6E70 / #58585A` | Any metadata that carries meaning sits at `#A8A8AA` or brighter (the `#6E6E70` step fails AA for small mono on `#121212`); `#6E6E70` and `#58585A` are decorative only — slashes, inactive tabs, locked/unfilled states |
 
 Rating always wears its tier chip (per-lift ratings use a muted stone chip so they don't compete
 with the global Volt rating chip); Load always renders plain with a caption ("LOAD · 7 DAYS").
@@ -86,7 +86,10 @@ endurance contexts, none on rest. The only permitted gradient besides chart data
 | 18–20 | Onboarding ×3 | 0:47 first set | one question → seeded week (556 planned load) → first set logged |
 | 21 | Challenges | 24-day crown streak | rolling windows only; per-surface hides + HIDE ALL |
 | 22 | Settings | — | dense hairline rows; PR-type toggles; "no tiers" closing line |
-| 23 | Icon + Splash | — | bolt at 120/60/32px on `#121212` |
+| 23 | Today · rest day | 842 | session module → "Recovery is the session" + tomorrow's session + streak line |
+| 24 | Today · day one | 0 | gray ramp, split bar unfilled stone, UNRATED chip, rivals/feed empty-stated, stone trophy tiles |
+| 25 | Today · deload | 512 ▼ 39% | yellow undertrained callout, capped-load session |
+| 26 | Icon + Splash | — | white bolt on `#121212` at 78px hero, tiles at 62% width (inside Android's 66% safe circle); splash keeps the wordmark |
 
 Still undrawn: **Plan tab screen** and the **routine/cardio-workout builder** (the two known gaps).
 
@@ -154,7 +157,10 @@ plan required).
 ## 8. Assets
 - Muscle figure: `design-screens/body-map/volt-body-map.svg` — LOCKED; recolor via CSS variables
   (`--vol-<region>`), never redraw; mirrored halves are real elements (no `<use>`).
-- Bolt: `<polygon points="12 0,20 0,8 12,16 12,0 24,4 13,0 13"/>` viewBox 0 0 20 24, ember.
+- Bolt (the mark): white split-V, `<polygon points="14,20 34,20 50,50 66,20 86,20 58,54 50,88 42,54"/>`
+  viewBox 0 0 100 100, flat `#FAFAFA`, matte. Never ember. The seam at x=50 allows a two-tone
+  variant later without a redraw. **No wordmark inside the app** — brand lives on edge surfaces
+  only (splash, onboarding, auth, share cards); interior screens give that space to metadata.
 - Share cards: 1080×1920, dark, mono numerals, session's signature graphic; beautiful or absent.
 
 ## 9. Open items

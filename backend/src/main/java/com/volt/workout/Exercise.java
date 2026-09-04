@@ -52,6 +52,10 @@ public class Exercise extends BaseEntity {
     @Column(nullable = false, length = 20)
     private MovementType movementType = MovementType.COMPOUND;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MeasurementType measurementType = MeasurementType.REPS_WEIGHT;
+
     @Column(nullable = false)
     private boolean system = false;
 
@@ -77,6 +81,8 @@ public class Exercise extends BaseEntity {
     public MovementType getMovementType() { return movementType; }
     public void setMovementType(MovementType movementType) { this.movementType = movementType; }
 
+    public MeasurementType getMeasurementType() { return measurementType; }
+    public void setMeasurementType(MeasurementType measurementType) { this.measurementType = measurementType; }
     public boolean isSystem() { return system; }
     public void setSystem(boolean system) { this.system = system; }
 

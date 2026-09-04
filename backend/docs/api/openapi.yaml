@@ -1011,6 +1011,13 @@ components:
           enum:
           - COMPOUND
           - ISOLATION
+        measurementType:
+          type: string
+          enum:
+          - REPS_WEIGHT
+          - DISTANCE
+          - DURATION
+          - REPS_ONLY
     ExerciseResponse:
       type: object
       properties:
@@ -1070,6 +1077,13 @@ components:
           enum:
           - COMPOUND
           - ISOLATION
+        measurementType:
+          type: string
+          enum:
+          - REPS_WEIGHT
+          - DISTANCE
+          - DURATION
+          - REPS_ONLY
         system:
           type: boolean
     CreateWorkoutExerciseRequest:
@@ -1110,6 +1124,11 @@ components:
         completedAt:
           type: string
           format: date-time
+        rpe:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
         exercises:
           type: array
           items:
@@ -1190,6 +1209,9 @@ components:
         completedAt:
           type: string
           format: date-time
+        rpe:
+          type: integer
+          format: int32
         inProgress:
           type: boolean
         totalVolumeKg:
@@ -1377,6 +1399,13 @@ components:
           enum:
           - COMPOUND
           - ISOLATION
+        measurementType:
+          type: string
+          enum:
+          - REPS_WEIGHT
+          - DISTANCE
+          - DURATION
+          - REPS_ONLY
       required:
       - equipment
       - movementType
@@ -1607,6 +1636,11 @@ components:
         completedAt:
           type: string
           format: date-time
+        rpe:
+          type: integer
+          format: int32
+          maximum: 10
+          minimum: 1
     UpdateProfileRequest:
       type: object
       properties:

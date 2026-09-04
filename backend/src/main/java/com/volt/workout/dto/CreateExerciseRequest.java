@@ -1,6 +1,7 @@
 package com.volt.workout.dto;
 
 import com.volt.workout.Equipment;
+import com.volt.workout.MeasurementType;
 import com.volt.workout.MovementType;
 import com.volt.workout.MuscleGroup;
 import jakarta.validation.constraints.NotBlank;
@@ -27,5 +28,6 @@ public record CreateExerciseRequest(
         Equipment equipment,
 
         @NotNull
-        MovementType movementType
+        MovementType movementType,
+        MeasurementType measurementType
 ) {}

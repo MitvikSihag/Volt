@@ -38,6 +38,7 @@ class ExerciseControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.system").value(false))
                 .andExpect(jsonPath("$.name").value("Cable Crunch Variant"))
+                .andExpect(jsonPath("$.measurementType").value("REPS_WEIGHT"))
                 .andReturn();
 
         String exerciseId = readBody(createResult).get("id").asText();
@@ -45,7 +46,9 @@ class ExerciseControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/exercises")
                         .header(HttpHeaders.AUTHORIZATION, bearer(alice.accessToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", hasItem("Cable Crunch Variant")));
+                .andExpect(jsonPath("$[*].name", hasItem("Cable Crunch Variant")))
+                .andExpect(jsonPath("$[?(@.name == 'Pull-Up')].measurementType", hasItem("REPS_ONLY")))
+                .andExpect(jsonPath("$[?(@.name == 'Plank')].measurementType", hasItem("DURATION")));
 
         mockMvc.perform(get("/api/exercises/{id}", exerciseId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(bob.accessToken())))
