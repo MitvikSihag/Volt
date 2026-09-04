@@ -33,6 +33,7 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
                         .content(json(Map.of(
                                 "title", "Push Day",
                                 "notes", "Heavy bench",
+                                "rpe", 8,
                                 "startedAt", startedAt.toString(),
                                 "completedAt", startedAt.plusSeconds(3600).toString(),
                                 "exercises", List.of(Map.of(
@@ -49,6 +50,7 @@ class WorkoutControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.exercises[0].exerciseId").value(systemExercise.getId().toString()))
                 .andExpect(jsonPath("$.exercises[0].position").value(0))
                 .andExpect(jsonPath("$.inProgress").value(false))
+                .andExpect(jsonPath("$.rpe").value(8))
                 .andReturn();
 
         JsonNode createdWorkout = readBody(createResult);

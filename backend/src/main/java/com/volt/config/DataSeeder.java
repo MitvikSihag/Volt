@@ -3,6 +3,7 @@ package com.volt.config;
 import com.volt.workout.Equipment;
 import com.volt.workout.Exercise;
 import com.volt.workout.ExerciseRepository;
+import com.volt.workout.MeasurementType;
 import com.volt.workout.MovementType;
 import com.volt.workout.MuscleGroup;
 import org.springframework.boot.CommandLineRunner;
@@ -128,6 +129,13 @@ public class DataSeeder implements CommandLineRunner {
                 ex("Dead Hang", FOREARMS, Set.of(), BODYWEIGHT, ISOLATION)
         );
 
+        for (Exercise e : exercises) {
+            e.setMeasurementType(switch (e.getName()) {
+                case "Farmer's Walk" -> MeasurementType.DISTANCE;
+                case "Plank", "Dead Hang" -> MeasurementType.DURATION;
+                default -> e.getEquipment() == BODYWEIGHT ? MeasurementType.REPS_ONLY : MeasurementType.REPS_WEIGHT;
+            });
+        }
         exerciseRepository.saveAll(exercises);
     }
 

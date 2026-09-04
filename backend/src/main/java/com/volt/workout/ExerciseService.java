@@ -57,6 +57,8 @@ public class ExerciseService {
         }
         exercise.setEquipment(request.equipment());
         exercise.setMovementType(request.movementType());
+        exercise.setMeasurementType(request.measurementType() != null ? request.measurementType()
+                : request.equipment() == Equipment.BODYWEIGHT ? MeasurementType.REPS_ONLY : MeasurementType.REPS_WEIGHT);
         exercise.setSystem(false);
         exercise.setCreatedBy(user);
 
@@ -73,6 +75,7 @@ public class ExerciseService {
         if (request.secondaryMuscleGroups() != null) exercise.setSecondaryMuscleGroups(request.secondaryMuscleGroups());
         if (request.equipment() != null) exercise.setEquipment(request.equipment());
         if (request.movementType() != null) exercise.setMovementType(request.movementType());
+        if (request.measurementType() != null) exercise.setMeasurementType(request.measurementType());
 
         return ExerciseResponse.from(exerciseRepository.save(exercise));
     }
