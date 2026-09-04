@@ -97,7 +97,7 @@ export default function Live() {
               </View>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginLeft: 'auto' }}>
-              <Numeral size={44}>{session.current.reps ?? '—'}</Numeral>
+              {session.current.reps == null ? <Numeral size={30} tone="t4" style={{ marginBottom: 6 }}>--</Numeral> : <Numeral size={44}>{session.current.reps}</Numeral>}
               <Mono tone="t2" size={13} style={{ marginBottom: 8, marginLeft: 6 }}>{unit}</Mono>
             </View>
           </View>
