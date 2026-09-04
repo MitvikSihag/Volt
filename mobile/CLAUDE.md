@@ -42,6 +42,8 @@ volt-mobile/
 │   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
 │   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
 │   ├── run/             live (Live Run, GPS), save (Save/Edit activity), privacy (bottom sheet)
+│   ├── workout/share.tsx Share card (12): 1080×1920 story captured with react-native-view-shot
+│   ├── settings.tsx     Settings (22): units, rest default, plates, PR types, privacy, competition
 │   ├── exercise/[id].tsx Exercise Detail — About · History · Charts · Records
 │   ├── history.tsx      History (lifts + cardio, week groups)
 │   └── profile.tsx      Profile — month calendar with dual dots, totals, link to History
@@ -50,7 +52,8 @@ volt-mobile/
     ├── auth/store.ts
     ├── session/         reducer.ts (pure, tested), toRequest.ts, pr.ts, store.ts, fromRoutine.ts
     ├── run/             geo.ts (pure, tested: distance, splits, pace, trim, polyline), store.ts, tracker.ts (expo-location + task)
-    ├── settings/store.ts privacy + share defaults (local until the API has them)
+    ├── settings/       store.ts (units, rest, plates, PR types, competition, privacy, share defaults — local),
+    │                    units.ts (kg/lb display helpers + platesPerSide, tested)
     ├── onboarding/      store.ts (goal, event date, first-set stopwatch), templates.ts (seeded weeks; `local:<name>` ids)
     └── ui/              tokens.ts, primitives.tsx, Bolt.tsx, LineChart.tsx, RouteArt.tsx (svg), SessionPill.tsx, useNow.ts, field.ts
 ```
@@ -84,7 +87,8 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 
 ## Screens built (artboard numbers)
 01 Today · 02 Live Lift · 03 Live Run · 06 Profile · 08 History · 10 Finish · 11 Summary ·
-13/14 Exercise Detail · 16 Save/Edit activity · 17 Privacy sheet · 18–20 Onboarding.
+12 Share · 13/14 Exercise Detail · 16 Save/Edit activity · 17 Privacy sheet · 18–20 Onboarding ·
+22 Settings. Weights are stored in kg; every display goes through `useUnits()`.
 Plus login, register, exercise picker (no artboards); Plan/Feed/Rivals tabs are placeholders.
 
 ## Navigation rules learned the hard way
@@ -109,5 +113,6 @@ The seeded week uses `local:<seed name>` exercise ids; Finish asks for the accou
 the POST. The chosen goal drives Today's race-countdown line until an Events entity exists.
 
 ## Next slices
-Share cards (12) → Settings (22) → Today low states (23–25) when Plan exists → Live Activity /
-lock screen. See [PRODUCT.md §7](../PRODUCT.md).
+Today low states (23–25, need Plan) → Live Activity / lock screen (development build) → social
+artboards (04 Feed, 05 Rivals, 09 Friends, 21 Challenges) once the backend social phase lands →
+07 Muscle map, 15 Vault when load/rating endpoints exist. See [PRODUCT.md §7](../PRODUCT.md).
