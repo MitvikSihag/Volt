@@ -1,5 +1,8 @@
 <svg viewBox="0 0 460 452" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family="sans-serif">
-  <!-- Volt body map v6. LOCKED ASSET: do not redraw; recolor regions only, by CSS variable.
+  <!-- Volt body map v7. LOCKED ASSET: recolor regions only, by CSS variable; do not redraw.
+       v7: front rectus abs redrawn as one tapered shield with etched tendon grooves (linea
+       alba + 3 tendons, class "groove"); neck softened from rect to trapezoid. Regions/API
+       unchanged.
        The figure is tiled from its muscle regions, subdivided into visible sub-muscles (all
        sub-shapes share the region's color). Left/right halves are REAL duplicated elements
        (mirrors deliberately unrolled - <use> clones break under scoped stylesheets), so any
@@ -22,21 +25,20 @@
     .quads       { fill: var(--vol-quads,       var(--vol-none, #23252B)); }
     .calves      { fill: var(--vol-calves,      var(--vol-none, #23252B)); }
     .lbl { fill: var(--label, #6A6D74); font-size: 10px; letter-spacing: 0.2em; }
+    .groove { fill: none; stroke: var(--gap, #0E0F12); stroke-width: 1.5; stroke-linecap: round; }
   </style>
 
   <!-- ============ FRONT ============ -->
   <g id="front" transform="translate(15,6)">
     <ellipse class="body" cx="100" cy="26" rx="16" ry="18"></ellipse>
-    <rect class="body" x="88" y="44" width="24" height="16" rx="5"></rect>
+    <path class="body" d="M90,44 L110,44 L113,59 C108,61 92,61 87,59 Z"></path>
 
     <!-- abs: segment rows + lower band (center, both sides drawn explicitly) -->
-    <rect class="r core" x="87.5" y="113" width="11.5" height="15" rx="4"></rect>
-    <rect class="r core" x="101" y="113" width="11.5" height="15" rx="4"></rect>
-    <rect class="r core" x="88" y="130" width="11" height="15" rx="4"></rect>
-    <rect class="r core" x="101" y="130" width="11" height="15" rx="4"></rect>
-    <rect class="r core" x="88.5" y="147" width="10.5" height="16" rx="4"></rect>
-    <rect class="r core" x="101" y="147" width="10.5" height="16" rx="4"></rect>
-    <path class="r core" d="M89,165 L111,165 C110,172 104,176 100,176 C96,176 90,172 89,165 Z"></path>
+    <path class="r core" d="M88,114 C86.5,124 86.5,146 90,160 C91.5,165 95,168 100,168.5 C105,168 108.5,165 110,160 C113.5,146 113.5,124 112,114 C107,111 93,111 88,114 Z"></path>
+    <path class="groove" d="M100,115 L100,166"></path>
+    <path class="groove" d="M89.5,119 Q100,120.5 110.5,119"></path>
+    <path class="groove" d="M89,131 Q100,133 111,131"></path>
+    <path class="groove" d="M90,146 Q100,148 110,146"></path>
     <path class="body" d="M78,172 L122,172 L112,192 C104,197 96,197 88,192 Z"></path>
 
     <g id="front-half-l">
@@ -80,7 +82,7 @@
   <!-- ============ BACK ============ -->
   <g id="back" transform="translate(245,6)">
     <ellipse class="body" cx="100" cy="26" rx="16" ry="18"></ellipse>
-    <rect class="body" x="88" y="44" width="24" height="16" rx="5"></rect>
+    <path class="body" d="M90,44 L110,44 L113,59 C108,61 92,61 87,59 Z"></path>
     <path class="r lats-traps" d="M100,44 C96,50 88,57 58,66 C78,71 90,82 96,106 L100,120 L104,106 C110,82 122,71 142,66 C112,57 104,50 100,44 Z"></path>
     <rect class="r core" x="92.5" y="118" width="6.5" height="48" rx="3"></rect>
     <rect class="r core" x="101" y="118" width="6.5" height="48" rx="3"></rect>
