@@ -28,9 +28,15 @@ npm run typecheck    # tsc --noEmit
 npm test             # jest (pure modules)
 npm run gen:api      # regenerate src/api/schema.d.ts from the backend contract
 ```
-Backend for dev: `cd backend && ./gradlew bootRun` (H2, in-memory — data is wiped on
-restart). API base URL: `EXPO_PUBLIC_API_URL` (default `http://localhost:8080`; on a physical
-phone use the Mac's LAN IP). `.npmrc` sets `legacy-peer-deps` — required for `expo install`.
+Backend for personal testing (**the default since 6 Sep**): the persistent Postgres stack —
+`cd backend && ./gradlew bootJar && docker compose up -d --build`. Data survives restarts
+(named volumes); the JWT secret lives in gitignored `backend/.env`. Rebuild+restart after
+backend changes: `./gradlew bootJar && docker compose up -d --build app`.
+H2 `./gradlew bootRun` remains for throwaway dev/tests only (in-memory, wiped, and it
+fights the stack for port 8080 — stop one before starting the other).
+API base URL: `EXPO_PUBLIC_API_URL` (default `http://localhost:8080`; on a physical phone use
+the Mac's LAN IP — the app is offline-first, so away-from-wifi sessions sync when back home).
+`.npmrc` sets `legacy-peer-deps` — required for `expo install`.
 
 ## Layout
 ```
