@@ -91,6 +91,8 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 3. Plan / week entity (Today's session preview and the Plan tab — currently the local seeded week).
 4. Activity visibility + share defaults (currently local settings).
 5. Social phase (Feed, Rivals, Friends, Challenges).
+6. Social sign-in (dogfood finding, launch scope): Google + Apple together — App Store rules
+   require Sign in with Apple alongside any third-party login.
 Shipped 4 Sep 2026: `measurementType` on Exercise and session-level `rpe` on Workout.
 
 ## Screens built (artboard numbers)
