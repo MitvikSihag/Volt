@@ -15,7 +15,9 @@
 | `email_verified` | Must be `true` in the Google token, else 401 | The collision check and account creation both trust the email claim |
 | Token verification | `spring-security-oauth2-jose` + `NimbusJwtDecoder` on Google's JWKS with issuer + audience validators | Spring's own JWT stack; no Google SDK; lazy key fetch so no network at boot |
 | Username for new Google users | Generated from the email local part; user renames in Profile (`PATCH /api/users/me`) | No extra screen. Username is `not null unique` and the rest of the app keys on it |
-| Password login on a Google-only account | `CustomUserDetailsService` throws `UsernameNotFoundException` when the hash is null | Provider hides it as "Bad credentials": no account-type leak, no BCrypt "empty encoded password" WARN per attempt |
+| Password login on a Google-only account | `CustomUserDetailsService` returns `""` as the password; the `DaoAuthenticationProvider` gets a wrapping `UserDetailsService` that throws `UsernameNotFoundException` on an empty password | Provider hides it as "Bad credentials": no account-type leak, no BCrypt WARN. The rejection must sit on the password path only — `JwtAuthenticationFilter` loads users through the same service, and throwing there 500s every bearer request for Google-only accounts (caught in final review) |
+| Google `iss` values | Accept both `https://accounts.google.com` and `accounts.google.com` (`volt.google.issuers` list) | Google documents both forms; an exact match on one silently rejects a whole platform |
+| Google `name` claim | Stripped and truncated to 50 chars before `displayName` | Entity is `@Size(max = 50)`; a longer name would fail at commit with a 500 |
 | Mobile library | `@react-native-google-signin/google-signin` (free tier) + `expo-dev-client` | Native account sheet, returns the ID token directly. Needs a development build, which Live Activity and Android background GPS need anyway |
 | Nonce | Not validated | Native ID-token flow; the library does not support a nonce on Android. Accepted ceremony cut |
 | Apple | Deferred to its own PR | One more nullable `*_sub` column, one endpoint, one button on the same seam |
