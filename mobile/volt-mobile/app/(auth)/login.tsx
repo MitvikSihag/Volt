@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { signInWithGoogle } from '@/auth/google';
 import { useAuth } from '@/auth/store';
 import { AuthClose } from '@/ui/AuthClose';
 import { field } from '@/ui/field';
@@ -11,11 +12,18 @@ import { color } from '@/ui/tokens';
 
 export default function Login() {
   const login = useAuth((s) => s.login);
+  const loginWithGoogle = useAuth((s) => s.loginWithGoogle);
   const [id, setId] = useState(''); const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
   const submit = async () => {
     setBusy(true); setErr(null);
     try { await login(id.trim(), pw); } catch (e) { setErr(e instanceof Error ? e.message : 'Could not sign in'); } finally { setBusy(false); }
+  };
+  const google = async () => {
+    setBusy(true); setErr(null);
+    try { const t = await signInWithGoogle(); if (t) await loginWithGoogle(t); }
+    catch (e) { setErr(e instanceof Error ? e.message : 'Google sign-in failed'); }
+    finally { setBusy(false); }
   };
   return (
     <Zone style={{ flex: 1 }}>
@@ -29,6 +37,7 @@ export default function Login() {
           {err && <Body tone="ember" size={13}>{err}</Body>}
           <View style={{ height: 8 }} />
           <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={submit} disabled={busy || !id || !pw} />
+          <Button label="Continue with Google" tone="ghost" onPress={google} disabled={busy} />
           <Link href="/(auth)/register" style={{ alignSelf: 'center', marginTop: 16 }}><Body tone="t2">New here? Create an account</Body></Link>
         </KeyboardAvoidingView>
       </SafeAreaView>

@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { signInWithGoogle } from '@/auth/google';
 import { useAuth } from '@/auth/store';
 import { AuthClose } from '@/ui/AuthClose';
 import { field } from '@/ui/field';
@@ -11,12 +12,19 @@ import { color } from '@/ui/tokens';
 
 export default function Register() {
   const register = useAuth((s) => s.register); const next = useAuth((s) => s.next);
+  const loginWithGoogle = useAuth((s) => s.loginWithGoogle);
   const [username, setUsername] = useState(''); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
   const valid = username.trim().length >= 3 && email.includes('@') && pw.length >= 8;
   const submit = async () => {
     setBusy(true); setErr(null);
     try { await register(username.trim(), email.trim(), pw); } catch (e) { setErr(e instanceof Error ? e.message : 'Could not create account'); } finally { setBusy(false); }
+  };
+  const google = async () => {
+    setBusy(true); setErr(null);
+    try { const t = await signInWithGoogle(); if (t) await loginWithGoogle(t); }
+    catch (e) { setErr(e instanceof Error ? e.message : 'Google sign-in failed'); }
+    finally { setBusy(false); }
   };
   return (
     <Zone style={{ flex: 1 }}>
@@ -32,6 +40,7 @@ export default function Register() {
           {err && <Body tone="ember" size={13}>{err}</Body>}
           <View style={{ height: 8 }} />
           <Button label={busy ? 'Creating…' : 'Create account'} onPress={submit} disabled={busy || !valid} />
+          <Button label="Continue with Google" tone="ghost" onPress={google} disabled={busy} />
           <Link href="/(auth)/login" style={{ alignSelf: 'center', marginTop: 16 }}><Body tone="t2">Have an account? Sign in</Body></Link>
         </KeyboardAvoidingView>
       </SafeAreaView>
