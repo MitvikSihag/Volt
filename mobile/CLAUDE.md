@@ -13,7 +13,9 @@ in. Spec: [docs/superpowers/specs/2026-09-02-mobile-log-loop-design.md](../docs/
 - **API:** `openapi-fetch` client over types generated from `backend/docs/api/openapi.yaml`
   (`npm run gen:api` → `src/api/schema.d.ts`, committed). Never hand-write API shapes.
 - **Auth:** JWT + rotating refresh in `expo-secure-store` (AsyncStorage on the web dev target);
-  one refresh-and-retry on 401 inside the fetch wrapper.
+  one refresh-and-retry on 401 inside the fetch wrapper. Google sign-in via
+  `@react-native-google-signin/google-signin` (`src/auth/google.ts` → `POST /api/auth/google`);
+  needs a development build — Expo Go does not show it.
 - **Design system:** `src/ui/tokens.ts` mirrors VOLT_DESIGN_SYSTEM.md §2; primitives in
   `src/ui/primitives.tsx` (Numeral, Meta, Mono, Body, Heading, Zone, Hairline, Button,
   Stepper, TierChip, HeaderWash) and `Bolt.tsx`. Fonts: JetBrains Mono (numerals/meta) + Inter (headings/body).
@@ -27,6 +29,7 @@ npm start            # Metro; scan the QR with Expo Go, or press i / a
 npm run typecheck    # tsc --noEmit
 npm test             # jest (pure modules)
 npm run gen:api      # regenerate src/api/schema.d.ts from the backend contract
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios   # development build on the simulator (Google sign-in, Live Activity); LANG needed or pod install fails on this Mac
 ```
 Backend for personal testing (**the default since 6 Sep**): the persistent Postgres stack —
 `cd backend && ./gradlew bootJar && docker compose up -d --build`. Data survives restarts
@@ -36,6 +39,10 @@ H2 `./gradlew bootRun` remains for throwaway dev/tests only (in-memory, wiped, a
 fights the stack for port 8080 — stop one before starting the other).
 API base URL: `EXPO_PUBLIC_API_URL` (default `http://localhost:8080`; on a physical phone use
 the Mac's LAN IP — the app is offline-first, so away-from-wifi sessions sync when back home).
+Google sign-in: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`
+(from the Google Cloud OAuth clients; the reversed iOS ID also goes in `app.json` under the
+google-signin plugin). Dogfood path is simulator first; a physical phone needs a signed dev
+build (free Apple ID, 7-day expiry) or TestFlight.
 `.npmrc` sets `legacy-peer-deps` — required for `expo install`.
 
 ## Layout
@@ -55,7 +62,7 @@ volt-mobile/
 │   └── profile.tsx      Profile — month calendar with dual dots, totals, link to History
 └── src/
     ├── api/             schema.d.ts (generated), client.ts, queries.ts
-    ├── auth/store.ts
+    ├── auth/store.ts, google.ts
     ├── session/         reducer.ts (pure, tested), toRequest.ts, pr.ts, store.ts, fromRoutine.ts
     ├── run/             geo.ts (pure, tested: distance, splits, pace, trim, polyline), store.ts, tracker.ts (expo-location + task)
     ├── settings/       store.ts (units, rest, plates, PR types, competition, privacy, share defaults — local),
@@ -91,8 +98,9 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 3. Plan / week entity (Today's session preview and the Plan tab — currently the local seeded week).
 4. Activity visibility + share defaults (currently local settings).
 5. Social phase (Feed, Rivals, Friends, Challenges).
-6. Social sign-in (dogfood finding, launch scope): Google + Apple together — App Store rules
-   require Sign in with Apple alongside any third-party login.
+6. Apple sign-in (App Store rule: required alongside Google before submission). Same seam as
+   Google: nullable `apple_sub`, `POST /api/auth/apple`, `expo-apple-authentication` button.
+   Account linking (Google ↔ password) as an authenticated Settings action.
 Shipped 4 Sep 2026: `measurementType` on Exercise and session-level `rpe` on Workout.
 
 ## Screens built (artboard numbers)
