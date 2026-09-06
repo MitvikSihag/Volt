@@ -196,6 +196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["google"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/activities": {
         parameters: {
             query?: never;
@@ -637,6 +653,9 @@ export interface components {
         LoginRequest: {
             usernameOrEmail: string;
             password: string;
+        };
+        GoogleAuthRequest: {
+            idToken: string;
         };
         ActivityLapRequest: {
             /** Format: double */
@@ -1339,6 +1358,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthResponse"];
+                };
+            };
+        };
+    };
+    google: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleAuthRequest"];
             };
         };
         responses: {

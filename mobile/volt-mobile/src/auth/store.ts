@@ -17,6 +17,7 @@ type AuthState = {
   hydrate: () => Promise<void>;
   login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   refresh: () => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -49,6 +50,7 @@ export const useAuth = create<AuthState>((set, get) => {
     },
     login: async (usernameOrEmail, password) => store(await postAuth('/api/auth/login', { usernameOrEmail, password })),
     register: async (username, email, password) => store(await postAuth('/api/auth/register', { username, email, password })),
+    loginWithGoogle: async (idToken) => store(await postAuth('/api/auth/google', { idToken })),
     refresh: () => {
       if (inflightRefresh) return inflightRefresh;
       inflightRefresh = (async () => {
