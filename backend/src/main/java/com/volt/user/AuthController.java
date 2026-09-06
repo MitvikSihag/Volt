@@ -1,6 +1,7 @@
 package com.volt.user;
 
 import com.volt.user.dto.AuthResponse;
+import com.volt.user.dto.GoogleAuthRequest;
 import com.volt.user.dto.LoginRequest;
 import com.volt.user.dto.RefreshRequest;
 import com.volt.user.dto.RegisterRequest;
@@ -31,6 +32,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/google")
+    public AuthResponse google(@Valid @RequestBody GoogleAuthRequest request) {
+        return authService.loginWithGoogle(request.idToken());
     }
 
     @PostMapping("/refresh")

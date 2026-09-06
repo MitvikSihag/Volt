@@ -12,11 +12,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Transactional
@@ -28,19 +32,22 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final JwtProperties jwtProperties;
     private final AuthenticationManager authenticationManager;
+    private final JwtDecoder googleJwtDecoder;
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider tokenProvider,
                        JwtProperties jwtProperties,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager,
+                       JwtDecoder googleJwtDecoder) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
         this.jwtProperties = jwtProperties;
         this.authenticationManager = authenticationManager;
+        this.googleJwtDecoder = googleJwtDecoder;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -97,6 +104,48 @@ public class AuthService {
             token.setRevoked(true);
             refreshTokenRepository.save(token);
         });
+    }
+
+    public AuthResponse loginWithGoogle(String idToken) {
+        Jwt jwt;
+        try {
+            jwt = googleJwtDecoder.decode(idToken);
+        } catch (JwtException e) {
+            throw new UnauthorizedException("Invalid Google token");
+        }
+        String email = jwt.getClaimAsString("email");
+        if (!Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified")) || email == null) {
+            throw new UnauthorizedException("Google account email is not verified");
+        }
+
+        return userRepository.findByGoogleSub(jwt.getSubject())
+                .map(this::issueTokens)
+                .orElseGet(() -> {
+                    // Never auto-link by email: Volt has no email verification of its own.
+                    if (userRepository.existsByEmailAndNotDeleted(email)) {
+                        throw new ConflictException("Email already registered, sign in with your password");
+                    }
+                    User user = new User();
+                    user.setUsername(generateUsername(email));
+                    user.setEmail(email);
+                    user.setGoogleSub(jwt.getSubject());
+                    String name = jwt.getClaimAsString("name");
+                    user.setDisplayName(name != null && !name.isBlank() ? name : user.getUsername());
+                    userRepository.save(user);
+                    return issueTokens(user);
+                });
+    }
+
+    /** Email local part → [a-z0-9_], 3..24 chars, 4 random digits appended while taken. */
+    private String generateUsername(String email) {
+        String base = email.substring(0, email.indexOf('@')).toLowerCase().replaceAll("[^a-z0-9_]", "");
+        if (base.length() > 24) base = base.substring(0, 24);
+        if (base.length() < 3) base = "volt" + base;
+        String candidate = base;
+        while (userRepository.existsByUsernameAndNotDeleted(candidate)) {
+            candidate = base + ThreadLocalRandom.current().nextInt(1000, 10000);
+        }
+        return candidate;
     }
 
     private AuthResponse issueTokens(User user) {
