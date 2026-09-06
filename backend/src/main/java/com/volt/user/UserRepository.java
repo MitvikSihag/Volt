@@ -22,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email AND u.deletedAt IS NULL")
     boolean existsByEmailAndNotDeleted(String email);
+
+    @Query("SELECT u FROM User u WHERE u.googleSub = :googleSub AND u.deletedAt IS NULL")
+    Optional<User> findByGoogleSub(String googleSub);
 }

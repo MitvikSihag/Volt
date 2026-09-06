@@ -22,6 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
 
+        // Google-only accounts have no password; the provider hides this as "Bad credentials".
+        if (user.getPasswordHash() == null) {
+            throw new UsernameNotFoundException("No password set for: " + usernameOrEmail);
+        }
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPasswordHash(),
