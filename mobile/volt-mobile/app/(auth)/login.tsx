@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/store';
+import { AuthClose } from '@/ui/AuthClose';
 import { field } from '@/ui/field';
 import { Bolt } from '@/ui/Bolt';
 import { Body, Button, Heading, Zone } from '@/ui/primitives';
@@ -19,6 +20,7 @@ export default function Login() {
   return (
     <Zone style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
+        <AuthClose />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 12 }}>
           <View style={{ marginBottom: 16 }}><Bolt size={40} /></View>
           <Heading style={{ marginBottom: 24 }}>Sign in.</Heading>
