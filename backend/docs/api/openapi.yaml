@@ -437,6 +437,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+  /api/auth/google:
+    post:
+      tags:
+      - auth-controller
+      operationId: google
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleAuthRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
   /api/activities:
     get:
       tags:
@@ -1461,6 +1479,14 @@ components:
       required:
       - password
       - usernameOrEmail
+    GoogleAuthRequest:
+      type: object
+      properties:
+        idToken:
+          type: string
+          minLength: 1
+      required:
+      - idToken
     ActivityLapRequest:
       type: object
       properties:
