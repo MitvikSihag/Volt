@@ -130,7 +130,10 @@ public class AuthService {
                     user.setEmail(email);
                     user.setGoogleSub(jwt.getSubject());
                     String name = jwt.getClaimAsString("name");
-                    user.setDisplayName(name != null && !name.isBlank() ? name : user.getUsername());
+                    if (name != null) name = name.strip();
+                    user.setDisplayName(name != null && !name.isBlank()
+                            ? name.substring(0, Math.min(name.length(), 50))
+                            : user.getUsername());
                     userRepository.save(user);
                     return issueTokens(user);
                 });

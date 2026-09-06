@@ -2,6 +2,7 @@ package com.volt;
 
 import com.volt.user.User;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,8 +14,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,5 +131,32 @@ class AuthGoogleIntegrationTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("idToken", ""))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void googleAccessTokenAuthenticatesRequests() throws Exception {
+        when(googleJwtDecoder.decode("tok-g6")).thenReturn(googleJwt("g6", "g.six@example.com", true, "G Six"));
+        MvcResult result = google("tok-g6");
+        String accessToken = readBody(result).get("accessToken").asText();
+
+        mockMvc.perform(get("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("gsix"));
+
+        String refreshToken = readBody(result).get("refreshToken").asText();
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void longGoogleDisplayNameIsTruncated() throws Exception {
+        String longName = "N".repeat(60);
+        when(googleJwtDecoder.decode("tok-g7")).thenReturn(googleJwt("g7", "g7@example.com", true, longName));
+        String accessToken = readBody(google("tok-g7")).get("accessToken").asText();
+        mockMvc.perform(get("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value(longName.substring(0, 50)));
     }
 }

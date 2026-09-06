@@ -10,14 +10,14 @@ import java.util.List;
 public class GoogleProperties {
 
     private List<String> clientIds = List.of();
-    private String issuer;
+    private List<String> issuers = List.of();
     private String jwkSetUri;
 
     public List<String> getClientIds() { return clientIds; }
     public void setClientIds(List<String> clientIds) { this.clientIds = clientIds; }
 
-    public String getIssuer() { return issuer; }
-    public void setIssuer(String issuer) { this.issuer = issuer; }
+    public List<String> getIssuers() { return issuers; }
+    public void setIssuers(List<String> issuers) { this.issuers = issuers; }
 
     public String getJwkSetUri() { return jwkSetUri; }
     public void setJwkSetUri(String jwkSetUri) { this.jwkSetUri = jwkSetUri; }

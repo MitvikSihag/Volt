@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -22,14 +23,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
 
-        // Google-only accounts have no password; the provider hides this as "Bad credentials".
-        if (user.getPasswordHash() == null) {
-            throw new UsernameNotFoundException("No password set for: " + usernameOrEmail);
-        }
-
+        // Google-only accounts have no password. Spring's User rejects a null password but
+        // accepts "" — callers on the password-login path reject that empty hash themselves
+        // (see SecurityConfig#authenticationProvider); the JWT filter loads it as-is.
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                user.getPasswordHash(),
+                Objects.requireNonNullElse(user.getPasswordHash(), ""),
                 List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }

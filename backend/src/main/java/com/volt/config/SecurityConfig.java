@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -79,7 +81,15 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+        // Google-only accounts have no password: reject them on the password path only,
+        // hidden as "Bad credentials". The JWT filter still loads them normally.
+        provider.setUserDetailsService(username -> {
+            UserDetails details = userDetailsService.loadUserByUsername(username);
+            if (details.getPassword().isEmpty()) {
+                throw new UsernameNotFoundException("No password set for: " + username);
+            }
+            return details;
+        });
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }

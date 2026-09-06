@@ -99,7 +99,7 @@ SPRING_DATASOURCE_USERNAME=volt SPRING_DATASOURCE_PASSWORD=volt ./gradlew bootRu
 Google sign-in needs `VOLT_GOOGLE_CLIENT_IDS` (comma-separated iOS/Android/Web OAuth client IDs).
 The container JVM does not trust the Cloudflare Gateway CA, so on the intercepting network the
 JWKS fetch fails inside Docker; run the app on the host against the compose `db` (published on
-5432) for Google-login dogfooding.
+5432) for Google-login dogfooding. Off the intercepting network the compose stack works as is.
 
 ### Schema changes
 Flyway is the single source of truth on the Postgres profile. Until the first real users exist,
