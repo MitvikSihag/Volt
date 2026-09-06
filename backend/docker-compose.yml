@@ -10,6 +10,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-volt}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-volt}
       POSTGRES_DB: ${POSTGRES_DB:-volt}
+    ports:
+      - "5432:5432"
     volumes:
       - volt-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -29,6 +31,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-volt}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-volt}
       VOLT_JWT_SECRET: ${VOLT_JWT_SECRET:?Set VOLT_JWT_SECRET to a strong base64 key}
+      VOLT_GOOGLE_CLIENT_IDS: ${VOLT_GOOGLE_CLIENT_IDS:-}
     ports:
       - "8080:8080"
     volumes:

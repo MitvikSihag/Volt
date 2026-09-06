@@ -22,7 +22,7 @@ src/main/java/com/volt/
 ├── analytics/      — Cross-domain read models (dashboard today; feed/rivals later)
 ├── load/           — TrainingMath: single source of truth for Epley 1RM + set volume
 ├── common/         — Shared DTOs, exceptions, base entities
-└── config/         — Security, OpenAPI, JPA config
+└── config/         — Security, OpenAPI, JPA config, GoogleAuthConfig/GoogleProperties
 ```
 
 The social graph, feed, kudos, and comments are planned for Phase 4; no `social/` package exists
@@ -31,7 +31,7 @@ yet.
 ## Domain Model
 | Entity | Description |
 |---|---|
-| `User` | Profile, goals, body stats |
+| `User` | Profile, goals, body stats; optional `google_sub`, nullable `password_hash` for Google-only accounts |
 | `Exercise` | Library entry (name, muscle groups, equipment, measurement type); system or user-created |
 | `Workout` | A strength session (belongs to User, has many WorkoutExercises); optional session `rpe` 1–10 |
 | `WorkoutExercise` | An ordered exercise entry within a workout, containing WorkoutSets |
@@ -96,10 +96,18 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/volt \
 SPRING_DATASOURCE_USERNAME=volt SPRING_DATASOURCE_PASSWORD=volt ./gradlew bootRun
 ```
 
+Google sign-in needs `VOLT_GOOGLE_CLIENT_IDS` (comma-separated iOS/Android/Web OAuth client IDs).
+The container JVM does not trust the Cloudflare Gateway CA, so on the intercepting network the
+JWKS fetch fails inside Docker; run the app on the host against the compose `db` (published on
+5432) for Google-login dogfooding.
+
 ### Schema changes
 Flyway is the single source of truth on the Postgres profile. Until the first real users exist,
-the V1 baseline is edited in place (PRODUCT.md §2 locked decision); once a database is deployed,
-never edit an applied migration — add `V2__*.sql`, `V3__*.sql`, … under `src/main/resources/db/migration`.
+the V1 baseline is edited in place (PRODUCT.md §2 locked decision). **After any V1 edit, wipe the
+local stack** — Flyway records V1's checksum, so the next boot fails validation otherwise:
+`./gradlew bootJar && docker compose down -v && docker compose up -d --build` (local accounts are
+disposable; re-register). Once a database is deployed, never edit an applied migration — add
+`V2__*.sql`, `V3__*.sql`, … under `src/main/resources/db/migration`.
 `FlywayPostgresIntegrationTest` (Testcontainers) boots the app under Postgres with
 `ddl-auto=validate` and fails if a migration and the JPA entities drift apart. It may skip locally
 when Docker is absent, but fails closed when Docker is unavailable in CI.
