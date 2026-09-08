@@ -94,8 +94,8 @@ Ordered by severity. Several are blockers for *any* real deployment and are pull
 | D12 | ~~OpenAPI export test silently overwrote the checked-in contract~~ | Contract drift could be hidden instead of failing verification | 🟡 **Phase 3 stabilization** — generate separately and compare; pending merge |
 | D3 | CI is not yet a required remote check | No enforced automated build/test gate | **Phase 3 stabilization** + remote branch settings; §6 (W1) |
 | D4 | ~~PostgreSQL runtime could inherit the committed dev JWT secret~~ | Missing config allowed token forgery with a known key | 🟡 **Phase 3 stabilization** — Postgres fails closed without `VOLT_JWT_SECRET`; pending merge |
-| D5 | Refresh tokens stored as **raw UUIDs** | DB leak = account takeover; hash at rest | §6 (W2) |
-| D6 | No rate limiting on `/api/auth/**` | Credential-stuffing / brute force exposure | §6 (W2) |
+| D5 | ~~Refresh tokens stored as **raw UUIDs**~~ | DB leak = account takeover; hash at rest | ✅ auth hardening, Sep 2026 — SHA-256 at rest |
+| D6 | ~~No rate limiting on `/api/auth/**`~~ | Credential-stuffing / brute force exposure | ✅ auth hardening, Sep 2026 — per IP/user/identity rate limiting |
 | D7 | Live PR banner lacks "previous value" context | `addSet` returns `isPr` but not the beaten record → frontend can't show "prev: 100kg × 5" | Phase 5 (or quick win) |
 | D8 | Soft-delete filtering not audited for consistency | Risk of deleted rows leaking into reads | §6 (W3) |
 | D9 | Nested fetches risk N+1 (`open-in-view=false`, good) | Latency at scale | §6 (W3) |

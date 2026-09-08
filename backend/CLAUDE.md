@@ -7,7 +7,9 @@ Spring Boot REST API for the Volt fitness platform. See the root `../CLAUDE.md` 
 - **Framework:** Spring Boot 3.5 (Spring Web, Spring Data JPA, Spring Security)
 - **Build:** Gradle 8.14 (Kotlin DSL) — run from this directory (`backend/`)
 - **Database:** H2 in-memory (default/`dev` + tests) · PostgreSQL via the `postgres` profile (prod/docker). Schema managed by **Flyway** migrations (`src/main/resources/db/migration`) with Hibernate `validate` on the Postgres profile.
-- **Auth:** JWT (stateless, `Authorization: Bearer <token>`)
+- **Auth:** JWT (stateless, `Authorization: Bearer <token>`; kid-tagged, rotating keys via
+  `VOLT_JWT_KEYS`/`VOLT_JWT_ACTIVE_KID`) + hashed rotating refresh tokens; email verification +
+  password reset via Resend; rate limits per RELEASE_CHECKLIST §1
 - **API docs:** OpenAPI 3 via springdoc-openapi — checked-in contract at
   `docs/api/openapi.yaml`, runtime spec at `/v3/api-docs`, UI at `/swagger-ui`
 - **Package root:** `com.volt`
@@ -16,13 +18,15 @@ Spring Boot REST API for the Volt fitness platform. See the root `../CLAUDE.md` 
 ```
 src/main/java/com/volt/
 ├── VoltApplication.java
-├── user/           — User entity, profiles, auth (register/login/refresh/JWT), UserLookup
+├── user/           — User entity, profiles, auth (register/login/refresh/JWT), UserLookup,
+│                     EmailToken*, IdentityRateLimiter, UserPurgeTask
 ├── workout/        — Exercises, workouts, routines; PersonalRecordService owns the PR engine
 ├── activity/       — Cardio: Activity, Route, Lap
 ├── analytics/      — Cross-domain read models (dashboard today; feed/rivals later)
 ├── load/           — TrainingMath: single source of truth for Epley 1RM + set volume
-├── common/         — Shared DTOs, exceptions, base entities
-└── config/         — Security, OpenAPI, JPA config, GoogleAuthConfig/GoogleProperties
+├── common/         — Shared DTOs, exceptions, base entities, mail/ (Resend), Hashes
+└── config/         — Security, OpenAPI, JPA config, GoogleAuthConfig/GoogleProperties,
+                      RateLimitFilter
 ```
 
 The social graph, feed, kudos, and comments are planned for Phase 4; no `social/` package exists
@@ -42,6 +46,7 @@ yet.
 | `Route` | GPS polyline + elevation profile for an Activity |
 | `Lap` | A timed/distance split within an Activity |
 | `RefreshToken` | Rotating auth token; unlike other entities, does not extend `BaseEntity` |
+| `EmailToken` | Hashed single-use verification / reset token; not a BaseEntity |
 
 ## Build Order
 > The authoritative, phased plan lives in [`ROADMAP.md`](ROADMAP.md). Summary status:
@@ -82,12 +87,20 @@ cd backend
 **Production-like (PostgreSQL + Flyway, persistent):**
 ```bash
 cd backend
-export VOLT_JWT_SECRET="$(openssl rand -base64 48)"
+export VOLT_JWT_KEYS="k1:$(openssl rand -base64 48)" VOLT_JWT_ACTIVE_KID=k1  # replaces the former VOLT_JWT_SECRET
 ./gradlew bootJar && docker compose up --build   # app + Postgres, data in named volumes
 # Optionally override database credentials via POSTGRES_USER/PASSWORD/DB
 ```
 The boot jar is built on the host (not inside the image) so the Docker build works
 behind the TLS-intercepting proxy.
+
+Mail is off by default (`VOLT_MAIL_ENABLED=false`): verification and reset links are logged by
+the app (`docker compose logs app | grep 'DEV ONLY'`). Set `VOLT_MAIL_ENABLED=true` +
+`VOLT_RESEND_API_KEY` to send. Rate limiting is on; set `VOLT_RATE_LIMIT_ENABLED=false` only for
+load scripts. Behind a proxy set `VOLT_TRUST_PROXY=true`.
+
+**Key rotation:** append `,k2:<new>` to `VOLT_JWT_KEYS`, restart, switch
+`VOLT_JWT_ACTIVE_KID=k2`, restart, remove `k1` after 15 minutes.
 
 To point a local run at an existing Postgres instead:
 ```bash
