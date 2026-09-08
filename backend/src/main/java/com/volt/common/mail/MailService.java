@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -28,6 +29,8 @@ public class MailService {
         this.http = builder.baseUrl("https://api.resend.com").build();
     }
 
+    /** Sends mail asynchronously off the request thread. Failures are logged. */
+    @Async
     public void send(String to, String subject, String html, String link) {
         if (!props.isEnabled()) {
             // DEV ONLY: the link is the secret. Never enable this branch in production (postgres profile sets enabled=true).
