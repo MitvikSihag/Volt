@@ -38,6 +38,7 @@ export default function Login() {
           <View style={{ height: 8 }} />
           <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={submit} disabled={busy || !id || !pw} />
           <Button label="Continue with Google" tone="ghost" onPress={google} disabled={busy} />
+          <Link href="/(auth)/forgot" style={{ alignSelf: 'center', marginTop: 12 }}><Body tone="t2">Forgot password?</Body></Link>
           <Link href="/(auth)/register" style={{ alignSelf: 'center', marginTop: 16 }}><Body tone="t2">New here? Create an account</Body></Link>
         </KeyboardAvoidingView>
       </SafeAreaView>

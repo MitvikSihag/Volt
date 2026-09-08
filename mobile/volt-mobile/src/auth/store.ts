@@ -18,6 +18,9 @@ type AuthState = {
   login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
+  confirmEmail: (token: string) => Promise<void>;
   refresh: () => Promise<boolean>;
   logout: () => Promise<void>;
 };
@@ -33,6 +36,11 @@ async function postAuth(path: string, body: unknown): Promise<Tokens> {
   const res = await fetch(BASE_URL + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
+}
+
+async function postAuthVoid(path: string, body: unknown): Promise<void> {
+  const res = await fetch(BASE_URL + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(await errorMessage(res));
 }
 
 let inflightRefresh: Promise<boolean> | null = null;
@@ -51,6 +59,9 @@ export const useAuth = create<AuthState>((set, get) => {
     login: async (usernameOrEmail, password) => store(await postAuth('/api/auth/login', { usernameOrEmail, password })),
     register: async (username, email, password) => store(await postAuth('/api/auth/register', { username, email, password })),
     loginWithGoogle: async (idToken) => store(await postAuth('/api/auth/google', { idToken })),
+    forgotPassword: (email) => postAuthVoid('/api/auth/password/forgot', { email }),
+    resetPassword: (token, newPassword) => postAuthVoid('/api/auth/password/reset', { token, newPassword }),
+    confirmEmail: (token) => postAuthVoid('/api/auth/verify/confirm', { token }),
     refresh: () => {
       if (inflightRefresh) return inflightRefresh;
       inflightRefresh = (async () => {

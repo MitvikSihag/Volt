@@ -28,7 +28,8 @@ function AuthGate() {
   const router = useRouter();
   useEffect(() => {
     const inAuth = segments[0] === '(auth)'; const inOnboarding = segments[0] === '(onboarding)'; const inWorkout = segments[0] === 'workout';
-    if (!token && !inAuth && !inOnboarding && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
+    const inLink = segments[0] === 'reset' || segments[0] === 'verify';
+    if (!token && !inAuth && !inOnboarding && !inLink && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
     if (token && inAuth) {
       useAuth.setState({ next: null });
       if (router.canDismiss()) router.dismissAll();

@@ -54,3 +54,12 @@ export function useSaveActivity() {
     onSuccess: () => { for (const k of ['dashboard', 'activities', 'stats']) void qc.invalidateQueries({ queryKey: [k] }); },
   });
 }
+
+export const useResendVerification = () => useMutation({ mutationFn: () => unwrap(api.POST('/api/auth/verify/request')) });
+export function useDeleteAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (password?: string) => unwrap(api.DELETE('/api/users/me', { body: password ? { password } : {} })),
+    onSuccess: () => qc.clear(),
+  });
+}
