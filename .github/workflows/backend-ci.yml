@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Test/Compose configuration only; never used for deployment.
-      VOLT_JWT_SECRET: dGhpcy1pcy1hLWNpLW9ubHktc2VjcmV0LWtleS1mb3Itdm9sdC10ZXN0cw==
+      VOLT_JWT_KEYS: ci:dGhpcy1pcy1hLWNpLW9ubHktc2VjcmV0LWtleS1mb3Itdm9sdC10ZXN0cw==
+      VOLT_JWT_ACTIVE_KID: ci
     defaults:
       run:
         working-directory: backend
