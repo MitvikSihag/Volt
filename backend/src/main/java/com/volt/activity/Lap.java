@@ -8,6 +8,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -17,6 +19,7 @@ import jakarta.validation.constraints.NotNull;
 public class Lap extends BaseEntity {
 
     @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;

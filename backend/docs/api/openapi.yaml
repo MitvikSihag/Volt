@@ -687,6 +687,20 @@ paths:
                 $ref: "#/components/schemas/UserSelfResponse"
       security:
       - bearerAuth: []
+    delete:
+      tags:
+      - user-controller
+      operationId: deleteSelf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
     patch:
       tags:
       - user-controller
@@ -2060,6 +2074,11 @@ components:
           format: int32
         last:
           type: boolean
+    DeleteAccountRequest:
+      type: object
+      properties:
+        password:
+          type: string
   securitySchemes:
     bearerAuth:
       type: http

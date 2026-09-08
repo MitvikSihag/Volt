@@ -2,15 +2,19 @@ package com.volt.user;
 
 import com.volt.activity.ActivityService;
 import com.volt.common.exception.ResourceNotFoundException;
+import com.volt.common.exception.UnauthorizedException;
 import com.volt.common.storage.StorageService;
 import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
 import com.volt.user.dto.UserStatsResponse;
 import com.volt.workout.WorkoutService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Clock;
 
 @Service
 @Transactional
@@ -20,15 +24,27 @@ public class UserService {
     private final StorageService storageService;
     private final WorkoutService workoutService;
     private final ActivityService activityService;
+    private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final EmailTokenRepository emailTokenRepository;
+    private final Clock clock;
 
     public UserService(UserRepository userRepository,
                        StorageService storageService,
                        WorkoutService workoutService,
-                       ActivityService activityService) {
+                       ActivityService activityService,
+                       PasswordEncoder passwordEncoder,
+                       RefreshTokenRepository refreshTokenRepository,
+                       EmailTokenRepository emailTokenRepository,
+                       Clock clock) {
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.workoutService = workoutService;
         this.activityService = activityService;
+        this.passwordEncoder = passwordEncoder;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.emailTokenRepository = emailTokenRepository;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +93,26 @@ public class UserService {
                 activityService.totalDistanceMetersForUser(user),
                 workoutService.totalVolumeKgForUser(user)
         );
+    }
+
+    public void deleteSelf(String username, String password) {
+        User user = findActiveUser(username);
+        if (user.getPasswordHash() != null && (password == null || !passwordEncoder.matches(password, user.getPasswordHash()))) {
+            throw new UnauthorizedException("Bad credentials");
+        }
+        if (user.getProfilePictureUrl() != null) storageService.delete(user.getProfilePictureUrl());
+        String tag = "deleted-" + user.getId().toString().replace("-", "").substring(0, 12);
+        user.setUsername(tag);
+        user.setEmail(tag + "@deleted.volt.invalid");
+        user.setGoogleSub(null);
+        user.setPasswordHash(null);
+        user.setDisplayName("Deleted user");
+        user.setBio(null);
+        user.setProfilePictureUrl(null);
+        user.setDeletedAt(clock.instant());
+        userRepository.save(user);
+        refreshTokenRepository.revokeAllByUser(user);
+        emailTokenRepository.deleteByUser(user);
     }
 
     private User findActiveUser(String username) {

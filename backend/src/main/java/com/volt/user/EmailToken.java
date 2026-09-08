@@ -1,6 +1,9 @@
 package com.volt.user;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -12,6 +15,7 @@ public class EmailToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
