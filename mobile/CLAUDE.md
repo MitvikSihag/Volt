@@ -15,7 +15,10 @@ in. Spec: [docs/superpowers/specs/2026-09-02-mobile-log-loop-design.md](../docs/
 - **Auth:** JWT + rotating refresh in `expo-secure-store` (AsyncStorage on the web dev target);
   one refresh-and-retry on 401 inside the fetch wrapper. Google sign-in via
   `@react-native-google-signin/google-signin` (`src/auth/google.ts` → `POST /api/auth/google`);
-  needs a development build — Expo Go does not show it.
+  needs a development build — Expo Go does not show it. Forgot/reset/verify flows via
+  `volt://reset?token=` and `volt://verify?token=` deep links (`app/reset.tsx`, `app/verify.tsx`,
+  `app/(auth)/forgot.tsx`); Today shows a verify line until `me.emailVerifiedAt` is set; Settings →
+  Account has Log out and Delete account.
 - **Design system:** `src/ui/tokens.ts` mirrors VOLT_DESIGN_SYSTEM.md §2; primitives in
   `src/ui/primitives.tsx` (Numeral, Meta, Mono, Body, Heading, Zone, Hairline, Button,
   Stepper, TierChip, HeaderWash) and `Bolt.tsx`. Fonts: JetBrains Mono (numerals/meta) + Inter (headings/body).
@@ -50,7 +53,8 @@ build (free Apple ID, 7-day expiry) or TestFlight.
 volt-mobile/
 ├── app/                 Expo Router routes
 │   ├── _layout.tsx      fonts, QueryClient + persister, auth hydrate + gate, stack
-│   ├── (auth)/          login, register (full-screen modal; register honours `useAuth.next`)
+│   ├── (auth)/          login, register (full-screen modal; register honours `useAuth.next`),
+│   │                    forgot.tsx (forgot password)
 │   ├── (onboarding)/    goal (18), week (19) — runs without a token
 │   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
 │   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
@@ -59,7 +63,10 @@ volt-mobile/
 │   ├── settings.tsx     Settings (22): units, rest default, plates, PR types, privacy, competition
 │   ├── exercise/[id].tsx Exercise Detail — About · History · Charts · Records
 │   ├── history.tsx      History (lifts + cardio, week groups)
-│   └── profile.tsx      Profile — month calendar with dual dots, totals, link to History
+│   ├── profile.tsx      Profile — month calendar with dual dots, totals, link to History
+│   ├── reset.tsx        Reset password (`volt://reset?token=` deep link)
+│   ├── verify.tsx       Verify email (`volt://verify?token=` deep link)
+│   └── delete-account.tsx Delete account confirmation (Settings → Account)
 └── src/
     ├── api/             schema.d.ts (generated), client.ts, queries.ts
     ├── auth/store.ts, google.ts
@@ -101,6 +108,7 @@ Muscle figure: `design-screens/body-map/volt-body-map.svg` (locked; recolor via 
 6. Apple sign-in (App Store rule: required alongside Google before submission). Same seam as
    Google: nullable `apple_sub`, `POST /api/auth/apple`, `expo-apple-authentication` button.
    Account linking (Google ↔ password) as an authenticated Settings action.
+7. Data export (GDPR) — manual via support until built.
 Shipped 4 Sep 2026: `measurementType` on Exercise and session-level `rpe` on Workout.
 
 ## Screens built (artboard numbers)
@@ -123,6 +131,10 @@ back to a foreground watch. Points go into the persisted run store; pauses open 
 distance never bridges a pause. Save trims the route ends per the privacy settings **before** the
 POST, then sends one nested `POST /api/activities` with laps from the per-km splits. Simulator:
 `xcrun simctl location <udid> start --speed=3.3 <lat,lng ...>` to drive a route.
+
+Deep links on the simulator: `xcrun simctl openurl booted "volt://verify?token=…"` (same for
+`volt://reset?token=…`); with mail disabled the token comes from
+`docker compose logs app | grep "DEV ONLY"`.
 
 ## Deferred account (onboarding)
 The gate lets `(onboarding)` and `workout/*` run without a token while onboarding is active.
