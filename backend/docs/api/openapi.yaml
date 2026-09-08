@@ -369,6 +369,30 @@ paths:
                 $ref: "#/components/schemas/ExerciseResponse"
       security:
       - bearerAuth: []
+  /api/auth/verify/request:
+    post:
+      tags:
+      - auth-controller
+      operationId: requestVerification
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+  /api/auth/verify/confirm:
+    post:
+      tags:
+      - auth-controller
+      operationId: confirmEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
   /api/auth/register:
     post:
       tags:
@@ -1432,6 +1456,14 @@ components:
       - movementType
       - name
       - primaryMuscleGroup
+    TokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
     RegisterRequest:
       type: object
       properties:

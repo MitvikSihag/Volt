@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Must precede the /api/auth/** permitAll below — first match wins.
+                        .requestMatchers("/api/auth/verify/request").authenticated()
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/uploads/**",

@@ -5,8 +5,13 @@ import com.volt.user.dto.GoogleAuthRequest;
 import com.volt.user.dto.LoginRequest;
 import com.volt.user.dto.RefreshRequest;
 import com.volt.user.dto.RegisterRequest;
+import com.volt.user.dto.TokenRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,5 +53,18 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request.refreshToken());
+    }
+
+    @PostMapping("/verify/request")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public void requestVerification(@AuthenticationPrincipal UserDetails principal) {
+        authService.requestVerification(principal.getUsername());
+    }
+
+    @PostMapping("/verify/confirm")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmEmail(@Valid @RequestBody TokenRequest request) {
+        authService.confirmEmail(request.token());
     }
 }

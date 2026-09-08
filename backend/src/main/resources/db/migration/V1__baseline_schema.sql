@@ -39,6 +39,17 @@ create table refresh_tokens (
     primary key (id)
 );
 
+-- ── email_tokens (verification / password reset; hash only) ─────────────────
+create table email_tokens (
+    id          uuid not null,
+    user_id     uuid not null,
+    purpose     varchar(10) not null check (purpose in ('VERIFY','RESET')),
+    token_hash  varchar(64) not null unique,
+    expires_at  timestamp(6) with time zone not null,
+    used_at     timestamp(6) with time zone,
+    primary key (id)
+);
+
 -- ── exercises ────────────────────────────────────────────────────────────────
 create table exercises (
     id                   uuid not null,
@@ -203,6 +214,7 @@ create index idx_users_username on users (username);
 create index idx_users_email on users (email);
 create index idx_refresh_tokens_token_hash on refresh_tokens (token_hash);
 create index idx_refresh_tokens_user_id on refresh_tokens (user_id);
+create index idx_email_tokens_user_purpose on email_tokens (user_id, purpose);
 create index idx_exercises_created_by on exercises (created_by_user_id);
 create index idx_routines_user_id on routines (user_id);
 create index idx_routine_exercises_routine_id on routine_exercises (routine_id);
@@ -219,6 +231,7 @@ create index idx_laps_activity_id on laps (activity_id);
 
 -- ── foreign keys ─────────────────────────────────────────────────────────────
 alter table refresh_tokens          add constraint fk_refresh_tokens_user             foreign key (user_id)             references users (id);
+alter table email_tokens            add constraint fk_email_tokens_user               foreign key (user_id)             references users (id);
 alter table exercises               add constraint fk_exercises_created_by            foreign key (created_by_user_id)  references users (id);
 alter table exercise_secondary_muscles add constraint fk_exercise_secondary_muscles_exercise foreign key (exercise_id) references exercises (id);
 alter table routines                add constraint fk_routines_user                   foreign key (user_id)             references users (id);

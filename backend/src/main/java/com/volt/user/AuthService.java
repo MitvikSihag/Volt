@@ -4,6 +4,8 @@ import com.volt.common.Hashes;
 import com.volt.common.exception.ConflictException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.common.exception.UnauthorizedException;
+import com.volt.common.mail.MailProperties;
+import com.volt.common.mail.MailService;
 import com.volt.config.JwtProperties;
 import com.volt.config.JwtTokenProvider;
 import com.volt.user.dto.AuthResponse;
@@ -42,6 +44,10 @@ public class AuthService {
     private final JwtDecoder googleJwtDecoder;
     private final Clock clock;
     private final String termsVersion;
+    private final EmailTokenService emailTokens;
+    private final EmailTokenRepository emailTokenRepository;
+    private final MailService mail;
+    private final MailProperties mailProps;
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
@@ -51,7 +57,11 @@ public class AuthService {
                        AuthenticationManager authenticationManager,
                        JwtDecoder googleJwtDecoder,
                        Clock clock,
-                       @Value("${volt.legal.terms-version}") String termsVersion) {
+                       @Value("${volt.legal.terms-version}") String termsVersion,
+                       EmailTokenService emailTokens,
+                       EmailTokenRepository emailTokenRepository,
+                       MailService mail,
+                       MailProperties mailProps) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -61,6 +71,10 @@ public class AuthService {
         this.googleJwtDecoder = googleJwtDecoder;
         this.clock = clock;
         this.termsVersion = termsVersion;
+        this.emailTokens = emailTokens;
+        this.emailTokenRepository = emailTokenRepository;
+        this.mail = mail;
+        this.mailProps = mailProps;
     }
 
     static String normaliseEmail(String email) {
@@ -85,8 +99,26 @@ public class AuthService {
         user.setTermsAcceptedAt(clock.instant());
         user.setTermsVersion(termsVersion);
         userRepository.save(user);
+        sendVerification(user);
 
         return issueTokens(user);
+    }
+
+    public void requestVerification(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.getEmailVerifiedAt() != null) throw new ConflictException("Email already verified");
+        sendVerification(user);
+    }
+
+    public void confirmEmail(String token) {
+        User user = emailTokens.consume(token, EmailTokenPurpose.VERIFY);
+        user.setEmailVerifiedAt(clock.instant());
+        userRepository.save(user);
+    }
+
+    private void sendVerification(User user) {
+        String link = mailProps.getLinkBase() + "verify?token=" + emailTokens.issue(user, EmailTokenPurpose.VERIFY);
+        mail.send(user.getEmail(), "Verify your Volt email", mail.render("verify", link), link);
     }
 
     public AuthResponse login(LoginRequest request) {
