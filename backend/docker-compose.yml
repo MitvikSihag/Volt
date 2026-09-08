@@ -1,5 +1,6 @@
 # Production-like local stack: PostgreSQL + the Volt API.
-#   export VOLT_JWT_SECRET="$(openssl rand -base64 48)"
+#   export VOLT_JWT_KEYS="prod:$(openssl rand -base64 48)"
+#   export VOLT_JWT_ACTIVE_KID="prod"
 #   docker compose up --build
 # The API runs the `postgres` profile (Flyway migrations + schema validation) and
 # persists data in named volumes that survive `docker compose down` (use `-v` to wipe).
@@ -30,7 +31,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-volt}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-volt}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-volt}
-      VOLT_JWT_SECRET: ${VOLT_JWT_SECRET:?Set VOLT_JWT_SECRET to a strong base64 key}
+      VOLT_JWT_KEYS: ${VOLT_JWT_KEYS:?Set VOLT_JWT_KEYS to "kid:base64" (at least 32 bytes)}
+      VOLT_JWT_ACTIVE_KID: ${VOLT_JWT_ACTIVE_KID:?Set VOLT_JWT_ACTIVE_KID}
       VOLT_GOOGLE_CLIENT_IDS: ${VOLT_GOOGLE_CLIENT_IDS:-}
     ports:
       - "8080:8080"
