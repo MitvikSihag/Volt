@@ -102,9 +102,13 @@ export default function Settings() {
           {['Apple Health', 'Garmin', 'Strava import'].map((l) => <Row key={l} label={l} right={<Meta tone="t3">Arrives with v1.2</Meta>} />)}
         </Section>
 
+        <Section title="Account">
+          <Row label="Log out" onPress={() => useAuth.getState().logout()} right={<Mono tone="t3">›</Mono>} />
+          <Row label="Delete account…" sub="Removes your account and all your data" onPress={() => router.push('/delete-account')} right={<Mono tone="t3">›</Mono>} />
+        </Section>
+
         <Section title="About">
           <Row label="Version" right={<Mono tone="t2" size={13}>{version}</Mono>} />
-          <Row label="Log out" onPress={() => useAuth.getState().logout()} right={<Mono tone="t3">›</Mono>} />
         </Section>
         <Body tone="t3" size={13} style={{ paddingHorizontal: 24, paddingTop: 28 }}>No tiers. Nothing to upgrade. Every feature is the whole feature.</Body>
       </ScrollView>
