@@ -55,6 +55,9 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml",
                                 "/actuator/health"
                         ).permitAll()
+                        // Must precede the {username} wildcard below — "me" would otherwise match it and
+                        // become publicly readable instead of requiring authentication.
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/users/{username}").permitAll()
                         .anyRequest().authenticated()
                 )
