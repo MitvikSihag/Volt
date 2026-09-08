@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens", indexes = {
-        @Index(name = "idx_refresh_tokens_token", columnList = "token"),
+        @Index(name = "idx_refresh_tokens_token_hash", columnList = "token_hash"),
         @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
 })
 public class RefreshToken {
@@ -25,8 +25,8 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
+    private String tokenHash;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -40,8 +40,8 @@ public class RefreshToken {
 
     public UUID getId() { return id; }
 
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+    public String getTokenHash() { return tokenHash; }
+    public void setTokenHash(String tokenHash) { this.tokenHash = tokenHash; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

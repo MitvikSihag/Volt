@@ -1,5 +1,6 @@
 package com.volt.user;
 
+import com.volt.common.Hashes;
 import com.volt.common.exception.ConflictException;
 import com.volt.common.exception.ResourceNotFoundException;
 import com.volt.common.exception.UnauthorizedException;
@@ -8,6 +9,7 @@ import com.volt.config.JwtTokenProvider;
 import com.volt.user.dto.AuthResponse;
 import com.volt.user.dto.LoginRequest;
 import com.volt.user.dto.RegisterRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,13 +20,18 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.Base64;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Transactional
 public class AuthService {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -33,6 +40,8 @@ public class AuthService {
     private final JwtProperties jwtProperties;
     private final AuthenticationManager authenticationManager;
     private final JwtDecoder googleJwtDecoder;
+    private final Clock clock;
+    private final String termsVersion;
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
@@ -40,7 +49,9 @@ public class AuthService {
                        JwtTokenProvider tokenProvider,
                        JwtProperties jwtProperties,
                        AuthenticationManager authenticationManager,
-                       JwtDecoder googleJwtDecoder) {
+                       JwtDecoder googleJwtDecoder,
+                       Clock clock,
+                       @Value("${volt.legal.terms-version}") String termsVersion) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -48,22 +59,31 @@ public class AuthService {
         this.jwtProperties = jwtProperties;
         this.authenticationManager = authenticationManager;
         this.googleJwtDecoder = googleJwtDecoder;
+        this.clock = clock;
+        this.termsVersion = termsVersion;
+    }
+
+    static String normaliseEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     public AuthResponse register(RegisterRequest request) {
+        String email = normaliseEmail(request.email());
         // Exclude soft-deleted users from uniqueness checks so a deleted username can be reused
         if (userRepository.existsByUsernameAndNotDeleted(request.username())) {
             throw new ConflictException("Username already taken");
         }
-        if (userRepository.existsByEmailAndNotDeleted(request.email())) {
+        if (userRepository.existsByEmailAndNotDeleted(email)) {
             throw new ConflictException("Email already registered");
         }
 
         User user = new User();
         user.setUsername(request.username());
-        user.setEmail(request.email());
+        user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setDisplayName(request.username());
+        user.setTermsAcceptedAt(clock.instant());
+        user.setTermsVersion(termsVersion);
         userRepository.save(user);
 
         return issueTokens(user);
@@ -83,7 +103,7 @@ public class AuthService {
 
     @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse refresh(String rawRefreshToken) {
-        RefreshToken stored = refreshTokenRepository.findByToken(rawRefreshToken)
+        RefreshToken stored = refreshTokenRepository.findByTokenHash(Hashes.sha256Hex(rawRefreshToken))
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
         if (!stored.isValid()) {
@@ -100,7 +120,7 @@ public class AuthService {
     }
 
     public void logout(String rawRefreshToken) {
-        refreshTokenRepository.findByToken(rawRefreshToken).ifPresent(token -> {
+        refreshTokenRepository.findByTokenHash(Hashes.sha256Hex(rawRefreshToken)).ifPresent(token -> {
             token.setRevoked(true);
             refreshTokenRepository.save(token);
         });
@@ -113,10 +133,11 @@ public class AuthService {
         } catch (JwtException e) {
             throw new UnauthorizedException("Invalid Google token");
         }
-        String email = jwt.getClaimAsString("email");
-        if (!Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified")) || email == null) {
+        String rawEmail = jwt.getClaimAsString("email");
+        if (!Boolean.TRUE.equals(jwt.getClaimAsBoolean("email_verified")) || rawEmail == null) {
             throw new UnauthorizedException("Google account email is not verified");
         }
+        String email = normaliseEmail(rawEmail);
 
         return userRepository.findByGoogleSub(jwt.getSubject())
                 .map(this::issueTokens)
@@ -134,6 +155,8 @@ public class AuthService {
                     user.setDisplayName(name != null && !name.isBlank()
                             ? name.substring(0, Math.min(name.length(), 50))
                             : user.getUsername());
+                    user.setTermsAcceptedAt(clock.instant());
+                    user.setTermsVersion(termsVersion);
                     userRepository.save(user);
                     return issueTokens(user);
                 });
@@ -158,11 +181,14 @@ public class AuthService {
     }
 
     private String createRefreshToken(User user) {
-        RefreshToken token = new RefreshToken();
-        token.setToken(UUID.randomUUID().toString());
-        token.setUser(user);
-        token.setExpiresAt(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpirationMs()));
-        refreshTokenRepository.save(token);
-        return token.getToken();
+        byte[] raw = new byte[32];
+        RANDOM.nextBytes(raw);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+        RefreshToken stored = new RefreshToken();
+        stored.setTokenHash(Hashes.sha256Hex(token));
+        stored.setUser(user);
+        stored.setExpiresAt(Instant.now().plusMillis(jwtProperties.getRefreshTokenExpirationMs()));
+        refreshTokenRepository.save(stored);
+        return token;
     }
 }

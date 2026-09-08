@@ -13,6 +13,9 @@ create table users (
     email                varchar(255) not null unique,
     password_hash        varchar(255),
     google_sub           varchar(255) unique,
+    email_verified_at    timestamp(6) with time zone,
+    terms_accepted_at    timestamp(6) with time zone,
+    terms_version        varchar(20),
     display_name         varchar(50),
     bio                  varchar(300),
     profile_picture_url  varchar(255),
@@ -30,7 +33,7 @@ create table users (
 create table refresh_tokens (
     id          uuid not null,
     user_id     uuid not null,
-    token       varchar(255) not null unique,
+    token_hash  varchar(64) not null unique,
     expires_at  timestamp(6) with time zone not null,
     revoked     boolean not null,
     primary key (id)
@@ -198,7 +201,7 @@ create table laps (
 -- ── indexes ──────────────────────────────────────────────────────────────────
 create index idx_users_username on users (username);
 create index idx_users_email on users (email);
-create index idx_refresh_tokens_token on refresh_tokens (token);
+create index idx_refresh_tokens_token_hash on refresh_tokens (token_hash);
 create index idx_refresh_tokens_user_id on refresh_tokens (user_id);
 create index idx_exercises_created_by on exercises (created_by_user_id);
 create index idx_routines_user_id on routines (user_id);

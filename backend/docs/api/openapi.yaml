@@ -1332,6 +1332,9 @@ components:
           type: string
         email:
           type: string
+        emailVerifiedAt:
+          type: string
+          format: date-time
         displayName:
           type: string
         bio:

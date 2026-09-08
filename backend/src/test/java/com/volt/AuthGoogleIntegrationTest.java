@@ -159,4 +159,13 @@ class AuthGoogleIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.displayName").value(longName.substring(0, 50)));
     }
+
+    @Test
+    void googleEmailCollisionIsCaseInsensitive() throws Exception {
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("username", "mixed", "email", "Mixed@Example.com", "password", "Password123"))))
+                .andExpect(status().isCreated());
+        when(googleJwtDecoder.decode("tok-g8")).thenReturn(googleJwt("g8", "mixed@example.com", true, "Mixed"));
+        assertThat(google("tok-g8").getResponse().getStatus()).isEqualTo(409);
+    }
 }
