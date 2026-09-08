@@ -429,6 +429,34 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+  /api/auth/password/reset:
+    post:
+      tags:
+      - auth-controller
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/auth/password/forgot:
+    post:
+      tags:
+      - auth-controller
+      operationId: forgotPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
   /api/auth/logout:
     post:
       tags:
@@ -1502,6 +1530,27 @@ components:
           minLength: 1
       required:
       - refreshToken
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        newPassword:
+          type: string
+          maxLength: 72
+          minLength: 8
+      required:
+      - newPassword
+      - token
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          minLength: 1
+      required:
+      - email
     LoginRequest:
       type: object
       properties:

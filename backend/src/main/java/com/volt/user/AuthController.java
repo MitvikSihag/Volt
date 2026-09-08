@@ -1,10 +1,12 @@
 package com.volt.user;
 
 import com.volt.user.dto.AuthResponse;
+import com.volt.user.dto.ForgotPasswordRequest;
 import com.volt.user.dto.GoogleAuthRequest;
 import com.volt.user.dto.LoginRequest;
 import com.volt.user.dto.RefreshRequest;
 import com.volt.user.dto.RegisterRequest;
+import com.volt.user.dto.ResetPasswordRequest;
 import com.volt.user.dto.TokenRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -66,5 +68,17 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirmEmail(@Valid @RequestBody TokenRequest request) {
         authService.confirmEmail(request.token());
+    }
+
+    @PostMapping("/password/forgot")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+    }
+
+    @PostMapping("/password/reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.token(), request.newPassword());
     }
 }

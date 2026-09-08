@@ -116,6 +116,25 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    public void forgotPassword(String rawEmail) {
+        String email = normaliseEmail(rawEmail);
+        userRepository.findByEmail(email)
+                .filter(user -> user.getPasswordHash() != null)
+                .ifPresent(user -> {
+                    String link = mailProps.getLinkBase() + "reset?token=" + emailTokens.issue(user, EmailTokenPurpose.RESET);
+                    mail.send(user.getEmail(), "Reset your Volt password", mail.render("reset", link), link);
+                });
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        User user = emailTokens.consume(token, EmailTokenPurpose.RESET);
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        if (user.getEmailVerifiedAt() == null) user.setEmailVerifiedAt(clock.instant()); // the address just proved control
+        userRepository.save(user);
+        refreshTokenRepository.revokeAllByUser(user);
+        emailTokenRepository.deleteByUser(user);
+    }
+
     private void sendVerification(User user) {
         String link = mailProps.getLinkBase() + "verify?token=" + emailTokens.issue(user, EmailTokenPurpose.VERIFY);
         mail.send(user.getEmail(), "Verify your Volt email", mail.render("verify", link), link);
