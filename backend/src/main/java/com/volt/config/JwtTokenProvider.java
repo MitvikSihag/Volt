@@ -1,5 +1,6 @@
 package com.volt.config;
 
+import com.volt.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -41,12 +42,14 @@ public class JwtTokenProvider {
         this.accessTokenExpirationMs = props.getAccessTokenExpirationMs();
     }
 
-    public String generateAccessToken(String username) {
+    /** Access tokens carry the user id as {@code uid}: usernames are freed on deletion and can be re-registered. */
+    public String generateAccessToken(User user) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .header().keyId(activeKid).and()
                 .issuer("volt")
-                .subject(username)
+                .subject(user.getUsername())
+                .claim("uid", user.getId().toString())
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + accessTokenExpirationMs))
                 .signWith(keys.get(activeKid))
@@ -55,6 +58,11 @@ public class JwtTokenProvider {
 
     public String extractUsername(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    /** The {@code uid} claim, or null for a token minted before it existed. */
+    public String extractUserId(String token) {
+        return parseClaims(token).get("uid", String.class);
     }
 
     public boolean isTokenValid(String token) {

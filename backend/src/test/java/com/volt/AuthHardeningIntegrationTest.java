@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,6 +18,11 @@ class AuthHardeningIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Test
+    void unknownApiPathIs404NotServerError() throws Exception {
+        mockMvc.perform(get("/api/auth/nope")).andExpect(status().isNotFound());
+    }
 
     @Test
     void refreshTokenIsStoredHashed() throws Exception {

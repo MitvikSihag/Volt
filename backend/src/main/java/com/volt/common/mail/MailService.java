@@ -33,7 +33,8 @@ public class MailService {
     @Async
     public void send(String to, String subject, String html, String link) {
         if (!props.isEnabled()) {
-            // DEV ONLY: the link is the secret. Never enable this branch in production (postgres profile sets enabled=true).
+            // DEV ONLY: the link is the secret. The postgres profile defaults volt.mail.enabled=true,
+            // so this branch is only reached locally (or when VOLT_MAIL_ENABLED=false is exported deliberately).
             log.warn("DEV ONLY mail disabled — '{}' to {}: {}", subject, to, link);
             return;
         }

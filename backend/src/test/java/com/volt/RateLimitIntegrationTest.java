@@ -1,6 +1,7 @@
 package com.volt;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
@@ -55,6 +56,32 @@ class RateLimitIntegrationTest extends AbstractIntegrationTest {
                     .andExpect(status().isOk());
         }
         mockMvc.perform(get("/api/users/public1").with(r -> { r.setRemoteAddr("10.3.0.1"); return r; }))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void fourthForgotForOneEmailIs429() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            final int n = i;
+            mockMvc.perform(post("/api/auth/password/forgot").with(r -> { r.setRemoteAddr("10.5.0." + n); return r; })
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(Map.of("email", "same@example.com"))))
+                    .andExpect(status().isNoContent());
+        }
+        mockMvc.perform(post("/api/auth/password/forgot").with(r -> { r.setRemoteAddr("10.5.0.99"); return r; })
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("email", "same@example.com"))))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void sixthVerifyRequestForOneUserIs429() throws Exception {
+        AuthTokens tokens = register("resender");
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/auth/verify/request").header(HttpHeaders.AUTHORIZATION, bearer(tokens.accessToken())))
+                    .andExpect(status().isNoContent());
+        }
+        mockMvc.perform(post("/api/auth/verify/request").header(HttpHeaders.AUTHORIZATION, bearer(tokens.accessToken())))
                 .andExpect(status().isTooManyRequests());
     }
 

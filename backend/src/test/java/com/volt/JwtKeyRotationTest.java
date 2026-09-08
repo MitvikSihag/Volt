@@ -22,7 +22,7 @@ class JwtKeyRotationTest extends AbstractIntegrationTest {
         oldProps.setKeys("old:" + JwtTokenProviderTest.KEY_A);
         oldProps.setActiveKid("old");
         oldProps.setAccessTokenExpirationMs(60_000);
-        String oldToken = new JwtTokenProvider(oldProps).generateAccessToken("rotator");
+        String oldToken = new JwtTokenProvider(oldProps).generateAccessToken(findUser("rotator"));
 
         mockMvc.perform(get("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + oldToken))
                 .andExpect(status().isOk());
@@ -35,7 +35,7 @@ class JwtKeyRotationTest extends AbstractIntegrationTest {
         ghost.setKeys("ghost:" + JwtTokenProviderTest.KEY_B);
         ghost.setActiveKid("ghost");
         ghost.setAccessTokenExpirationMs(60_000);
-        String token = new JwtTokenProvider(ghost).generateAccessToken("rotator2");
+        String token = new JwtTokenProvider(ghost).generateAccessToken(findUser("rotator2"));
 
         mockMvc.perform(get("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isUnauthorized());

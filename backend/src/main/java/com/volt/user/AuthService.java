@@ -212,6 +212,7 @@ public class AuthService {
                     user.setDisplayName(name != null && !name.isBlank()
                             ? name.substring(0, Math.min(name.length(), 50))
                             : user.getUsername());
+                    user.setEmailVerifiedAt(clock.instant()); // Google asserted email_verified above
                     user.setTermsAcceptedAt(clock.instant());
                     user.setTermsVersion(termsVersion);
                     userRepository.save(user);
@@ -232,7 +233,7 @@ public class AuthService {
     }
 
     private AuthResponse issueTokens(User user) {
-        String accessToken = tokenProvider.generateAccessToken(user.getUsername());
+        String accessToken = tokenProvider.generateAccessToken(user);
         String refreshToken = createRefreshToken(user);
         return new AuthResponse(accessToken, refreshToken, jwtProperties.getAccessTokenExpirationMs());
     }

@@ -15,7 +15,11 @@ export default function Reset() {
   const submit = async () => {
     if (!token) return;
     setBusy(true); setErr(null);
-    try { await resetPassword(token, pw); router.replace('/(auth)/login'); } catch (e) { setErr(e instanceof Error ? e.message : 'Could not reset the password'); } finally { setBusy(false); }
+    try {
+      await resetPassword(token, pw);
+      await useAuth.getState().logout(); // every refresh token was just revoked server-side
+      router.replace('/(auth)/login');
+    } catch (e) { setErr(e instanceof Error ? e.message : 'Could not reset the password'); } finally { setBusy(false); }
   };
   return (
     <Zone style={{ flex: 1 }}>

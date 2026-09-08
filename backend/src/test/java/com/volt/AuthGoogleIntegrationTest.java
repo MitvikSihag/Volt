@@ -71,6 +71,7 @@ class AuthGoogleIntegrationTest extends AbstractIntegrationTest {
         assertThat(created.getEmail()).isEqualTo("g.one@example.com");
         assertThat(created.getDisplayName()).isEqualTo("G One");
         assertThat(created.getPasswordHash()).isNull();
+        assertThat(created.getEmailVerifiedAt()).isNotNull(); // Google asserted email_verified
     }
 
     @Test

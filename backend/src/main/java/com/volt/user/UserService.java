@@ -109,6 +109,10 @@ public class UserService {
         user.setDisplayName("Deleted user");
         user.setBio(null);
         user.setProfilePictureUrl(null);
+        user.setDateOfBirth(null);
+        user.setGender(null);
+        user.setHeightCm(null);
+        user.setWeightKg(null);
         user.setDeletedAt(clock.instant());
         userRepository.save(user);
         refreshTokenRepository.revokeAllByUser(user);

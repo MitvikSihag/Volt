@@ -107,7 +107,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private String clientIp(HttpServletRequest request) {
         if (trustProxy) {
             String forwarded = request.getHeader("X-Forwarded-For");
-            if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
+            if (forwarded != null && !forwarded.isBlank()) {
+                // LAST entry: our own proxy appends the peer address, everything before it is client-supplied.
+                String[] parts = forwarded.split(",");
+                return parts[parts.length - 1].trim();
+            }
         }
         return request.getRemoteAddr();
     }

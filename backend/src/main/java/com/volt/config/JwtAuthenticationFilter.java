@@ -1,6 +1,7 @@
 package com.volt.config;
 
 import com.volt.user.CustomUserDetailsService;
+import com.volt.user.VoltUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = tokenProvider.extractUsername(token);
             try {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                // Bind the token to the id it was minted for: usernames are freed on deletion, so
+                // the sub alone would let a dead token authenticate as the name's next owner.
+                // A token with no uid claim (pre-uid, or forged) never matches and is rejected.
+                if (!(userDetails instanceof VoltUserDetails v)
+                        || !v.getId().toString().equals(tokenProvider.extractUserId(token))) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

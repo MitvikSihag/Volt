@@ -1,8 +1,10 @@
 package com.volt;
 
 import com.volt.activity.Activity;
+import com.volt.user.Gender;
 import com.volt.user.User;
 import com.volt.user.UserPurgeTask;
+import com.volt.workout.Exercise;
 import com.volt.workout.Workout;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.springframework.http.MediaType;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +42,13 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void deleteAnonymisesRevokesAndFreesTheUsername() throws Exception {
         AuthTokens tokens = register("gone");
+        User before = findUser("gone");
+        before.setDateOfBirth(LocalDate.of(1999, 1, 2));
+        before.setGender(Gender.OTHER);
+        before.setHeightCm(180);
+        before.setWeightKg(75.0);
+        userRepository.save(before);
+
         mockMvc.perform(delete("/api/users/me").header(HttpHeaders.AUTHORIZATION, bearer(tokens.accessToken()))
                         .contentType(MediaType.APPLICATION_JSON).content(json(Map.of("password", tokens.password()))))
                 .andExpect(status().isNoContent());
@@ -53,6 +63,10 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
         assertThat(row.getUsername()).startsWith("deleted-");
         assertThat(row.getEmail()).endsWith("@deleted.volt.invalid");
         assertThat(row.getPasswordHash()).isNull();
+        assertThat(row.getDateOfBirth()).isNull();
+        assertThat(row.getGender()).isNull();
+        assertThat(row.getHeightCm()).isNull();
+        assertThat(row.getWeightKg()).isNull();
 
         register("gone"); // username reusable
     }
@@ -61,8 +75,8 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
     void googleOnlyAccountDeletesWithoutPassword() throws Exception {
         User user = new User();
         user.setUsername("gdel"); user.setEmail("gdel@example.com"); user.setGoogleSub("sub-gdel"); user.setDisplayName("gdel");
-        userRepository.save(user);
-        String access = new com.volt.config.JwtTokenProvider(jwtProps()).generateAccessToken("gdel");
+        User saved = userRepository.save(user);
+        String access = new com.volt.config.JwtTokenProvider(jwtProps()).generateAccessToken(saved);
         mockMvc.perform(delete("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + access))
                 .andExpect(status().isNoContent());
     }
@@ -84,6 +98,41 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
         assertThat(userRepository.findById(user.getId())).isEmpty();
         assertThat(workoutRepository.findById(workout.getId())).isEmpty();
         assertThat(activityRepository.findById(activity.getId())).isEmpty();
+    }
+
+    @Test
+    void deletedUsersTokenDoesNotAuthenticateTheNextOwnerOfTheUsername() throws Exception {
+        AuthTokens old = register("reuse");
+        mockMvc.perform(delete("/api/users/me").header(HttpHeaders.AUTHORIZATION, bearer(old.accessToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content(json(Map.of("password", old.password()))))
+                .andExpect(status().isNoContent());
+
+        register("reuse"); // the username is free again — a different account now owns it
+
+        mockMvc.perform(get("/api/users/me").header(HttpHeaders.AUTHORIZATION, bearer(old.accessToken())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void purgeSetsCreatedByNullOnUserExercises() throws Exception {
+        register("curator");
+        User user = findUser("curator");
+        Exercise custom = new Exercise();
+        custom.setName("Curator's press");
+        custom.setPrimaryMuscleGroup(systemExercise.getPrimaryMuscleGroup());
+        custom.setEquipment(systemExercise.getEquipment());
+        custom.setSystem(false);
+        custom.setCreatedBy(user);
+        custom = exerciseRepository.save(custom);
+        user.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
+        userRepository.save(user);
+        em.flush();
+
+        purgeTask.purgeDeletedUsers();
+        em.flush(); em.clear();
+
+        Exercise survivor = exerciseRepository.findById(custom.getId()).orElseThrow();
+        assertThat(survivor.getCreatedBy()).isNull();
     }
 
     private com.volt.config.JwtProperties jwtProps() {

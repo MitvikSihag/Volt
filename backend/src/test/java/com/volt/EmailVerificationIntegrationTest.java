@@ -1,12 +1,18 @@
 package com.volt;
 
 import com.volt.common.mail.MailService;
+import com.volt.user.EmailToken;
+import com.volt.user.EmailTokenPurpose;
+import com.volt.user.EmailTokenRepository;
+import com.volt.user.User;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Instant;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +28,9 @@ class EmailVerificationIntegrationTest extends AbstractIntegrationTest {
 
     @MockitoBean
     private MailService mailService;
+
+    @Autowired
+    private EmailTokenRepository emailTokenRepository;
 
     /** Token from the last mail sent to {@code email}. */
     protected String lastToken(String email) {
@@ -75,6 +84,23 @@ class EmailVerificationIntegrationTest extends AbstractIntegrationTest {
     @Test
     void verifyRequestRequiresAuthentication() throws Exception {
         mockMvc.perform(post("/api/auth/verify/request")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void expiredTokenIsRejected() throws Exception {
+        AuthTokens tokens = register("staleverify");
+        String token = lastToken(tokens.email());
+        User user = findUser("staleverify");
+        EmailToken row = emailTokenRepository.findAll().stream()
+                .filter(t -> t.getPurpose() == EmailTokenPurpose.VERIFY && t.getUser().getId().equals(user.getId()))
+                .findFirst().orElseThrow();
+        row.setExpiresAt(Instant.now().minusSeconds(1));
+        emailTokenRepository.save(row);
+
+        mockMvc.perform(post("/api/auth/verify/confirm").contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("token", token))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Link is invalid or has expired"));
     }
 
     @Test

@@ -1,7 +1,7 @@
 # Volt — Pre-release checklist
 
 Living doc. Everything that must be true before v1.0 goes to the App Store / Play Store.
-Status reflects the repo as of 2026-09-07 (branch `feat/google-sign-in`). Tick items as they land;
+Status reflects the repo as of 2026-09-08 (branch `feat/auth-hardening`). Tick items as they land;
 add new ones at the bottom of the relevant section. Nothing here is built yet unless marked ✅.
 
 Legend: ✅ done · 🔸 partial · ❌ missing · ❓ decision needed
@@ -10,8 +10,8 @@ Legend: ✅ done · 🔸 partial · ❌ missing · ❓ decision needed
 
 ## 1. Abuse & rate limiting
 
-The API has **no rate limiting anywhere** (no bucket4j/resilience4j, no filter). Login is the
-obvious one, but it is not the only endpoint that needs it.
+Rate limiting shipped 8 Sep 2026 (`RateLimitFilter` + `IdentityRateLimiter`); the table below is
+the live configuration.
 
 | Endpoint | Why | Limit (starting point) | Status |
 |---|---|---|---|
@@ -38,8 +38,8 @@ Implementation notes
 | Item | Status | Notes |
 |---|---|---|
 | Password policy | 🔸 | `@Size(min=8,max=72)` only. Add a breached-password check (HIBP k-anonymity) or leave as-is; **don't** add composition rules (uppercase/symbol), they hurt more than they help |
-| Email verification | ✅ | `POST /api/auth/verify/request` + `/api/auth/verify`; `volt://verify?token=` deep link; Today shows a verify line until `emailVerifiedAt` is set |
-| Password reset / forgot password | ✅ | `POST /api/auth/forgot-password` + `/reset-password`; `volt://reset?token=` deep link; mobile forgot/reset screens shipped; mail via Resend (DEV ONLY log line when disabled) |
+| Email verification | ✅ | `POST /api/auth/verify/request` + `/api/auth/verify/confirm`; `volt://verify?token=` deep link; Today shows a verify line until `emailVerifiedAt` is set |
+| Password reset / forgot password | ✅ | `POST /api/auth/password/forgot` + `/api/auth/password/reset`; `volt://reset?token=` deep link; mobile forgot/reset screens shipped; mail via Resend (DEV ONLY log line when disabled) |
 | Refresh-token rotation + reuse detection | ✅ | `AuthService.refresh` rotates and invalidates the old token; reused revoked token kills the whole family (verified) |
 | Logout everywhere / session list | ❓ | Nice-to-have; v1.1 |
 | JWT secret from env | ✅ | `VOLT_JWT_KEYS` + `VOLT_JWT_ACTIVE_KID` replace `VOLT_JWT_SECRET`; fails fast if unset (keys, fail-fast) |
