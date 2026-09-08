@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Locale;
@@ -48,6 +49,7 @@ public class AuthService {
     private final EmailTokenRepository emailTokenRepository;
     private final MailService mail;
     private final MailProperties mailProps;
+    private final IdentityRateLimiter identityLimiter;
 
     public AuthService(UserRepository userRepository,
                        RefreshTokenRepository refreshTokenRepository,
@@ -61,7 +63,8 @@ public class AuthService {
                        EmailTokenService emailTokens,
                        EmailTokenRepository emailTokenRepository,
                        MailService mail,
-                       MailProperties mailProps) {
+                       MailProperties mailProps,
+                       IdentityRateLimiter identityLimiter) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
@@ -75,6 +78,7 @@ public class AuthService {
         this.emailTokenRepository = emailTokenRepository;
         this.mail = mail;
         this.mailProps = mailProps;
+        this.identityLimiter = identityLimiter;
     }
 
     static String normaliseEmail(String email) {
@@ -118,6 +122,7 @@ public class AuthService {
 
     public void forgotPassword(String rawEmail) {
         String email = normaliseEmail(rawEmail);
+        identityLimiter.check("forgot", email, 3, Duration.ofHours(1));
         userRepository.findByEmail(email)
                 .filter(user -> user.getPasswordHash() != null)
                 .ifPresent(user -> {
@@ -141,6 +146,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        identityLimiter.check("login", normaliseEmail(request.usernameOrEmail()), 10, Duration.ofMinutes(15));
         // One query via AuthenticationManager (unavoidable), then one direct index hit by username
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.usernameOrEmail(), request.password())

@@ -2,6 +2,7 @@ package com.volt.config;
 
 import com.volt.user.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,10 +33,20 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final RateLimitFilter rateLimitFilter;
+    private final boolean h2Console;
+    private final List<String> corsOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter,
+                          CustomUserDetailsService userDetailsService,
+                          RateLimitFilter rateLimitFilter,
+                          @Value("${spring.h2.console.enabled:false}") boolean h2Console,
+                          @Value("${volt.cors.allowed-origins}") List<String> corsOrigins) {
         this.jwtFilter = jwtFilter;
         this.userDetailsService = userDetailsService;
+        this.rateLimitFilter = rateLimitFilter;
+        this.h2Console = h2Console;
+        this.corsOrigins = corsOrigins;
     }
 
     @Bean
@@ -42,27 +54,31 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Must precede the /api/auth/** permitAll below — first match wins.
-                        .requestMatchers("/api/auth/verify/request").authenticated()
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/uploads/**",
-                                "/h2-console/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/actuator/health"
-                        ).permitAll()
-                        // Must precede the {username} wildcard below — "me" would otherwise match it and
-                        // become publicly readable instead of requiring authentication.
-                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/users/{username}").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    // Must precede the /api/auth/** permitAll below — first match wins.
+                    auth.requestMatchers("/api/auth/verify/request").authenticated();
+                    // Must precede the {username} wildcard below — "me" would otherwise match it and
+                    // become publicly readable instead of requiring authentication.
+                    auth.requestMatchers(HttpMethod.GET, "/api/users/me").authenticated();
+                    // Only open in profiles where the H2 console is actually enabled (never on postgres/prod).
+                    if (h2Console) {
+                        auth.requestMatchers("/h2-console/**").permitAll();
+                    }
+                    auth.requestMatchers(
+                                    "/api/auth/**",
+                                    "/uploads/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/v3/api-docs/**",
+                                    "/v3/api-docs.yaml",
+                                    "/actuator/health"
+                            ).permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/users/{username}").permitAll()
+                            .anyRequest().authenticated();
+                })
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setContentType("application/json");
@@ -78,7 +94,8 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -112,7 +129,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8081", "http://localhost:19006"));
+        config.setAllowedOrigins(corsOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

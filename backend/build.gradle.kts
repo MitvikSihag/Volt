@@ -35,6 +35,10 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
 
+    // Rate limiting — in-memory token buckets (single instance)
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
     // Drivers: H2 for local dev/tests, PostgreSQL for prod/docker
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
