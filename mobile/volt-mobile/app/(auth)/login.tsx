@@ -7,6 +7,7 @@ import { useAuth } from '@/auth/store';
 import { AuthClose } from '@/ui/AuthClose';
 import { field } from '@/ui/field';
 import { Bolt } from '@/ui/Bolt';
+import { GoogleG } from '@/ui/GoogleG';
 import { Body, Button, Heading, Zone } from '@/ui/primitives';
 import { color } from '@/ui/tokens';
 
@@ -37,7 +38,7 @@ export default function Login() {
           {err && <Body tone="ember" size={13}>{err}</Body>}
           <View style={{ height: 8 }} />
           <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={submit} disabled={busy || !id || !pw} />
-          <Button label="Continue with Google" tone="ghost" onPress={google} disabled={busy} />
+          <Button label="Continue with Google" tone="ghost" icon={<GoogleG />} onPress={google} disabled={busy} />
           <Link href="/(auth)/forgot" style={{ alignSelf: 'center', marginTop: 12 }}><Body tone="t2">Forgot password?</Body></Link>
           <Link href="/(auth)/register" style={{ alignSelf: 'center', marginTop: 16 }}><Body tone="t2">New here? Create an account</Body></Link>
         </KeyboardAvoidingView>

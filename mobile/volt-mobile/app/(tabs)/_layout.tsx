@@ -14,6 +14,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
         <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
         <Tabs.Screen name="rivals" options={{ title: 'Rivals' }} />
+        <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>
       <SessionPill />
     </>

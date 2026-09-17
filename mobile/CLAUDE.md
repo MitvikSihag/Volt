@@ -32,6 +32,8 @@ npm start            # Metro; scan the QR with Expo Go, or press i / a
 npm run typecheck    # tsc --noEmit
 npm test             # jest (pure modules)
 npm run gen:api      # regenerate src/api/schema.d.ts from the backend contract
+# Dev client shows "problem loading the project" (it picked a VPN/NAT address)? Point it at localhost:
+# xcrun simctl openurl booted "exp+volt://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx expo run:ios   # development build on the simulator (Google sign-in, Live Activity); LANG needed or pod install fails on this Mac
 ```
 Backend for personal testing (**the default since 6 Sep**): the persistent Postgres stack —
@@ -56,14 +58,15 @@ volt-mobile/
 │   ├── (auth)/          login, register (full-screen modal; register honours `useAuth.next`),
 │   │                    forgot.tsx (forgot password)
 │   ├── (onboarding)/    goal (18), week (19) — runs without a token
-│   ├── (tabs)/          Today · Plan · Feed · Rivals (Plan/Feed/Rivals are placeholders)
+│   ├── (tabs)/          Today · Plan · Feed · Rivals · Profile — the five tabs of VOLT_DESIGN_SYSTEM §7
+│   │                    (Plan/Feed/Rivals are placeholders; Profile holds the Settings link)
 │   ├── workout/         live (Live Lift), picker, finish, summary (also read-only from History)
 │   ├── run/             live (Live Run, GPS), save (Save/Edit activity), privacy (bottom sheet)
 │   ├── workout/share.tsx Share card (12): 1080×1920 story captured with react-native-view-shot
 │   ├── settings.tsx     Settings (22): units, rest default, plates, PR types, privacy, competition
 │   ├── exercise/[id].tsx Exercise Detail — About · History · Charts · Records
 │   ├── history.tsx      History (lifts + cardio, week groups)
-│   ├── profile.tsx      Profile — month calendar with dual dots, totals, link to History
+│   ├── (tabs)/profile.tsx  Profile — month calendar with dual dots, totals, links to History and Settings
 │   ├── reset.tsx        Reset password (`volt://reset?token=` deep link)
 │   ├── verify.tsx       Verify email (`volt://verify?token=` deep link)
 │   └── delete-account.tsx Delete account confirmation (Settings → Account)

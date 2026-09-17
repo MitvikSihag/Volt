@@ -62,7 +62,8 @@ export default function RootLayout() {
           <Stack.Screen name="run/privacy" options={{ presentation: 'formSheet', sheetAllowedDetents: [0.9], sheetGrabberVisible: false, contentStyle: { backgroundColor: '#171717' } }} />
           <Stack.Screen name="workout/share" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="settings" />
-          <Stack.Screen name="profile" />
+          <Stack.Screen name="reset" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="verify" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="history" />
           <Stack.Screen name="exercise/[id]" options={{ presentation: 'fullScreenModal' }} />
         </Stack>

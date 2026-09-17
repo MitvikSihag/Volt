@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, PressableProps, StyleSheet, Text, TextProps, View, ViewProps } from 'react-native';
 import { color, font, Tone } from './tokens';
@@ -24,15 +25,16 @@ export const Zone = ({ level = 'base', style, ...p }: ViewProps & { level?: 'bas
 );
 export const Hairline = () => <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: color.hairline }} />;
 
-export const Button = ({ label, tone = 'primary', disabled, ...p }: PressableProps & { label: string; tone?: 'primary' | 'ghost' }) => (
+export const Button = ({ label, tone = 'primary', disabled, icon, ...p }: PressableProps & { label: string; tone?: 'primary' | 'ghost'; icon?: ReactNode }) => (
   <Pressable
     {...p}
     disabled={disabled}
     style={({ pressed }) => ({
-      height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center',
+      height: 56, borderRadius: 28, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center',
       backgroundColor: tone === 'primary' ? color.t1 : color.raised, opacity: disabled ? 0.4 : pressed ? 0.85 : 1,
     })}
   >
+    {icon}
     <Text style={{ fontFamily: font.sansSemi, fontSize: 16, color: tone === 'primary' ? color.sunken : color.t1 }}>{label}</Text>
   </Pressable>
 );
