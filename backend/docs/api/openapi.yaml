@@ -369,6 +369,30 @@ paths:
                 $ref: "#/components/schemas/ExerciseResponse"
       security:
       - bearerAuth: []
+  /api/auth/verify/request:
+    post:
+      tags:
+      - auth-controller
+      operationId: requestVerification
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+  /api/auth/verify/confirm:
+    post:
+      tags:
+      - auth-controller
+      operationId: confirmEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
   /api/auth/register:
     post:
       tags:
@@ -405,6 +429,34 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+  /api/auth/password/reset:
+    post:
+      tags:
+      - auth-controller
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/auth/password/forgot:
+    post:
+      tags:
+      - auth-controller
+      operationId: forgotPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
   /api/auth/logout:
     post:
       tags:
@@ -429,6 +481,24 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/google:
+    post:
+      tags:
+      - auth-controller
+      operationId: google
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleAuthRequest"
         required: true
       responses:
         "200":
@@ -615,6 +685,20 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/UserSelfResponse"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - user-controller
+      operationId: deleteSelf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "204":
+          description: No Content
       security:
       - bearerAuth: []
     patch:
@@ -1314,6 +1398,9 @@ components:
           type: string
         email:
           type: string
+        emailVerifiedAt:
+          type: string
+          format: date-time
         displayName:
           type: string
         bio:
@@ -1411,6 +1498,14 @@ components:
       - movementType
       - name
       - primaryMuscleGroup
+    TokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
     RegisterRequest:
       type: object
       properties:
@@ -1449,6 +1544,27 @@ components:
           minLength: 1
       required:
       - refreshToken
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        newPassword:
+          type: string
+          maxLength: 72
+          minLength: 8
+      required:
+      - newPassword
+      - token
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          minLength: 1
+      required:
+      - email
     LoginRequest:
       type: object
       properties:
@@ -1461,6 +1577,14 @@ components:
       required:
       - password
       - usernameOrEmail
+    GoogleAuthRequest:
+      type: object
+      properties:
+        idToken:
+          type: string
+          minLength: 1
+      required:
+      - idToken
     ActivityLapRequest:
       type: object
       properties:
@@ -1950,6 +2074,11 @@ components:
           format: int32
         last:
           type: boolean
+    DeleteAccountRequest:
+      type: object
+      properties:
+        password:
+          type: string
   securitySchemes:
     bearerAuth:
       type: http

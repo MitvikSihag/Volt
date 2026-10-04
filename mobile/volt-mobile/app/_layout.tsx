@@ -28,7 +28,8 @@ function AuthGate() {
   const router = useRouter();
   useEffect(() => {
     const inAuth = segments[0] === '(auth)'; const inOnboarding = segments[0] === '(onboarding)'; const inWorkout = segments[0] === 'workout';
-    if (!token && !inAuth && !inOnboarding && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
+    const inLink = segments[0] === 'reset' || segments[0] === 'verify';
+    if (!token && !inAuth && !inOnboarding && !inLink && !(onboarding && inWorkout)) router.replace(seen ? '/(auth)/register' : '/(onboarding)/goal');
     if (token && inAuth) {
       useAuth.setState({ next: null });
       if (router.canDismiss()) router.dismissAll();
@@ -61,7 +62,8 @@ export default function RootLayout() {
           <Stack.Screen name="run/privacy" options={{ presentation: 'formSheet', sheetAllowedDetents: [0.9], sheetGrabberVisible: false, contentStyle: { backgroundColor: '#171717' } }} />
           <Stack.Screen name="workout/share" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="settings" />
-          <Stack.Screen name="profile" />
+          <Stack.Screen name="reset" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="verify" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="history" />
           <Stack.Screen name="exercise/[id]" options={{ presentation: 'fullScreenModal' }} />
         </Stack>

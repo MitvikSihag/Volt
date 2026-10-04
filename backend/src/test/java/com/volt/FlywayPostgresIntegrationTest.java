@@ -24,7 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Runs in CI and fails closed there when Docker is unavailable. Local runs skip it when
  * Docker is unavailable so the H2-backed test loop remains usable.
  */
-@SpringBootTest(properties = "volt.jwt.secret=dGhpcy1pcy1hLXRlc3Qtb25seS1zZWNyZXQta2V5LWZvci12b2x0LXBvc3RncmVz")
+@SpringBootTest(properties = {
+        "volt.jwt.keys=test:dGhpcy1pcy1hLXRlc3Qtb25seS1zZWNyZXQta2V5LWZvci12b2x0LXBvc3RncmVz",
+        "volt.jwt.active-kid=test"
+})
 @ActiveProfiles("postgres")
 @Testcontainers
 @EnabledIf("dockerAvailable")

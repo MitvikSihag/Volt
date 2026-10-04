@@ -26,9 +26,8 @@ export default function Profile() {
     <Zone style={{ flex: 1 }}>
       <HeaderWash tone="ember" height={220} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-          <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Pressable onPress={() => router.back()} hitSlop={12}><Mono tone="t2" size={18}>←</Mono></Pressable>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+          <View style={{ paddingHorizontal: 24, paddingTop: 8, flexDirection: 'row', justifyContent: 'flex-end' }}>
             <Pressable onPress={() => router.push('/settings')} hitSlop={12}><Meta tone="t2">Settings</Meta></Pressable>
           </View>
           <View style={{ paddingHorizontal: 24, paddingTop: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }}>

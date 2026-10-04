@@ -1,6 +1,7 @@
 package com.volt.config;
 
 import com.volt.user.CustomUserDetailsService;
+import com.volt.user.VoltUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -35,13 +37,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             String username = tokenProvider.extractUsername(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities()
-            );
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                // Bind the token to the id it was minted for: usernames are freed on deletion, so
+                // the sub alone would let a dead token authenticate as the name's next owner.
+                // A token with no uid claim (pre-uid, or forged) never matches and is rejected.
+                if (!(userDetails instanceof VoltUserDetails v)
+                        || !v.getId().toString().equals(tokenProvider.extractUserId(token))) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (UsernameNotFoundException e) {
+                // Token is otherwise valid but the account behind it is gone (e.g. deleted
+                // and anonymised) — leave the request unauthenticated so it 401s normally.
+            }
         }
 
         filterChain.doFilter(request, response);

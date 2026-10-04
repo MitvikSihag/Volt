@@ -1,6 +1,7 @@
 package com.volt.user;
 
 import com.volt.common.exception.ApiException;
+import com.volt.user.dto.DeleteAccountRequest;
 import com.volt.user.dto.UpdateProfileRequest;
 import com.volt.user.dto.UserProfileResponse;
 import com.volt.user.dto.UserSelfResponse;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -86,5 +89,13 @@ public class UserController {
     @Operation(security = @SecurityRequirement(name = "bearerAuth"))
     public List<ExerciseRecordsResponse> getRecords(@AuthenticationPrincipal UserDetails principal) {
         return prService.getRecordsGrid(principal.getUsername());
+    }
+
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"))
+    public void deleteSelf(@AuthenticationPrincipal UserDetails principal,
+                           @RequestBody(required = false) DeleteAccountRequest request) {
+        userService.deleteSelf(principal.getUsername(), request == null ? null : request.password());
     }
 }

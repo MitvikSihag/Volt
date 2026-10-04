@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDashboard, useExercises, useLastSets, useMe, useRoutines } from '@/api/queries';
+import { useDashboard, useExercises, useLastSets, useMe, useResendVerification, useRoutines } from '@/api/queries';
 import { fromRoutine } from '@/session/fromRoutine';
 import { useOnboarding } from '@/onboarding/store';
 import { toSession, WEEK } from '@/onboarding/templates';
@@ -65,6 +65,7 @@ export default function Today() {
             <Pressable onPress={() => router.push('/profile')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: color.raised, alignItems: 'center', justifyContent: 'center', marginTop: 4 }}><Mono size={12}>{initials}</Mono></Pressable>
           </View>
           <Meta style={{ paddingHorizontal: 24, paddingTop: 16 }}>{raceLine ?? dateLine}</Meta>
+          {me && !me.emailVerifiedAt && <VerifyLine />}
 
           <View style={{ paddingHorizontal: 24, paddingTop: 36, flexDirection: 'row', alignItems: 'flex-end' }}>
             <View style={{ flexShrink: 1 }}><Numeral numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{volume == null ? '—' : Math.round(units.toDisplay(volume)).toLocaleString()}</Numeral></View>
@@ -123,5 +124,14 @@ export default function Today() {
         </ScrollView>
       </SafeAreaView>
     </Zone>
+  );
+}
+
+function VerifyLine() {
+  const resend = useResendVerification();
+  return (
+    <Pressable onPress={() => resend.mutate()} disabled={resend.isPending || resend.isSuccess} style={{ paddingHorizontal: 24, paddingTop: 8 }}>
+      <Meta tone="t2">Verify your email · {resend.isSuccess ? 'Sent' : resend.isPending ? 'Sending…' : resend.isError ? 'Try again' : 'Resend'}</Meta>
+    </Pressable>
   );
 }

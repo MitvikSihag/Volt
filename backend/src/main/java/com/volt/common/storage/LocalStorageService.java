@@ -43,7 +43,10 @@ public class LocalStorageService implements StorageService {
         if (url == null || !url.startsWith(baseUrl)) return;
         try {
             Path path = Paths.get(uploadDir, url.substring(baseUrl.length()));
-            Files.deleteIfExists(path);
+            Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path target = path.toAbsolutePath().normalize();
+            if (!target.startsWith(root)) return; // ../ in a stored URL must not reach outside the upload dir
+            Files.deleteIfExists(target);
         } catch (IOException e) {
             // non-critical — stale file, log in production
         }

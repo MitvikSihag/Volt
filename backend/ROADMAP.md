@@ -93,9 +93,9 @@ Ordered by severity. Several are blockers for *any* real deployment and are pull
 | D11 | ~~Refresh-token family revocation rolled back with the reuse error~~ | A rotated descendant stayed valid after reuse detection | 🟡 **Phase 3 stabilization** — regression fix; pending merge |
 | D12 | ~~OpenAPI export test silently overwrote the checked-in contract~~ | Contract drift could be hidden instead of failing verification | 🟡 **Phase 3 stabilization** — generate separately and compare; pending merge |
 | D3 | CI is not yet a required remote check | No enforced automated build/test gate | **Phase 3 stabilization** + remote branch settings; §6 (W1) |
-| D4 | ~~PostgreSQL runtime could inherit the committed dev JWT secret~~ | Missing config allowed token forgery with a known key | 🟡 **Phase 3 stabilization** — Postgres fails closed without `VOLT_JWT_SECRET`; pending merge |
-| D5 | Refresh tokens stored as **raw UUIDs** | DB leak = account takeover; hash at rest | §6 (W2) |
-| D6 | No rate limiting on `/api/auth/**` | Credential-stuffing / brute force exposure | §6 (W2) |
+| D4 | ~~PostgreSQL runtime could inherit the committed dev JWT secret~~ | Missing config allowed token forgery with a known key | 🟡 **Phase 3 stabilization** — Postgres fails closed without `VOLT_JWT_KEYS` / `VOLT_JWT_ACTIVE_KID`; pending merge |
+| D5 | ~~Refresh tokens stored as **raw UUIDs**~~ | DB leak = account takeover; hash at rest | ✅ auth hardening, Sep 2026 — SHA-256 at rest |
+| D6 | ~~No rate limiting on `/api/auth/**`~~ | Credential-stuffing / brute force exposure | ✅ auth hardening, Sep 2026 — per IP/user/identity rate limiting |
 | D7 | Live PR banner lacks "previous value" context | `addSet` returns `isPr` but not the beaten record → frontend can't show "prev: 100kg × 5" | Phase 5 (or quick win) |
 | D8 | Soft-delete filtering not audited for consistency | Risk of deleted rows leaking into reads | §6 (W3) |
 | D9 | Nested fetches risk N+1 (`open-in-view=false`, good) | Latency at scale | §6 (W3) |
@@ -114,8 +114,8 @@ Ordered by severity. Several are blockers for *any* real deployment and are pull
   (`application.properties`, `application-postgres.properties`).
 - Flyway baseline `db/migration/V1__baseline_schema.sql` — generated from Hibernate's own
   PostgreSQL DDL, so `validate` matches the entity model exactly.
-- Secrets externalized via env (`VOLT_JWT_SECRET`, `SPRING_DATASOURCE_*`); the H2 dev profile keeps
-  a local default, while the PostgreSQL profile fails startup when `VOLT_JWT_SECRET` is absent.
+- Secrets externalized via env (`VOLT_JWT_KEYS`, `VOLT_JWT_ACTIVE_KID`, `SPRING_DATASOURCE_*`); the H2 dev profile keeps
+  a local default, while the PostgreSQL profile fails startup when `VOLT_JWT_KEYS` is absent.
 - `Dockerfile` (slim runtime, host-built jar — works behind the TLS-intercepting proxy) +
   `docker-compose.yml` (app + Postgres, named volumes) + `.dockerignore`.
 - `FlywayPostgresIntegrationTest` (Testcontainers) — permanent drift-catcher: boots under
