@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private UserPurgeTask purgeTask;
+    @Autowired private com.volt.config.JwtTokenProvider tokenProvider;
     @Autowired private EntityManager em;
 
     @Test
@@ -76,7 +77,7 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
         User user = new User();
         user.setUsername("gdel"); user.setEmail("gdel@example.com"); user.setGoogleSub("sub-gdel"); user.setDisplayName("gdel");
         User saved = userRepository.save(user);
-        String access = new com.volt.config.JwtTokenProvider(jwtProps()).generateAccessToken(saved);
+        String access = tokenProvider.generateAccessToken(saved); // the context's own keys (CI overrides them via env)
         mockMvc.perform(delete("/api/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + access))
                 .andExpect(status().isNoContent());
     }
@@ -135,11 +136,4 @@ class AccountDeletionIntegrationTest extends AbstractIntegrationTest {
         assertThat(survivor.getCreatedBy()).isNull();
     }
 
-    private com.volt.config.JwtProperties jwtProps() {
-        com.volt.config.JwtProperties p = new com.volt.config.JwtProperties();
-        p.setKeys("dev:dGhpcy1pcy1hLXZlcnktc2VjcmV0LWtleS1mb3Itdm9sdC1hcHAtZGV2LTIwMjY=");
-        p.setActiveKid("dev");
-        p.setAccessTokenExpirationMs(60_000);
-        return p;
-    }
 }
